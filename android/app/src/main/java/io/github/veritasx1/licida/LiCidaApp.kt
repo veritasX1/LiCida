@@ -7,6 +7,7 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.view.PreviewView
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
@@ -126,6 +127,45 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
     }
     fun edit(next: Edits) { edits = next; studio.edits = next }
 
+    // Straightening the camera (cards 6/7): by hand, or automatically from the target.
+    var correction by remember { mutableStateOf(studio.correction) }
+    var savedCorrection by remember { mutableStateOf(studio.savedCorrection) }
+    var helperGhost by remember { mutableStateOf(studio.helperGhost) }
+    var ownAspect by remember { mutableStateOf(studio.ownTargetAspect) }
+    var autoBusy by remember { mutableStateOf<String?>(null) }
+    var checkRect by remember { mutableStateOf<FloatArray?>(null) }
+    var askCheck by remember { mutableStateOf(false) }
+    var checking by remember { mutableStateOf(false) }
+    var checkSpeed by remember { mutableStateOf(0.4f) }
+    val helperPicture = remember { Target.bitmap(840) }
+    val ownTargetPicture = remember(ownAspect) {
+        if (ownAspect == null) null else runCatching { android.graphics.BitmapFactory.decodeFile(Reference.ownTarget(context).path) }.getOrNull()
+    }
+    val ownPick = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        uri?.let { Reference.keepOwnTarget(context, it) }?.let { picture ->
+            ownAspect = picture.width.toFloat() / picture.height; studio.ownTargetAspect = ownAspect
+        }
+    }
+    fun setCorrection(next: Correction) { correction = next; studio.correction = next }
+    fun runAuto() {
+        scope.launch {
+            for (second in 3 downTo 1) { autoBusy = "Arm aus dem Bild … $second"; delay(1000) }
+            autoBusy = "Suche das Zielbild …"
+            val shot = camera.snapshot(preview)
+            val found = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { shot?.let { AutoAlign.find(it, ownAspect) } }
+            autoBusy = null
+            if (found == null) {
+                val text = "Zielbild nicht gefunden – flach hinlegen, gut beleuchten, ganz ins Bild"
+                message = text; delay(2600); if (message == text) message = null
+                return@launch
+            }
+            setCorrection(Correction(auto = found.homography))
+            cameraView = CameraView(); studio.cameraView = cameraView   // AUTO also undoes a mirror
+            checkRect = found.rectangle
+            askCheck = true
+        }
+    }
+
     fun say(text: String) {
         message = text
         scope.launch { delay(1800); if (message == text) message = null }
@@ -174,11 +214,15 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
                 translationX = view.offset.x; translationY = view.offset.y
             }
         }) {
-            CameraLayer(camera, onView = { preview = it }, fill = fill, modifier = Modifier.graphicsLayer {
+            Box(Modifier.fillMaxSize().graphicsLayer {
                 scaleX = cameraView.zoom * (if (cameraView.flipH) -1f else 1f)
                 scaleY = cameraView.zoom * (if (cameraView.flipV) -1f else 1f)
                 translationX = cameraView.offset.x; translationY = cameraView.offset.y
-            })
+            }) {
+                CameraLayer(camera, onView = { preview = it }, fill = fill, correction = correction)
+                // Checking the automatic alignment: the target fades in and out where it lies (handbook p. 24).
+                if (checking) checkRect?.let { rect -> CheckOverlay(rect, ownTargetPicture ?: helperPicture, ownTargetPicture != null, checkSpeed) }
+            }
             (shown ?: reference)?.let { bitmap ->
                 val image = remember(bitmap) { bitmap.asImageBitmap() }
                 Image(image, contentDescription = "Vorlage", contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize().graphicsLayer {
@@ -187,6 +231,12 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
                     alpha = shownOpacity
                 })
             }
+        }
+
+        // The helper grid as a ghost over the screen: lay the printed target so that it matches (handbook p. 19).
+        if (helperGhost && mode == Mode.Setup) {
+            val ghostImage = remember(helperPicture) { helperPicture.asImageBitmap() }
+            Image(ghostImage, contentDescription = "Hilfsraster", contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize().graphicsLayer { alpha = 0.45f })
         }
 
         // Gestures – with the camera sheet open they move the camera picture (handbook p. 14).
@@ -276,7 +326,30 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
                 onGhost = { ghost = it; studio.ghost = it },
                 onReset = { cameraView = chosenCamera?.let(Composition::cameraViewFor) ?: CameraView(); studio.cameraView = cameraView },
                 onDone = { cameraSheet = false },
-                modifier = Modifier.align(Alignment.BottomCenter).fillMaxHeight(0.5f))
+                modifier = Modifier.align(Alignment.BottomCenter).fillMaxHeight(0.5f),
+                correcting = CorrectionControls(correction, cameraView.flipH, cameraView.flipV, helperGhost, ownAspect != null,
+                    savedCorrection != null, autoBusy,
+                    onCorrection = { correction = it }, onCorrectionDone = { studio.correction = correction },
+                    onFlip = { horizontal ->
+                        cameraView = if (horizontal) cameraView.copy(flipH = !cameraView.flipH) else cameraView.copy(flipV = !cameraView.flipV)
+                        studio.cameraView = cameraView
+                    },
+                    onHelperGhost = { helperGhost = it; studio.helperGhost = it },
+                    onResetCorrection = { setCorrection(Correction()) },
+                    onTargetKind = { own -> if (!own) { ownAspect = null; studio.ownTargetAspect = null } },
+                    onPickOwnTarget = { ownPick.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+                    onPrintTarget = {
+                        runCatching {
+                            androidx.print.PrintHelper(context).apply { scaleMode = androidx.print.PrintHelper.SCALE_MODE_FIT }
+                                .printBitmap("LiCida-Zielbild", Target.bitmap(2480))
+                        }.onFailure { say("Drucken ist hier nicht möglich") }
+                    },
+                    onSaveTarget = {
+                        say(if (Reference.saveToPhotos(context, Target.bitmap(2480), "LiCida-Zielbild")) "Zielbild in Fotos gesichert" else "Sichern hat nicht geklappt")
+                    },
+                    onAuto = ::runAuto,
+                    onSaveSetting = { savedCorrection = correction; studio.savedCorrection = correction; say("Ausrichtung gesichert") },
+                    onRestoreSetting = { savedCorrection?.let { setCorrection(it); say("Ausrichtung wiederhergestellt") } }))
             mode == Mode.Setup -> SetupChrome(reference, opacity, hintSeen, cameraAllowed,
                 onOpacity = { opacity = it }, onOpacityDone = { studio.opacity = opacity },
                 onPhotos = ::pickPhoto, onFiles = ::pickFile, onCamera = ::takePhoto, onAskCamera = onAskCamera,
@@ -298,6 +371,15 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
                     onZoomReset = { view = DrawView() })
             }
         }
+
+        autoBusy?.let { text ->
+            if (!cameraSheet) return@let
+            BasicText(text, style = style(17f, 600, Color.Black), modifier = Modifier.align(Alignment.TopCenter)
+                .windowInsetsPadding(WindowInsets.statusBars).padding(top = 64.dp).clip(CircleShape).background(Ink.yellow).padding(horizontal = 16.dp, vertical = 8.dp))
+        }
+        if (askCheck) AskDialog("Kamera ausgerichtet", "Jetzt prüfen, ob Zielbild und Kamerabild genau übereinanderliegen? Das Zielbild dabei liegen lassen.",
+            "Prüfen", onYes = { askCheck = false; checking = true; cameraSheet = false }, onNo = { askCheck = false })
+        if (checking) CheckControls(checkSpeed, { checkSpeed = it }, Modifier.align(Alignment.BottomCenter)) { checking = false }
 
         message?.let { text ->
             Box(Modifier.align(Alignment.Center).clip(RoundedCornerShape(14.dp)).background(Ink.glassStrong).padding(horizontal = 18.dp, vertical = 12.dp)) {
@@ -424,6 +506,84 @@ private fun DrawChrome(view: DrawView, opacity: Float, exposureLocked: Boolean, 
                 SymbolIcon(Symbol.Camera, Ink.white, size = 18.dp)
                 IosSlider(opacity, onOpacity, "Deckkraft der Vorlage", Modifier.weight(1f).padding(horizontal = 6.dp), onRelease = onOpacityDone)
                 SymbolIcon(Symbol.Photo, Ink.white, size = 18.dp)
+            }
+        }
+    }
+}
+
+/** The automatic alignment's result: the straightening and where the target's dots (or corners) now lie. */
+class AutoFound(val homography: FloatArray, val rectangle: FloatArray)
+
+/** Finding the target in a camera picture (card 7) – on a smaller copy, the points scaled back to the view. */
+object AutoAlign {
+    fun find(picture: Bitmap, ownAspect: Float?): AutoFound? {
+        val small = Reference.scaled(picture, 720)
+        val factor = picture.width.toFloat() / small.width
+        val pixels = Reference.pixels(small)
+        val found = (if (ownAspect == null) Target.findDots(pixels) else Target.findCorners(pixels)) ?: return null
+        val points = FloatArray(8) { found[it] * factor }
+        val homography = Target.straighten(points, ownAspect ?: Target.DOT_ASPECT) ?: return null
+        val rectangle = FloatArray(8).also { out ->
+            for (p in 0 until 4) Homography.apply(homography, points[2 * p], points[2 * p + 1]).let { (x, y) -> out[2 * p] = x; out[2 * p + 1] = y }
+        }
+        return AutoFound(homography, rectangle)
+    }
+}
+
+/** The target picture placed where it lies after straightening, fading in and out (handbook p. 24). */
+@Composable
+private fun CheckOverlay(rect: FloatArray, picture: Bitmap, own: Boolean, speed: Float) {
+    val image = remember(picture) { picture.asImageBitmap() }
+    val transition = androidx.compose.animation.core.rememberInfiniteTransition(label = "Prüfen")
+    val period = (3000 - speed * 2700).toInt()
+    val alpha by transition.animateFloat(0f, 1f, androidx.compose.animation.core.infiniteRepeatable(
+        androidx.compose.animation.core.tween(period), androidx.compose.animation.core.RepeatMode.Reverse), label = "Überblenden")
+    androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
+        // Own picture: its corners are the rectangle; LiCida's target: the dots' rectangle → the whole sheet.
+        val left: Float; val top: Float; val width: Float; val height: Float
+        if (own) { left = rect[0]; top = rect[1]; width = rect[2] - rect[0]; height = rect[5] - rect[1] }
+        else {
+            val sx = (rect[2] - rect[0]) / (Target.DOTS[2] - Target.DOTS[0])
+            val sy = (rect[5] - rect[1]) / (Target.DOTS[5] - Target.DOTS[1])
+            left = rect[0] - Target.DOTS[0] * sx; top = rect[1] - Target.DOTS[1] * sy
+            width = Target.WIDTH * sx; height = Target.HEIGHT * sy
+        }
+        drawImage(image, dstOffset = androidx.compose.ui.unit.IntOffset(left.toInt(), top.toInt()),
+            dstSize = androidx.compose.ui.unit.IntSize(width.toInt().coerceAtLeast(1), height.toInt().coerceAtLeast(1)), alpha = alpha)
+    }
+}
+
+@Composable
+private fun CheckControls(speed: Float, onSpeed: (Float) -> Unit, modifier: Modifier, onDone: () -> Unit) {
+    Column(modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.navigationBars).padding(12.dp).clip(RoundedCornerShape(18.dp))
+        .background(Ink.card).padding(16.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            BasicText("Ausrichtung prüfen", style = style(17f, 600), modifier = Modifier.weight(1f))
+            BasicText("Fertig", style = style(17f, 600, Ink.yellow), modifier = Modifier.clickable(role = Role.Button, onClick = onDone).padding(6.dp))
+        }
+        BasicText("Liegt alles übereinander, flimmert kaum etwas. Sieht es doppelt aus: Zielbild glätten, Licht prüfen und erneut ausrichten.",
+            style = style(13f, 400, Ink.secondary), modifier = Modifier.padding(top = 4.dp, bottom = 6.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            BasicText("Tempo", style = style(15f), modifier = Modifier.widthIn(min = 56.dp))
+            IosSlider(speed, onSpeed, "Tempo des Überblendens", Modifier.weight(1f))
+        }
+    }
+}
+
+/** An iOS alert with two choices. */
+@Composable
+private fun AskDialog(title: String, body: String, yes: String, onYes: () -> Unit, onNo: () -> Unit) {
+    androidx.compose.ui.window.Dialog(onDismissRequest = onNo) {
+        Column(Modifier.widthIn(max = 280.dp).clip(RoundedCornerShape(14.dp)).background(Color(0xF22C2C2E)), horizontalAlignment = Alignment.CenterHorizontally) {
+            BasicText(title, style = style(17f, 600).copy(textAlign = TextAlign.Center), modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 18.dp))
+            BasicText(body, style = style(13f).copy(textAlign = TextAlign.Center), modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 16.dp))
+            Box(Modifier.fillMaxWidth().height(0.5.dp).background(Ink.separator))
+            Row(Modifier.fillMaxWidth()) {
+                BasicText("Später", style = style(17f, 400, Ink.yellow).copy(textAlign = TextAlign.Center),
+                    modifier = Modifier.weight(1f).clickable(role = Role.Button, onClick = onNo).padding(vertical = 12.dp))
+                Box(Modifier.size(0.5.dp, 44.dp).background(Ink.separator))
+                BasicText(yes, style = style(17f, 600, Ink.yellow).copy(textAlign = TextAlign.Center),
+                    modifier = Modifier.weight(1f).clickable(role = Role.Button, onClick = onYes).padding(vertical = 12.dp))
             }
         }
     }

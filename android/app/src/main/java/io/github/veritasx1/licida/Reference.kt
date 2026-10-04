@@ -61,6 +61,19 @@ object Reference {
         runCatching { ImageDecoder.decodeBitmap(ImageDecoder.createSource(file)) { decoder, _, _ -> decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE } }.getOrNull()
     }
 
+    /** One's own target picture (card 7): kept privately as ziel.jpg. */
+    fun ownTarget(context: Context) = File(context.filesDir, "ziel.jpg")
+
+    fun keepOwnTarget(context: Context, uri: Uri): Bitmap? = runCatching {
+        val bitmap = ImageDecoder.decodeBitmap(ImageDecoder.createSource(context.contentResolver, uri)) { decoder, info, _ ->
+            decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
+            val longest = maxOf(info.size.width, info.size.height)
+            if (longest > 1600) decoder.setTargetSampleSize(Math.ceil(longest / 1600.0).toInt())
+        }
+        ownTarget(context).outputStream().use { bitmap.compress(Bitmap.CompressFormat.JPEG, 92, it) }
+        bitmap
+    }.getOrNull()
+
     fun forget(context: Context) {
         file(context).delete()
     }
@@ -152,6 +165,24 @@ class Studio(context: Context) {
     var slots: List<Slot>
         get() = (0 until 3).map { Slot.decode(prefs.getString("slot$it", null), it) }
         set(value) { prefs.edit().apply { value.forEachIndexed { index, slot -> putString("slot$index", slot.encode()) } }.apply() }
+
+    /** The camera's straightening (cards 6/7), a saved one to bring back, and which target AUTO looks for. */
+    var correction: Correction
+        get() = Correction.decode(prefs.getString("correction", null))
+        set(value) { prefs.edit().putString("correction", value.encode()).apply() }
+
+    var savedCorrection: Correction?
+        get() = prefs.getString("savedCorrection", null)?.let { Correction.decode(it) }
+        set(value) { prefs.edit().putString("savedCorrection", value?.encode()).apply() }
+
+    /** null: LiCida's printed target; else the width/height of one's own target picture (kept as ziel.jpg). */
+    var ownTargetAspect: Float?
+        get() = prefs.getFloat("ownTarget", 0f).takeIf { it > 0f }
+        set(value) { prefs.edit().putFloat("ownTarget", value ?: 0f).apply() }
+
+    var helperGhost: Boolean
+        get() = prefs.getBoolean("helperGhost", false)
+        set(value) { prefs.edit().putBoolean("helperGhost", value).apply() }
 
     /** The gesture hint shows until the user has moved a reference once. */
     var hintSeen: Boolean

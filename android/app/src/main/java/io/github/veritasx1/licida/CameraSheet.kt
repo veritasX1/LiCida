@@ -31,13 +31,18 @@ import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
+import androidx.compose.ui.input.pointer.pointerInput
+import kotlinx.coroutines.withTimeoutOrNull
 
 /** The camera controls (card 5, handbook p. 13–15) as an iOS sheet at half height: the live picture
  *  above stays visible – and while it is open, two fingers there move and zoom the camera picture. */
 @Composable
 fun CameraSheet(options: List<CameraOption>, chosen: CameraOption?, fill: Boolean, ghost: Boolean, hasReference: Boolean,
                 onChoose: (CameraOption) -> Unit, onFill: (Boolean) -> Unit, onGhost: (Boolean) -> Unit, onReset: () -> Unit,
-                onDone: () -> Unit, modifier: Modifier = Modifier) {
+                onDone: () -> Unit, modifier: Modifier = Modifier, correcting: CorrectionControls? = null) {
     Column(modifier.fillMaxWidth().clip(RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp)).background(Color(0xF21C1C1E))
         .windowInsetsPadding(WindowInsets.navigationBars)) {
         Box(Modifier.fillMaxWidth().padding(top = 6.dp), contentAlignment = Alignment.Center) {
@@ -81,11 +86,144 @@ fun CameraSheet(options: List<CameraOption>, chosen: CameraOption?, fill: Boolea
                 BasicText("Kamerabild zurücksetzen", style = style(17f, 400, Ink.yellow),
                     modifier = Modifier.fillMaxWidth().clickable(role = Role.Button, onClick = onReset).padding(horizontal = 16.dp, vertical = 12.dp))
             }
+            correcting?.let { CorrectionSections(it) }
             BasicText("Mit zwei Fingern oben im Bild zoomst und verschiebst du das Kamerabild. Besser: die Kamera näher oder weiter weg stellen – "
                 + "das hält das Bild scharf. „Ganzes Bild“ zeigt das ganze Blickfeld der Kamera und erlaubt die größte Zeichnung.",
                 style = style(13f, 400, Ink.secondary), modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp))
         }
     }
+}
+
+/** Everything the correction sections show and do (cards 6/7). */
+class CorrectionControls(
+    val correction: Correction, val flipH: Boolean, val flipV: Boolean, val helperGhost: Boolean, val ownTarget: Boolean,
+    val hasSaved: Boolean, val busy: String?,
+    val onCorrection: (Correction) -> Unit, val onCorrectionDone: () -> Unit, val onFlip: (horizontal: Boolean) -> Unit,
+    val onHelperGhost: (Boolean) -> Unit, val onResetCorrection: () -> Unit,
+    val onTargetKind: (own: Boolean) -> Unit, val onPickOwnTarget: () -> Unit, val onPrintTarget: () -> Unit, val onSaveTarget: () -> Unit,
+    val onAuto: () -> Unit, val onSaveSetting: () -> Unit, val onRestoreSetting: () -> Unit,
+)
+
+@Composable
+private fun CorrectionSections(c: CorrectionControls) {
+    Section("KORREKTUR VON HAND")
+    Group {
+        val tilt = c.correction.tilt
+        SliderRow("Neigung", "${tilt.toInt()}°", (tilt + Correction.MAX_TILT) / (2 * Correction.MAX_TILT), "Neigung der Kamera",
+            { c.onCorrection(c.correction.copy(tilt = (it * 2 - 1) * Correction.MAX_TILT)) }, c.onCorrectionDone)
+        Separator()
+        SliderRow("Höhe", "%.1f".format(c.correction.height).replace('.', ','), (c.correction.height - 1f) / 9f, "Höhe über der Zeichenfläche",
+            { c.onCorrection(c.correction.copy(height = 1f + it * 9f)) }, c.onCorrectionDone)
+        Separator()
+        Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+            BasicText("Spiegeln", style = style(17f), modifier = Modifier.weight(1f))
+            Toggle("↔", "Waagerecht spiegeln", c.flipH) { c.onFlip(true) }
+            Spacer(Modifier.width(8.dp))
+            Toggle("↕", "Senkrecht spiegeln", c.flipV) { c.onFlip(false) }
+        }
+        Separator()
+        StretchRow("Breite", c.correction.stretchX, { c.onCorrection(c.correction.copy(stretchX = it)) }, c.onCorrectionDone)
+        Separator()
+        StretchRow("Länge", c.correction.stretchY, { c.onCorrection(c.correction.copy(stretchY = it)) }, c.onCorrectionDone)
+        Separator()
+        Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+            BasicText("Hilfsraster einblenden", style = style(17f), modifier = Modifier.weight(1f))
+            IosSwitch(c.helperGhost, description = "Hilfsraster einblenden", onChange = c.onHelperGhost)
+        }
+        Separator()
+        BasicText("Korrektur zurücksetzen", style = style(17f, 400, Ink.yellow),
+            modifier = Modifier.fillMaxWidth().clickable(role = Role.Button, onClick = c.onResetCorrection).padding(horizontal = 16.dp, vertical = 12.dp))
+    }
+    BasicText("Leg das gedruckte Zielbild auf und blende das Hilfsraster ein: Neigung und Strecken so wählen, dass sich beide decken.",
+        style = style(13f, 400, Ink.secondary), modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 6.dp))
+
+    Section("AUTOMATISCH")
+    Group {
+        CheckRow("LiCida-Zielbild", "Ausdrucken oder auf einem zweiten Bildschirm zeigen", !c.ownTarget) { c.onTargetKind(false) }
+        Separator()
+        CheckRow("Eigenes Bild", "Etwas Flaches mit klaren Kanten, z. B. eine Zeitschrift", c.ownTarget) { c.onPickOwnTarget() }
+        Separator()
+        ActionRow("Zielbild drucken …", onClick = c.onPrintTarget)
+        Separator()
+        ActionRow("Zielbild in Fotos sichern", onClick = c.onSaveTarget)
+    }
+    BasicText(c.busy ?: "Automatisch ausrichten", style = style(17f, 600, androidx.compose.ui.graphics.Color.Black).copy(textAlign = TextAlign.Center),
+        modifier = Modifier.padding(top = 12.dp).fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(if (c.busy == null) Ink.yellow else Ink.secondary)
+            .clickable(enabled = c.busy == null, role = Role.Button, onClick = c.onAuto).padding(vertical = 14.dp))
+    BasicText("Zielbild flach in den Blick der Kamera legen, Arm aus dem Bild – LiCida richtet das Kamerabild so aus, als schaue die Kamera senkrecht von oben.",
+        style = style(13f, 400, Ink.secondary), modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 6.dp))
+    Section("EINSTELLUNG")
+    Group {
+        ActionRow("Diese Ausrichtung sichern", onClick = c.onSaveSetting)
+        Separator()
+        ActionRow("Gesicherte wiederherstellen", enabled = c.hasSaved, onClick = c.onRestoreSetting)
+    }
+}
+
+@Composable
+private fun SliderRow(label: String, value: String, fraction: Float, description: String, onChange: (Float) -> Unit, onDone: () -> Unit) {
+    Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 2.dp, bottom = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+        BasicText(label, style = style(17f), modifier = Modifier.width(82.dp))
+        IosSlider(fraction.coerceIn(0f, 1f), onChange, description, Modifier.weight(1f), onRelease = onDone)
+        BasicText(value, style = style(15f, 500, Ink.secondary, tabular = true).copy(textAlign = TextAlign.End), modifier = Modifier.width(44.dp))
+    }
+}
+
+@Composable
+private fun Toggle(symbol: String, description: String, on: Boolean, onClick: () -> Unit) {
+    BasicText(symbol, style = style(18f, 600, if (on) androidx.compose.ui.graphics.Color.Black else Ink.white).copy(textAlign = TextAlign.Center),
+        modifier = Modifier.size(width = 52.dp, height = 34.dp).clip(RoundedCornerShape(8.dp)).background(if (on) Ink.yellow else Color(0x3D767680))
+            .clickable(role = Role.Switch, onClick = onClick).semantics { contentDescription = description; selected = on }.padding(top = 5.dp))
+}
+
+/** Stretch with − and +: slow at first, faster the longer they are held (handbook p. 18); 1:1 resets. */
+@Composable
+private fun StretchRow(label: String, value: Float, onChange: (Float) -> Unit, onDone: () -> Unit) {
+    val current = androidx.compose.runtime.rememberUpdatedState(value)
+    Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+        BasicText(label, style = style(17f), modifier = Modifier.weight(1f))
+        BasicText("${(value * 100).toInt()} %", style = style(15f, 500, Ink.secondary, tabular = true), modifier = Modifier.padding(end = 10.dp))
+        for ((sign, text) in listOf(-1 to "−", 1 to "+")) {
+            BasicText(text, style = style(20f, 500).copy(textAlign = TextAlign.Center), modifier = Modifier.padding(start = 6.dp).size(width = 44.dp, height = 34.dp)
+                .clip(RoundedCornerShape(8.dp)).background(Color(0x3D767680))
+                .semantics { contentDescription = "$label ${if (sign < 0) "verringern" else "vergrößern"}" }
+                .pointerInput(Unit) {
+                    awaitEachGesture {
+                        awaitFirstDown()
+                        val started = System.currentTimeMillis()
+                        onChange((current.value + sign * Correction.stretchStep(0)).coerceIn(0.5f, 2f))
+                        while (true) {
+                            val released = withTimeoutOrNull(60) { waitForUpOrCancellation() }
+                            if (released != null) break
+                            if (System.currentTimeMillis() - started > 350)
+                                onChange((current.value + sign * Correction.stretchStep(System.currentTimeMillis() - started)).coerceIn(0.5f, 2f))
+                        }
+                        onDone()
+                    }
+                }.padding(top = 3.dp))
+        }
+        BasicText("1:1", style = style(15f, 600, Ink.yellow).copy(textAlign = TextAlign.Center),
+            modifier = Modifier.padding(start = 6.dp).size(width = 40.dp, height = 34.dp).clip(RoundedCornerShape(8.dp))
+                .clickable(role = Role.Button, onClickLabel = "$label zurücksetzen") { onChange(1f); onDone() }.padding(top = 7.dp))
+    }
+}
+
+@Composable
+private fun CheckRow(label: String, detail: String, checked: Boolean, onClick: () -> Unit) {
+    Row(Modifier.fillMaxWidth().clickable(role = Role.Button, onClick = onClick).semantics { selected = checked }
+        .padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            BasicText(label, style = style(17f))
+            BasicText(detail, style = style(13f, 400, Ink.secondary))
+        }
+        if (checked) SymbolIcon(Symbol.Checkmark, Ink.yellow, size = 20.dp, weight = 2.2f)
+    }
+}
+
+@Composable
+private fun ActionRow(label: String, enabled: Boolean = true, onClick: () -> Unit) {
+    BasicText(label, style = style(17f, 400, if (enabled) Ink.yellow else Ink.secondary),
+        modifier = Modifier.fillMaxWidth().clickable(enabled = enabled, role = Role.Button, onClick = onClick).padding(horizontal = 16.dp, vertical = 12.dp))
 }
 
 @Composable
