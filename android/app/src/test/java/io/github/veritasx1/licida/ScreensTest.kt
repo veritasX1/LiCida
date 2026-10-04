@@ -14,6 +14,8 @@ import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.test.core.app.ApplicationProvider
 import com.github.takahirom.roborazzi.captureRoboImage
 import org.junit.Assert.assertEquals
@@ -117,6 +119,8 @@ class ScreensTest {
         compose.onNodeWithContentDescription("Werkzeuge und Filter").performClick()
         compose.waitUntil(5000) { runCatching { compose.onNodeWithContentDescription("Graustufen: Ohne Farbe").assertExists() }.isSuccess }
         compose.onNodeWithContentDescription("Graustufen: Ohne Farbe").performClick()
+        compose.onNode(androidx.compose.ui.test.hasScrollToIndexAction())
+            .performScrollToNode(androidx.compose.ui.test.hasContentDescription("Tontrennung: 2 bis 16 Grautöne"))
         compose.onNodeWithContentDescription("Tontrennung: 2 bis 16 Grautöne").performClick()
         compose.waitForIdle()
         assertEquals(listOf("Graustufen", "Tontrennung (4)"), studio.edits.active.map { it.label })
@@ -172,5 +176,24 @@ class ScreensTest {
         shot("9-farbebenen")
         compose.onNodeWithContentDescription("Alle Farben ein").performClick()
         compose.onAllNodesWithContentDescription("Farbebene aus").assertCountEquals(0)
+    }
+
+    @Test
+    fun colourEffects() {
+        val studio = Studio(context).apply { hintSeen = true; edits = Edits() }
+        compose.setContent { LiCidaApp(studio, sample(), cameraAllowed = false, onAskCamera = {}, onDrawMode = {}) }
+        compose.onNodeWithContentDescription("Werkzeuge und Filter").performClick()
+        compose.waitUntil(5000) { runCatching { compose.onNodeWithContentDescription("Farbeffekte: Helligkeit, Kontrast, Sättigung, Farbton").assertExists() }.isSuccess }
+        compose.onNodeWithContentDescription("Farbeffekte: Helligkeit, Kontrast, Sättigung, Farbton").performClick()
+        compose.onNodeWithContentDescription("Zeichnen").assertDoesNotExist()      // everything else waits
+        compose.onNodeWithContentDescription("Sättigung").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.SetProgress) { it(0.9f) }
+        compose.onNodeWithContentDescription("Farbton").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.SetProgress) { it(0.8f) }
+        shot("10-farbeffekte")
+        compose.onNodeWithText("Übernehmen").performClick()
+        compose.waitForIdle()
+        val step = studio.edits.active.single()
+        assertEquals(Filter.ColourEffects, step.filter)
+        assertEquals(1.8f, step.effects!!.saturation, 0.01f)
+        compose.onNodeWithContentDescription("Zeichnen").assertExists()
     }
 }

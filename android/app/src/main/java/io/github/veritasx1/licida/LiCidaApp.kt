@@ -112,6 +112,9 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
     var hiddenLayers by remember(edits) { mutableStateOf<Set<Int>>(emptySet()) }
     var paletteEditor by remember { mutableStateOf(false) }
     var paletteBackToSheet by remember { mutableStateOf(false) }
+    // The colour sliders (card 4): live as a colour matrix on the picture, a step when taken over.
+    var effectsSheet by remember { mutableStateOf(false) }
+    var effects by remember { mutableStateOf(Effects()) }
     var paletteSource by remember { mutableStateOf<Bitmap?>(null) }
     var wheelOf by remember { mutableStateOf<Palette?>(null) }
     var importInto by remember { mutableStateOf<((Palette) -> Unit)?>(null) }
@@ -227,6 +230,7 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
     LaunchedEffect(mode) { onDrawMode(mode == Mode.Draw) }
     BackHandler(enabled = cameraSheet) { cameraSheet = false }
     BackHandler(enabled = filterSheet) { filterSheet = false }
+    BackHandler(enabled = effectsSheet) { effectsSheet = false; effects = Effects() }
     BackHandler(enabled = paletteEditor) { paletteEditor = false; filterSheet = paletteBackToSheet }
     BackHandler(enabled = mode == Mode.Draw) { mode = Mode.Setup; view = DrawView(); chrome = true }
 
@@ -256,7 +260,10 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
             }
             (shown ?: reference)?.let { bitmap ->
                 val image = remember(bitmap) { bitmap.asImageBitmap() }
-                Image(image, contentDescription = "Vorlage", contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize().graphicsLayer {
+                Image(image, contentDescription = "Vorlage", contentScale = ContentScale.Fit,
+                    colorFilter = if (effectsSheet && !effects.isNeutral) androidx.compose.ui.graphics.ColorFilter.colorMatrix(
+                        androidx.compose.ui.graphics.ColorMatrix(effects.matrix())) else null,
+                    modifier = Modifier.fillMaxSize().graphicsLayer {
                     scaleX = placement.scale; scaleY = placement.scale; rotationZ = placement.rotation
                     translationX = placement.offset.x; translationY = placement.offset.y
                     alpha = shownOpacity
@@ -346,7 +353,8 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
                 },
                 onDone = { filterSheet = false },
                 modifier = Modifier.align(Alignment.BottomCenter).fillMaxHeight(0.52f),
-                onPalette = ::openPalette)
+                onPalette = ::openPalette,
+                onEffects = { effects = Effects(); effectsSheet = true; filterSheet = false })
             mode == Mode.Setup && cameraSheet -> CameraSheet(cameraOptions, chosenCamera, fill, ghost, reference != null,
                 onChoose = { option ->
                     if (option.key != chosenCamera?.key) {
@@ -382,6 +390,7 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
                     onAuto = ::runAuto,
                     onSaveSetting = { savedCorrection = correction; studio.savedCorrection = correction; say("Ausrichtung gesichert") },
                     onRestoreSetting = { savedCorrection?.let { setCorrection(it); say("Ausrichtung wiederhergestellt") } }))
+            effectsSheet -> Unit   // while the colour sliders are open, everything else waits (handbook p. 10)
             mode == Mode.Setup -> SetupChrome(reference, opacity, hintSeen, cameraAllowed,
                 onOpacity = { opacity = it }, onOpacityDone = { studio.opacity = opacity },
                 onPhotos = ::pickPhoto, onFiles = ::pickFile, onCamera = ::takePhoto, onAskCamera = onAskCamera,
@@ -404,11 +413,14 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
             }
         }
 
-        if (lastPalette != null && !filterSheet && !cameraSheet && !paletteEditor && (mode == Mode.Setup || chrome)) {
+        if (lastPalette != null && !filterSheet && !cameraSheet && !paletteEditor && !effectsSheet && (mode == Mode.Setup || chrome)) {
             PaletteLayers(lastPalette, hiddenLayers, { hiddenLayers = it }, onEdit = ::openPalette,
                 modifier = Modifier.align(Alignment.BottomCenter).windowInsetsPadding(WindowInsets.navigationBars)
                     .padding(start = 16.dp, end = 16.dp, bottom = if (mode == Mode.Draw) 84.dp else 176.dp))
         }
+        if (effectsSheet) EffectsSheet(effects, { effects = it }, onCancel = { effectsSheet = false; effects = Effects(); filterSheet = true },
+            onApply = { edit(edits.add(Step.effects(effects))); effectsSheet = false; effects = Effects() },
+            modifier = Modifier.align(Alignment.BottomCenter))
         if (paletteEditor) paletteSource?.let { source ->
             PaletteEditor(source, lastPalette,
                 onImport = { count, into -> importCount = count; importInto = into; importer.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },

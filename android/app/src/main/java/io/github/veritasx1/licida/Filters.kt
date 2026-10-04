@@ -16,6 +16,8 @@ class Pixels(val width: Int, val height: Int, val argb: IntArray = IntArray(widt
  *  stack; some take a value (Tontrennung: shades 2–16). The ids are stored in the history and in the
  *  three custom slots – never rename them. */
 enum class Filter(val id: String, val label: String, val hint: String, val takesValue: Boolean = false, val defaultValue: Int = 0) {
+    /** Opens the four colour sliders (card 4); as a step it carries their values. */
+    ColourEffects("effects", "Farbeffekte", "Helligkeit, Kontrast, Sättigung, Farbton"),
     /** Opens the palette editor (card 11); as a step it carries its palette. */
     ColourPalette("palette", "Farbpalette", "Wenige Farben, einzeln ein- und ausblendbar"),
     Colors64("colors64", "64 Farben", "Auf 64 Farben reduziert"),
@@ -55,6 +57,7 @@ object Filters {
 
     /** One step; `previous` is the filter applied right before (Schwellwert twice in a row inverts). */
     fun apply(image: Pixels, filter: Filter, value: Int = filter.defaultValue, previous: Filter? = null): Pixels = when (filter) {
+        Filter.ColourEffects -> Effects(saturation = 1.6f, contrast = 1.15f).apply(image)  // preview; the real step carries its values
         Filter.ColourPalette -> Palette.find(image, Palette.DEFAULT_COLOURS).render(image)  // preview; the real step carries its palette
         Filter.Colors64 -> map(image) { c -> argb(a(c), q(r(c), 4), q(g(c), 4), q(b(c), 4)) }
         Filter.Sepia -> map(image) { c ->
@@ -216,5 +219,47 @@ object Filters {
         var y = 0.0
         while (y <= h) { line(out, w, h, 0, y.roundToInt(), w - 1, y.roundToInt(), thickness, BLACK); y += cell }
         return Pixels(w, h, out)
+    }
+}
+
+/** The four colour sliders of the setup (card 4, handbook p. 10): brightness −1…1, contrast 0.5…2, saturation 0…2,
+ *  hue −180…180°. One 4×5 colour matrix (as Android's ColorMatrix): shown live by the graphics chip while sliding,
+ *  computed on the pixels when taken over. */
+data class Effects(val brightness: Float = 0f, val contrast: Float = 1f, val saturation: Float = 1f, val hue: Float = 0f) {
+    val isNeutral get() = brightness == 0f && contrast == 1f && saturation == 1f && hue == 0f
+
+    fun matrix(): FloatArray {
+        // Saturation (luminance weights Rec. 709), then hue rotation (about the grey axis), then contrast and brightness.
+        val lr = 0.2126f; val lg = 0.7152f; val lb = 0.0722f
+        val s = saturation
+        val sat = floatArrayOf(lr * (1 - s) + s, lg * (1 - s), lb * (1 - s), lr * (1 - s), lg * (1 - s) + s, lb * (1 - s), lr * (1 - s), lg * (1 - s), lb * (1 - s) + s)
+        val a = Math.toRadians(hue.toDouble())
+        val c = kotlin.math.cos(a).toFloat(); val n = kotlin.math.sin(a).toFloat()
+        val rot = floatArrayOf(
+            lr + c * (1 - lr) + n * (-lr), lg + c * (-lg) + n * (-lg), lb + c * (-lb) + n * (1 - lb),
+            lr + c * (-lr) + n * 0.143f, lg + c * (1 - lg) + n * 0.140f, lb + c * (-lb) + n * (-0.283f),
+            lr + c * (-lr) + n * (-(1 - lr)), lg + c * (-lg) + n * lg, lb + c * (1 - lb) + n * lb)
+        val m = FloatArray(9) { i -> (0 until 3).sumOf { k -> (rot[(i / 3) * 3 + k] * sat[k * 3 + i % 3]).toDouble() }.toFloat() }
+        val offset = 128f * (1 - contrast) + brightness * 100f
+        return floatArrayOf(m[0] * contrast, m[1] * contrast, m[2] * contrast, 0f, offset,
+            m[3] * contrast, m[4] * contrast, m[5] * contrast, 0f, offset,
+            m[6] * contrast, m[7] * contrast, m[8] * contrast, 0f, offset,
+            0f, 0f, 0f, 1f, 0f)
+    }
+
+    fun apply(image: Pixels): Pixels {
+        val m = matrix()
+        return Pixels(image.width, image.height, IntArray(image.argb.size) { i ->
+            val p = image.argb[i]
+            val r = (p shr 16) and 255; val g = (p shr 8) and 255; val b = p and 255
+            Filters.argb(p ushr 24, (m[0] * r + m[1] * g + m[2] * b + m[4]).roundToInt(), (m[5] * r + m[6] * g + m[7] * b + m[9]).roundToInt(),
+                (m[10] * r + m[11] * g + m[12] * b + m[14]).roundToInt())
+        })
+    }
+
+    fun encode() = "$brightness;$contrast;$saturation;$hue"
+
+    companion object {
+        fun decode(text: String?): Effects? = text?.split(";")?.mapNotNull { it.toFloatOrNull() }?.takeIf { it.size == 4 }?.let { Effects(it[0], it[1], it[2], it[3]) }
     }
 }
