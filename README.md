@@ -21,12 +21,29 @@ eingebunden.
 
 Copyright (C) 2026 Olaf Winkler
 
-## Stand
+## Funktionen (Version 0.1b)
 
-Erste Version: Einrichten- und Zeichenmodus, Vorlage aus Fotos/Dateien/Kamera, mit zwei Fingern
-verschieben, zoomen, drehen, 90°-Drehen, Deckkraft, Vorlage in Fotos sichern; im Zeichenmodus Kamera und
-Vorlage gekoppelt (bis 30×, Doppeltipp 3×), Tippen blendet die Bedienung aus, Scharfstellen,
-Belichtung per Zwei-Finger-Tipp sperren, Drehung gesperrt, Bildschirm bleibt an.
+- **Einrichten:** Vorlage aus Fotos, Dateien oder Kamera; mit zwei Fingern verschieben, zoomen, drehen;
+  Deckkraft, 90°-Drehen, Vorlage in Fotos sichern.
+- **Kamera:** Rück-, Ultraweitwinkel-, Front- (mit Spiegelaufsatz) und USB-Kamera; Füllen oder ganzes Bild;
+  Korrektur von Hand (Neigung, Höhe, Strecken, Spiegeln, Hilfsraster) und automatisch mit Zielbild.
+- **Werkzeugkasten:** 17 stapelbare Filter mit Vorschau (Graustufen, Tontrennung, Lasurwerte, Comic, Kanten,
+  Raster …), Verlauf, drei eigene Filterfolgen, Farbpalette mit Farbebenen, Farbeffekte.
+- **Zeichnen:** Kamera und Vorlage gekoppelt (bis 30×), Scharfstellen, Belichtung sperren, Taschenlampe,
+  geteilte Ansicht, Flimmern, Zeitraffer-Video, Bild der Zeichenfläche sichern oder teilen.
+- **Sitzungen:** sichern und später weiterzeichnen – LiCida findet das Blatt per Bildabgleich wieder.
+- **Einstellungen:** Hinweise, Kamerabild, Zeitraffer, Tasten für Bluetooth-Tastatur, Controller und
+  Selfie-Auslöser, Projektor-Modus.
+- **Hilfe:** Rundgang beim ersten Start, deutsche Anleitung in der App und als PDF.
+
+„Beta“, weil LiCida bisher nur auf einem Gerät (moto g84) getestet ist. Die automatische Kamerakorrektur
+wartet noch auf den Test mit gedrucktem Zielbild.
+
+## Laden
+
+- Homepage: https://licida.lisoft.goip.de
+- F-Droid-Paketquelle: `https://volkskamera.goip.de/fdroid/repo`
+- APK: unter „Releases“ auf GitHub
 
 ## Bauen
 

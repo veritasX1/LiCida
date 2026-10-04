@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- A pencil over a sheet seen through a lens – placeholder in the spirit of the app. 108 dp canvas, 66 dp safe zone. -->
+<!-- LiCida: a sheet, the faint line of the reference and the pencil tracing it (same drawing as homepage/licida.svg).
+     108 dp canvas; everything inside the 66 dp safe zone (21–87), so no mask cuts it. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
-    <path android:strokeColor="#FFFFFFFF" android:strokeWidth="3.2" android:fillColor="#00000000"
-        android:pathData="M54,54m-22,0a22,22 0 1,0 44,0a22,22 0 1,0 -44,0" />
-    <path android:fillColor="#FFFFD60A" android:pathData="M45,66 L47,58 L63,42 L69,48 L53,64 Z" />
-    <path android:fillColor="#FFFFFFFF" android:pathData="M45,66 L47,58 L53,64 Z" />
+    <path android:fillColor="#FFF5F5F7" android:pathData="M32.5,25 L67.5,25 Q71,25 71,28.5 L71,77.5 Q71,81 67.5,81 L32.5,81 Q29,81 29,77.5 L29,28.5 Q29,25 32.5,25 Z" />
+    <path android:strokeColor="#FFC7C7CC" android:strokeWidth="2.6" android:strokeLineCap="round" android:fillColor="#00000000"
+        android:pathData="M35,64 C41,46 50,45 54,56 C57,64 61,71 66,70" />
+    <path android:strokeColor="#FF1C1C1E" android:strokeWidth="2.8" android:strokeLineCap="round" android:fillColor="#00000000"
+        android:pathData="M35,64 C41,46 50,45 54,56" />
+    <path android:fillColor="#FFFFD60A" android:pathData="M62.42,53.52 L57.48,48.58 L75.83,30.23 L80.77,35.17 Z" />
+    <path android:fillColor="#FFFF6482" android:pathData="M80.77,35.17 L75.83,30.23 L78.66,27.4 L83.6,32.34 Z" />
+    <path android:fillColor="#FFF2D3A7" android:pathData="M54,56 L57.48,48.58 L62.42,53.52 Z" />
+    <path android:fillColor="#FF1C1C1E" android:pathData="M54,56 L55.88,53.35 L57.65,55.11 Z" />
 </vector>
