@@ -17,6 +17,22 @@ import java.io.File
  *  there when LiCida opens again. "Sichern" writes the composed picture to Fotos – only then, and
  *  only because the user asked. */
 object Reference {
+    /** Android pictures ↔ the filters' plain pixels. */
+    fun pixels(bitmap: Bitmap): Pixels {
+        val soft = if (bitmap.config == Bitmap.Config.ARGB_8888) bitmap else bitmap.copy(Bitmap.Config.ARGB_8888, false)
+        return Pixels(soft.width, soft.height).also { soft.getPixels(it.argb, 0, soft.width, 0, 0, soft.width, soft.height) }
+    }
+
+    fun bitmap(pixels: Pixels): Bitmap = Bitmap.createBitmap(pixels.argb, pixels.width, pixels.height, Bitmap.Config.ARGB_8888)
+
+    /** A smaller copy (longest side `side`) – the filters run on 2048 px, the previews on a thumbnail. */
+    fun scaled(bitmap: Bitmap, side: Int): Bitmap {
+        val longest = maxOf(bitmap.width, bitmap.height)
+        if (longest <= side) return bitmap
+        val factor = side.toFloat() / longest
+        return Bitmap.createScaledBitmap(bitmap, maxOf(1, (bitmap.width * factor).toInt()), maxOf(1, (bitmap.height * factor).toInt()), true)
+    }
+
     private const val FILE = "vorlage.jpg"
     private const val MAX_SIDE = 3200   // sharp enough to draw from, small enough for any phone
 
@@ -127,6 +143,15 @@ class Studio(context: Context) {
     var ghost: Boolean
         get() = prefs.getBoolean("ghost", true)
         set(value) { prefs.edit().putBoolean("ghost", value).apply() }
+
+    /** The filter history of the current reference (card 10) and the three own sequences. */
+    var edits: Edits
+        get() = Edits.decode(prefs.getString("edits", null))
+        set(value) { prefs.edit().putString("edits", value.encode()).apply() }
+
+    var slots: List<Slot>
+        get() = (0 until 3).map { Slot.decode(prefs.getString("slot$it", null), it) }
+        set(value) { prefs.edit().apply { value.forEachIndexed { index, slot -> putString("slot$index", slot.encode()) } }.apply() }
 
     /** The gesture hint shows until the user has moved a reference once. */
     var hintSeen: Boolean
