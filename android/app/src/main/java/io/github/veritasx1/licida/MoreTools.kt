@@ -44,7 +44,8 @@ import kotlin.math.roundToInt
 
 /** The draw mode's further tools (card 12, handbook p. 32) – what is on stays on until switched off. */
 data class Tools(val torch: Boolean = false, val split: Boolean = false, val splitAt: Float = 0.5f,
-                 val flicker: Boolean = false, val flickerSpeed: Float = 0.4f, val sessionButton: Boolean = true)
+                 val flicker: Boolean = false, val flickerSpeed: Float = 0.4f, val sessionButton: Boolean = true,
+                 val recordButton: Boolean = false)
 
 /** The further tools as an iOS sheet (handbook p. 32: slides up, a tap elsewhere closes it). */
 @Composable
@@ -131,4 +132,66 @@ fun captureScreen(activity: Activity, onDone: (Bitmap?) -> Unit) {
     runCatching {
         PixelCopy.request(activity.window, bitmap, { result -> onDone(if (result == PixelCopy.SUCCESS) bitmap else null) }, Handler(Looper.getMainLooper()))
     }.onFailure { onDone(null) }
+}
+
+/** The time-lapse part of the tools sheet (card 13): the record button on/off, the playback speed and quality. */
+@Composable
+fun TimelapseRows(tools: Tools, settings: TimelapseSettings, onTools: (Tools) -> Unit, onSettings: (TimelapseSettings) -> Unit) {
+    Line()
+    SwitchRow("Zeitraffer", "Aufnahmeknopf oben rechts – das Video kommt in Fotos", tools.recordButton, true) { onTools(tools.copy(recordButton = it)) }
+    if (tools.recordButton) {
+        val speeds = TimelapseSettings.SPEEDS
+        val index = speeds.indexOf(settings.speed).let { if (it < 0) speeds.indexOf(60) else it }
+        Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+            BasicText("Tempo", style = style(15f), modifier = Modifier.width(64.dp))
+            IosSlider(index / (speeds.size - 1f), { onSettings(settings.copy(speed = speeds[(it * (speeds.size - 1)).roundToInt()])) },
+                "Wiedergabetempo des Zeitraffers", Modifier.weight(1f))
+            BasicText("${settings.speed}×", style = style(15f, 600, Ink.secondary, tabular = true).copy(textAlign = TextAlign.End), modifier = Modifier.width(52.dp))
+        }
+        BasicText(if (settings.choppy) "Unter 5× ruckelt das Video – für eine Aufnahme in Echtzeit lieber Androids Bildschirmaufnahme nehmen."
+            else "${settings.speed}×: eine Stunde Zeichnen wird ${formatFilm(3600.0 / settings.speed)} Video.",
+            style = style(13f, 400, if (settings.choppy) Ink.yellow else Ink.secondary), modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 6.dp))
+        Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+            BasicText("Qualität", style = style(15f), modifier = Modifier.weight(1f))
+            Segmented(TimelapseSettings.QUALITIES, settings.quality) { onSettings(settings.copy(quality = it)) }
+        }
+    }
+}
+
+fun formatFilm(seconds: Double): String = when {
+    seconds >= 60 -> "${(seconds / 60).roundToInt()} Minute${if ((seconds / 60).roundToInt() == 1) "" else "n"}"
+    else -> "${seconds.roundToInt()} Sekunden"
+}
+
+/** The record button like Camera's: a white ring; red dot to start, red square while recording. */
+@Composable
+fun RecordButton(recording: Boolean, filmSeconds: Int, onClick: () -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        if (recording) BasicText("%d:%02d".format(filmSeconds / 60, filmSeconds % 60), style = style(13f, 700, Color.White, tabular = true),
+            modifier = Modifier.padding(end = 8.dp).clip(RoundedCornerShape(6.dp)).background(Ink.red).padding(horizontal = 8.dp, vertical = 3.dp))
+        Box(Modifier.size(44.dp).clip(CircleShape).background(Ink.glass).clickable(role = Role.Button, onClickLabel = if (recording) "Zeitraffer beenden" else "Zeitraffer aufnehmen", onClick = onClick)
+            .semantics { contentDescription = if (recording) "Zeitraffer beenden" else "Zeitraffer aufnehmen" }, contentAlignment = Alignment.Center) {
+            Box(Modifier.size(34.dp).clip(CircleShape).background(Color.White), contentAlignment = Alignment.Center) {
+                Box(Modifier.size(30.dp).clip(CircleShape).background(Color.Black), contentAlignment = Alignment.Center) {
+                    if (recording) Box(Modifier.size(13.dp).clip(RoundedCornerShape(3.dp)).background(Ink.red))
+                    else Box(Modifier.size(24.dp).clip(CircleShape).background(Ink.red))
+                }
+            }
+        }
+    }
+}
+
+/** The camera picture as the user sees it (straightened, mirrored, the camera's own zoom; the draw zoom only if
+ *  wanted) – the time-lapse's picture without buttons. */
+fun cameraFrame(raw: Bitmap, correction: Correction, camera: CameraView, view: DrawView?): Bitmap {
+    val out = Bitmap.createBitmap(raw.width, raw.height, Bitmap.Config.ARGB_8888)
+    val canvas = android.graphics.Canvas(out)
+    canvas.drawColor(android.graphics.Color.BLACK)
+    val cx = raw.width / 2f; val cy = raw.height / 2f
+    val m = android.graphics.Matrix().apply { setValues(correction.matrix(raw.width.toFloat(), raw.height.toFloat())) }
+    m.postScale(camera.zoom * (if (camera.flipH) -1 else 1), camera.zoom * (if (camera.flipV) -1 else 1), cx, cy)
+    m.postTranslate(camera.offset.x, camera.offset.y)
+    if (view != null) { m.postScale(view.zoom, view.zoom, cx, cy); m.postTranslate(view.offset.x, view.offset.y) }
+    canvas.drawBitmap(raw, m, android.graphics.Paint(android.graphics.Paint.FILTER_BITMAP_FLAG))
+    return out
 }
