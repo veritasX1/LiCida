@@ -42,6 +42,8 @@ enum class Symbol {
     More,           // chevron.up – the draw mode's further tools
     Flashlight,     // flashlight.on.fill
     Share,          // square.and.arrow.up
+    Ellipsis,       // ellipsis.circle – the setup's further choices
+    Sessions,       // clock.arrow.trianglehead – a kept session: tray with arrow down
 }
 
 @Composable
@@ -168,6 +170,15 @@ fun DrawScope.drawSymbol(symbol: Symbol, color: Color, weight: Float = 1.7f) {
         Symbol.Share -> {
             path { m(12f, 14.5f); l(12f, 3.5f); m(8f, 7.5f); l(12f, 3.5f); l(16f, 7.5f) }
             path { m(8.5f, 10f); l(6f, 10f); q(4f, 10f, 4f, 12f); l(4f, 18.5f); q(4f, 20.5f, 6f, 20.5f); l(18f, 20.5f); q(20f, 20.5f, 20f, 18.5f); l(20f, 12f); q(20f, 10f, 18f, 10f); l(15.5f, 10f) }
+        }
+        Symbol.Ellipsis -> {
+            drawCircle(color, 9.5f * u, p(12f, 12f), style = stroke)
+            for (x in listOf(8f, 12f, 16f)) drawCircle(color, 1.35f * u, p(x, 12f))
+        }
+        Symbol.Sessions -> {
+            path { m(12f, 3.5f); l(12f, 13f); m(8.5f, 9.5f); l(12f, 13f); l(15.5f, 9.5f) }
+            path { m(3.5f, 14f); l(3.5f, 18.5f); q(3.5f, 20.5f, 5.5f, 20.5f); l(18.5f, 20.5f); q(20.5f, 20.5f, 20.5f, 18.5f); l(20.5f, 14f)
+                m(3.5f, 14f); l(8f, 14f); l(9f, 16.5f); l(15f, 16.5f); l(16f, 14f); l(20.5f, 14f) }
         }
         Symbol.Hand -> {
             // Two fingers spreading: the pinch hint.

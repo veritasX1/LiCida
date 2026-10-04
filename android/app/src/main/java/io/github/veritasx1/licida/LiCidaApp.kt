@@ -265,6 +265,96 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
     }
 
 
+    // Sessions (card 14): keep everything to carry on later, and find the paper again.
+    var saveSheet by remember { mutableStateOf(false) }
+    var saveSnapshot by remember { mutableStateOf<Bitmap?>(null) }
+    var saveDescription by remember { mutableStateOf("") }
+    var countdown by remember { mutableStateOf<String?>(null) }
+    var sessionsSheet by remember { mutableStateOf(false) }
+    var sessionList by remember { mutableStateOf<List<Session>>(emptyList()) }
+    var aligning by remember { mutableStateOf<Session?>(null) }
+    var alignSnapshot by remember { mutableStateOf<Bitmap?>(null) }
+    var alignAlpha by remember { mutableStateOf(0.5f) }
+    var alignBusy by remember { mutableStateOf(false) }
+    var setupMenu by remember { mutableStateOf(false) }
+    /** The camera picture as seen (straightened, the camera's own view), without the draw zoom and without buttons. */
+    fun cameraPicture(): Bitmap? = camera.snapshot(preview)?.let { cameraFrame(it, correction, cameraView, null) }
+    fun openSave() {
+        saveSnapshot = cameraPicture()
+        saveDescription = Session.defaultDescription()
+        saveSheet = true
+    }
+    fun retake() {
+        saveSheet = false
+        scope.launch {
+            for (second in 3 downTo 1) { countdown = "Hand aus dem Bild … $second"; delay(1000) }
+            countdown = null; delay(150)
+            saveSnapshot = cameraPicture() ?: saveSnapshot
+            saveSheet = true
+        }
+    }
+    fun saveSession() {
+        val picture = saveSnapshot ?: return
+        val session = Session(Sessions.newId(), saveDescription.trim().ifBlank { Session.defaultDescription() }, System.currentTimeMillis(),
+            placement, opacity, drawOpacity, cameraKey, fill, cameraView, edits, correction)
+        saveSheet = false
+        scope.launch {
+            val ok = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { Sessions.save(context, session, Reference.file(context), picture) }
+            say(if (ok) "Sitzung gesichert" else "Sitzung ließ sich nicht sichern")
+        }
+    }
+    fun openSessions() {
+        setupMenu = false
+        scope.launch {
+            sessionList = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { Sessions.list(context) }
+            sessionsSheet = true
+        }
+    }
+    fun restore(session: Session) {
+        scope.launch {
+            val loaded = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                val file = Sessions.reference(context, session.id)
+                runCatching { file.copyTo(Reference.file(context), overwrite = true); Reference.restore(context) }.getOrNull() to Sessions.snapshot(context, session.id)
+            }
+            val picture = loaded.first ?: run { say("Die Sitzung ließ sich nicht öffnen"); return@launch }
+            reference = picture
+            placement = session.placement; studio.placement = placement
+            opacity = session.opacity; studio.opacity = opacity
+            drawOpacity = session.drawOpacity; studio.drawOpacity = drawOpacity
+            session.cameraKey?.let { cameraKey = it; studio.cameraKey = it }
+            fill = session.fill; studio.fill = fill
+            cameraView = session.cameraView; studio.cameraView = cameraView
+            edits = session.edits; studio.edits = edits
+            setCorrection(session.correction)
+            mode = Mode.Setup; view = DrawView()
+            sessionsSheet = false
+            alignSnapshot = loaded.second
+            aligning = if (loaded.second != null) session else null
+        }
+    }
+    /** The paper found again by image matching: the reference is carried along as the paper moved. */
+    fun alignAuto() {
+        val session = aligning ?: return
+        val old = alignSnapshot ?: return
+        scope.launch {
+            alignBusy = true
+            val live = cameraPicture()
+            val found = live?.let {
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+                    val small = Reference.scaled(it, 800)
+                    Registration.find(Reference.pixels(Reference.scaled(old, 800)), Reference.pixels(small))?.let { shift ->
+                        val back = it.width.toFloat() / small.width
+                        shift.copy(dx = shift.dx * back, dy = shift.dy * back)
+                    }
+                }
+            }
+            alignBusy = false
+            if (found == null) { say("Blatt nicht wiedergefunden – von Hand verschieben"); return@launch }
+            placement = found.carry(session.placement); studio.placement = placement
+            say("Ausgerichtet")
+        }
+    }
+
     fun use(bitmap: Bitmap?) {
         if (bitmap == null) { say("Das Bild ließ sich nicht öffnen"); return }
         reference = bitmap
@@ -294,9 +384,14 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
     BackHandler(enabled = moreSheet) { moreSheet = false }
     BackHandler(enabled = effectsSheet) { effectsSheet = false; effects = Effects() }
     BackHandler(enabled = paletteEditor) { paletteEditor = false; filterSheet = paletteBackToSheet }
+    BackHandler(enabled = saveSheet) { saveSheet = false }
+    BackHandler(enabled = sessionsSheet) { sessionsSheet = false }
+    BackHandler(enabled = setupMenu) { setupMenu = false }
+    BackHandler(enabled = aligning != null) { aligning = null; alignSnapshot = null }
     BackHandler(enabled = mode == Mode.Draw) { mode = Mode.Setup; view = DrawView(); chrome = true }
 
     val shownOpacity = when {
+        aligning != null -> 0f
         mode == Mode.Draw && tools.split -> 1f
         mode == Mode.Draw -> drawOpacity
         cameraSheet -> if (ghost) 0.35f else 0f
@@ -320,6 +415,22 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
                 CameraLayer(camera, onView = { preview = it }, fill = fill, correction = correction)
                 // Checking the automatic alignment: the target fades in and out where it lies (handbook p. 24).
                 if (checking) checkRect?.let { rect -> CheckOverlay(rect, ownTargetPicture ?: helperPicture, ownTargetPicture != null, checkSpeed) }
+            }
+            // Finding the paper again: the session's snapshot, carried along like the reference.
+            if (aligning != null) alignSnapshot?.let { snapshot ->
+                val saved = aligning!!.placement
+                val image = remember(snapshot) { snapshot.asImageBitmap() }
+                Image(image, contentDescription = "Schnappschuss der Sitzung", contentScale = ContentScale.FillBounds,
+                    modifier = Modifier.fillMaxSize().graphicsLayer {
+                        val scale = placement.scale / saved.scale
+                        val angle = placement.rotation - saved.rotation
+                        val a = Math.toRadians(angle.toDouble())
+                        val ox = saved.offset.x; val oy = saved.offset.y
+                        scaleX = scale; scaleY = scale; rotationZ = angle
+                        translationX = placement.offset.x - scale * (ox * kotlin.math.cos(a) - oy * kotlin.math.sin(a)).toFloat()
+                        translationY = placement.offset.y - scale * (ox * kotlin.math.sin(a) + oy * kotlin.math.cos(a)).toFloat()
+                        alpha = alignAlpha
+                    })
             }
             (shown ?: reference)?.let { bitmap ->
                 val image = remember(bitmap) { bitmap.asImageBitmap() }
@@ -460,9 +571,11 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
                     onSaveSetting = { savedCorrection = correction; studio.savedCorrection = correction; say("Ausrichtung gesichert") },
                     onRestoreSetting = { savedCorrection?.let { setCorrection(it); say("Ausrichtung wiederhergestellt") } }))
             effectsSheet -> Unit   // while the colour sliders are open, everything else waits (handbook p. 10)
+            aligning != null && mode == Mode.Setup -> AlignControls(alignAlpha, { alignAlpha = it }, alignBusy, ::alignAuto,
+                Modifier.align(Alignment.BottomCenter)) { aligning = null; alignSnapshot = null }
             mode == Mode.Setup -> SetupChrome(reference, opacity, hintSeen, cameraAllowed,
                 onOpacity = { opacity = it }, onOpacityDone = { studio.opacity = opacity },
-                onPhotos = ::pickPhoto, onFiles = ::pickFile, onCamera = ::takePhoto, onAskCamera = onAskCamera,
+                onPhotos = ::pickPhoto, onFiles = ::pickFile, onCamera = ::takePhoto, onAskCamera = onAskCamera, onMenu = { setupMenu = true },
                 onRotate = { placement = Composition.quarterTurn(placement); studio.placement = placement },
                 onSave = {
                     val bitmap = shown ?: reference ?: return@SetupChrome
@@ -479,13 +592,14 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
                         if (recorder != null) stopRecording() else startRecording() } } } else null,
                     onOpacity = { drawOpacity = it }, onOpacityDone = { studio.drawOpacity = drawOpacity },
                     onBack = { mode = Mode.Setup; view = DrawView() },
+                    onSaveSession = if (tools.sessionButton) ::openSave else null,
                     onFocus = { camera.focus(preview); say("Scharfgestellt") },
                     onUnlock = { camera.unlock(); exposureLocked = false },
                     onZoomReset = { view = DrawView() })
             }
         }
 
-        if (lastPalette != null && !filterSheet && !cameraSheet && !paletteEditor && !effectsSheet && (mode == Mode.Setup || chrome)) {
+        if (lastPalette != null && !filterSheet && !cameraSheet && !paletteEditor && !effectsSheet && aligning == null && (mode == Mode.Setup || chrome)) {
             PaletteLayers(lastPalette, hiddenLayers, { hiddenLayers = it }, onEdit = ::openPalette,
                 modifier = Modifier.align(Alignment.BottomCenter).windowInsetsPadding(WindowInsets.navigationBars)
                     .padding(start = 16.dp, end = 16.dp, bottom = if (mode == Mode.Draw) 84.dp else 176.dp))
@@ -532,6 +646,18 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
             "Prüfen", onYes = { askCheck = false; checking = true; cameraSheet = false }, onNo = { askCheck = false })
         if (checking) CheckControls(checkSpeed, { checkSpeed = it }, Modifier.align(Alignment.BottomCenter)) { checking = false }
 
+        if (setupMenu && mode == Mode.Setup) SetupMenu(onClose = { setupMenu = false }, entries = listOf(
+            MenuEntry(Symbol.Folder, "Aus Dateien") { setupMenu = false; pickFile() },
+            MenuEntry(Symbol.Sessions, "Sitzungen …") { openSessions() }))
+        if (saveSheet) SaveSessionSheet(saveSnapshot, saveDescription, { saveDescription = it }, ::retake, { saveSheet = false }, ::saveSession)
+        if (sessionsSheet) SessionsSheet(sessionList, { Sessions.thumbnail(context, it.id) }, ::restore,
+            onDelete = { gone -> Sessions.delete(context, gone.id); sessionList = sessionList - gone; say("Sitzung gelöscht") },
+            onClose = { sessionsSheet = false })
+        (countdown ?: if (alignBusy) "Suche dein Blatt …" else null)?.let { text ->
+            BasicText(text, style = style(17f, 600, Color.Black), modifier = Modifier.align(Alignment.TopCenter)
+                .windowInsetsPadding(WindowInsets.statusBars).padding(top = 64.dp).clip(CircleShape).background(Ink.yellow).padding(horizontal = 16.dp, vertical = 8.dp))
+        }
+
         message?.let { text ->
             Box(Modifier.align(Alignment.Center).clip(RoundedCornerShape(14.dp)).background(Ink.glassStrong).padding(horizontal = 18.dp, vertical = 12.dp)) {
                 BasicText(text, style = style(15f, 600))
@@ -543,14 +669,14 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
 @Composable
 private fun SetupChrome(reference: Bitmap?, opacity: Float, hintSeen: Boolean, cameraAllowed: Boolean,
                         onOpacity: (Float) -> Unit, onOpacityDone: () -> Unit,
-                        onPhotos: () -> Unit, onFiles: () -> Unit, onCamera: () -> Unit, onAskCamera: () -> Unit,
+                        onPhotos: () -> Unit, onFiles: () -> Unit, onCamera: () -> Unit, onAskCamera: () -> Unit, onMenu: () -> Unit,
                         onRotate: () -> Unit, onSave: () -> Unit, onDraw: () -> Unit, onCameraSettings: () -> Unit, onFilters: () -> Unit) {
     val ready = reference != null
     Box(Modifier.fillMaxSize()) {
         // Top: files on the left, turn and keep on the right (Camera keeps its top bar this light).
         Row(Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars).padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically) {
-            GlassButton(Symbol.Folder, "Bild aus Dateien", onClick = onFiles)
+            GlassButton(Symbol.Ellipsis, "Mehr", onClick = onMenu)
             Spacer(Modifier.size(12.dp))
             GlassButton(Symbol.Aperture, "Kamera wählen und einstellen", enabled = cameraAllowed, onClick = onCameraSettings)
             Spacer(Modifier.size(12.dp))
@@ -632,7 +758,7 @@ private fun CameraNeeded(onAsk: () -> Unit, modifier: Modifier) {
 @Composable
 private fun DrawChrome(view: DrawView, opacity: Float, exposureLocked: Boolean, onFilters: () -> Unit,
                        torch: Boolean, onTorchOff: () -> Unit, onMore: () -> Unit, record: (@Composable () -> Unit)?, onOpacity: (Float) -> Unit, onOpacityDone: () -> Unit,
-                       onBack: () -> Unit, onFocus: () -> Unit, onUnlock: () -> Unit, onZoomReset: () -> Unit) {
+                       onBack: () -> Unit, onSaveSession: (() -> Unit)?, onFocus: () -> Unit, onUnlock: () -> Unit, onZoomReset: () -> Unit) {
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.align(Alignment.TopCenter).windowInsetsPadding(WindowInsets.statusBars).padding(top = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally) {
@@ -651,6 +777,7 @@ private fun DrawChrome(view: DrawView, opacity: Float, exposureLocked: Boolean, 
         }
         Row(Modifier.align(Alignment.TopEnd).windowInsetsPadding(WindowInsets.statusBars).padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             record?.let { it(); Spacer(Modifier.size(12.dp)) }
+            onSaveSession?.let { GlassButton(Symbol.Sessions, "Sitzung sichern", onClick = it); Spacer(Modifier.size(12.dp)) }
             GlassButton(Symbol.Focus, "Scharfstellen", onClick = onFocus)
         }
         Row(Modifier.align(Alignment.BottomCenter).fillMaxWidth().windowInsetsPadding(WindowInsets.navigationBars).padding(horizontal = 16.dp, vertical = 16.dp),
@@ -741,6 +868,47 @@ private fun AskDialog(title: String, body: String, yes: String, onYes: () -> Uni
                 Box(Modifier.size(0.5.dp, 44.dp).background(Ink.separator))
                 BasicText(yes, style = style(17f, 600, Ink.yellow).copy(textAlign = TextAlign.Center),
                     modifier = Modifier.weight(1f).clickable(role = Role.Button, onClick = onYes).padding(vertical = 12.dp))
+            }
+        }
+    }
+}
+
+/** Finding a session's paper again (handbook p. 44): the snapshot over the camera, by hand or automatically. */
+@Composable
+private fun AlignControls(alpha: Float, onAlpha: (Float) -> Unit, busy: Boolean, onAuto: () -> Unit, modifier: Modifier, onDone: () -> Unit) {
+    Column(modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.navigationBars).padding(12.dp).clip(RoundedCornerShape(18.dp))
+        .background(Ink.card).padding(16.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            BasicText("Blatt wiederfinden", style = style(17f, 600), modifier = Modifier.weight(1f))
+            BasicText("Fertig", style = style(17f, 600, Ink.yellow), modifier = Modifier.clickable(role = Role.Button, onClick = onDone).padding(6.dp))
+        }
+        BasicText("Der Schnappschuss liegt über dem Kamerabild. Leg dein Blatt so, dass beides übereinanderliegt – oder lass LiCida die Vorlage passend schieben.",
+            style = style(13f, 400, Ink.secondary), modifier = Modifier.padding(top = 4.dp, bottom = 6.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            BasicText("Schnappschuss", style = style(15f), modifier = Modifier.widthIn(min = 112.dp))
+            IosSlider(alpha, onAlpha, "Deckkraft des Schnappschusses", Modifier.weight(1f))
+        }
+        BasicText(if (busy) "Suche …" else "Automatisch ausrichten", style = style(17f, 600, Color.Black).copy(textAlign = TextAlign.Center),
+            modifier = Modifier.padding(top = 8.dp).fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(if (busy) Ink.secondary else Ink.yellow)
+                .clickable(enabled = !busy, role = Role.Button, onClick = onAuto).padding(vertical = 13.dp))
+    }
+}
+
+class MenuEntry(val symbol: Symbol, val label: String, val action: () -> Unit)
+
+/** An iOS pull-down menu under the "Mehr" button: rounded, label left, symbol right. */
+@Composable
+fun SetupMenu(onClose: () -> Unit, entries: List<MenuEntry>) {
+    Box(Modifier.fillMaxSize().clickable(onClick = onClose)) {
+        Column(Modifier.windowInsetsPadding(WindowInsets.statusBars).padding(start = 16.dp, top = 64.dp).widthIn(min = 230.dp, max = 280.dp)
+            .clip(RoundedCornerShape(13.dp)).background(Color(0xF22C2C2E))) {
+            entries.forEachIndexed { index, entry ->
+                if (index > 0) Box(Modifier.fillMaxWidth().height(0.5.dp).background(Ink.separator))
+                Row(Modifier.fillMaxWidth().clickable(role = Role.Button, onClick = entry.action).padding(horizontal = 16.dp, vertical = 11.dp),
+                    verticalAlignment = Alignment.CenterVertically) {
+                    BasicText(entry.label, style = style(17f), modifier = Modifier.weight(1f))
+                    SymbolIcon(entry.symbol, Ink.white, size = 20.dp)
+                }
             }
         }
     }

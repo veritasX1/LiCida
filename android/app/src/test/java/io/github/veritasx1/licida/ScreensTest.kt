@@ -216,4 +216,52 @@ class ScreensTest {
         compose.onNodeWithText("Fertig").performClick()
         shot("12-geteilt")
     }
+
+    @Test
+    fun sessionsKeptAndRestored() {
+        // Card 14: a session on disk – the list shows it, opening it brings back the reference and the alignment step.
+        Sessions.folder(context).deleteRecursively()
+        Reference.keep(context, sample())
+        val session = Session("1791100000000", "Blume im Garten", 1791100000000, Placement(0.8f, 5f), 0.6f, 0.4f, null, true,
+            CameraView(), Edits().add(Step(Filter.Gray)), Correction(tilt = 4f))
+        assertEquals(true, Sessions.save(context, session, Reference.file(context), sample()))
+        val kept = Sessions.list(context).single()
+        assertEquals(session, kept)
+        org.junit.Assert.assertNotNull("Schnappschuss", Sessions.snapshot(context, kept.id))
+        org.junit.Assert.assertNotNull("Vorlage", Reference.restore(context))
+
+        val studio = Studio(context).apply { hintSeen = true; edits = Edits() }
+        compose.setContent { LiCidaApp(studio, sample(), cameraAllowed = true, onAskCamera = {}, onDrawMode = {}) }
+        compose.onNodeWithContentDescription("Mehr").performClick()
+        compose.onNodeWithText("Aus Dateien").assertExists()
+        shot("14-mehr")
+        compose.onNodeWithText("Sitzungen …").performClick()
+        compose.waitUntil(3000) { compose.onAllNodesWithText("Blume im Garten").fetchSemanticsNodes().isNotEmpty() }
+        shot("15-sitzungen")
+        compose.onNodeWithText("Blume im Garten").performClick()
+        compose.waitUntil(3000) { compose.onAllNodesWithText("Blatt wiederfinden").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithContentDescription("Schnappschuss der Sitzung").assertExists()
+        assertEquals(Placement(0.8f, 5f), studio.placement)
+        assertEquals(1, studio.edits.active.size)
+        assertEquals(4f, studio.correction.tilt)
+        shot("16-wiederfinden")
+        compose.onNodeWithText("Fertig").performClick()
+        compose.onNodeWithContentDescription("Schnappschuss der Sitzung").assertDoesNotExist()
+
+        Sessions.delete(context, kept.id)
+        assertEquals(0, Sessions.list(context).size)
+    }
+
+    @Test
+    fun saveSessionSheetWhileDrawing() {
+        val studio = Studio(context).apply { hintSeen = true; edits = Edits(); sessionButton = true }
+        compose.setContent { LiCidaApp(studio, sample(), cameraAllowed = true, onAskCamera = {}, onDrawMode = {}) }
+        compose.onNodeWithContentDescription("Zeichnen").performClick()
+        compose.onNodeWithContentDescription("Sitzung sichern").performClick()
+        compose.onNodeWithText("Neu aufnehmen").assertExists()
+        compose.onNodeWithContentDescription("Beschreibung").assertExists()
+        shot("13-sitzung-sichern")
+        compose.onNodeWithText("Abbrechen").performClick()
+        compose.onNodeWithText("Neu aufnehmen").assertDoesNotExist()
+    }
 }

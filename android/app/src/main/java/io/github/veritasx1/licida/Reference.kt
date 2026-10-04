@@ -59,6 +59,7 @@ object Reference {
 
     fun restore(context: Context): Bitmap? = file(context).takeIf { it.exists() }?.let { file ->
         runCatching { ImageDecoder.decodeBitmap(ImageDecoder.createSource(file)) { decoder, _, _ -> decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE } }.getOrNull()
+            ?: runCatching { android.graphics.BitmapFactory.decodeFile(file.path) }.getOrNull()
     }
 
     /** Read a picture without keeping it (e.g. a photo of one's own paints for the palette). */
