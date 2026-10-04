@@ -74,4 +74,23 @@ class ScreensTest {
         compose.waitForIdle()
         assertEquals(false, drawing)
     }
+
+    @Test
+    fun cameraSheet() {
+        val studio = Studio(context).apply { hintSeen = true; cameraKey = null; ghost = true }
+        val moto = listOf(CameraFacts("0", Facing.Back, 5.56f, 8.16f), CameraFacts("1", Facing.Front, 3.27f, 4.608f),
+            CameraFacts("2", Facing.Back, 1.66f, 3.6736f))
+        compose.setContent { LiCidaApp(studio, sample(), cameraAllowed = true, onAskCamera = {}, onDrawMode = {}, cameras = { moto }) }
+        compose.onNodeWithContentDescription("Kamera wählen und einstellen").performClick()
+        compose.waitUntil(3000) { runCatching { compose.onNodeWithText("Ultraweitwinkel · 95° Bildwinkel").assertExists() }.isSuccess }
+        shot("4-kamera-blatt")
+        compose.onNodeWithText("Frontkamera").performClick()
+        compose.waitForIdle()
+        assertEquals("front", studio.cameraKey)
+        assertEquals(true, studio.cameraView.flipV)  // the front camera looks through a mirror
+        compose.onNodeWithText("Ganzes Bild").performClick()
+        assertEquals(false, studio.fill)
+        compose.onNodeWithText("Fertig").performClick()
+        compose.onNodeWithContentDescription("Zeichnen").assertExists()
+    }
 }

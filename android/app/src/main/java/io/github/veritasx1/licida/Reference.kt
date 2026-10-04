@@ -106,6 +106,28 @@ class Studio(context: Context) {
         get() = prefs.getFloat("drawOpacity", 0.5f)
         set(value) { prefs.edit().putFloat("drawOpacity", value).apply() }
 
+    /** The chosen camera (key of CameraOption), whether the picture fills the screen, and the camera's own view. */
+    var cameraKey: String?
+        get() = prefs.getString("camera", null)
+        set(value) { prefs.edit().putString("camera", value).apply() }
+
+    var fill: Boolean
+        get() = prefs.getBoolean("fill", true)
+        set(value) { prefs.edit().putBoolean("fill", value).apply() }
+
+    var cameraView: CameraView
+        get() = CameraView(prefs.getFloat("camZoom", 1f), Offset(prefs.getFloat("camX", 0f), prefs.getFloat("camY", 0f)),
+            prefs.getBoolean("flipH", false), prefs.getBoolean("flipV", false))
+        set(value) {
+            prefs.edit().putFloat("camZoom", value.zoom).putFloat("camX", value.offset.x).putFloat("camY", value.offset.y)
+                .putBoolean("flipH", value.flipH).putBoolean("flipV", value.flipV).apply()
+        }
+
+    /** While adjusting the camera: show the reference faintly (handbook p. 14). */
+    var ghost: Boolean
+        get() = prefs.getBoolean("ghost", true)
+        set(value) { prefs.edit().putBoolean("ghost", value).apply() }
+
     /** The gesture hint shows until the user has moved a reference once. */
     var hintSeen: Boolean
         get() = prefs.getBoolean("hintSeen", false)

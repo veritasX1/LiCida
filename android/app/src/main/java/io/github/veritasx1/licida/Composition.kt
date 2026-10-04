@@ -69,6 +69,17 @@ object Composition {
         return view.copy(offset = Offset(view.offset.x.coerceIn(-limitX, limitX), view.offset.y.coerceIn(-limitY, limitY)))
     }
 
+    /** The camera's own view while the camera sheet is open: zoom 0.3×…8× (digital), moved freely. */
+    fun moveCamera(view: CameraView, centroid: Offset, pan: Offset, zoom: Float, size: Size): CameraView {
+        val newZoom = (view.zoom * zoom).coerceIn(0.3f, 8f)
+        val factor = newZoom / view.zoom
+        val fingers = centroid - Offset(size.width / 2, size.height / 2)
+        return view.copy(zoom = newZoom, offset = fingers + pan + (view.offset - fingers) * factor)
+    }
+
+    /** Choosing a camera starts its view afresh; the front camera looks through a mirror (handbook p. 13, 16). */
+    fun cameraViewFor(option: CameraOption) = CameraView(flipV = option.facing == Facing.Front)
+
     /** While the reference is moved, it turns see-through so the paper shows (handbook p. 7) – never more opaque than this. */
     const val WHILE_MOVING = 0.55f
 }
