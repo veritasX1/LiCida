@@ -7,6 +7,9 @@ import android.graphics.Paint
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onLast
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
@@ -92,5 +95,37 @@ class ScreensTest {
         assertEquals(false, studio.fill)
         compose.onNodeWithText("Fertig").performClick()
         compose.onNodeWithContentDescription("Zeichnen").assertExists()
+    }
+
+    @Test
+    fun toolbox() {
+        val studio = Studio(context).apply { hintSeen = true; edits = Edits(); slots = List(3) { Slot.decode(null, it) } }
+        compose.setContent { LiCidaApp(studio, sample(), cameraAllowed = false, onAskCamera = {}, onDrawMode = {}) }
+        compose.onNodeWithContentDescription("Werkzeuge und Filter").performClick()
+        compose.waitUntil(5000) { runCatching { compose.onNodeWithContentDescription("Graustufen: Ohne Farbe").assertExists() }.isSuccess }
+        compose.onNodeWithContentDescription("Graustufen: Ohne Farbe").performClick()
+        compose.onNodeWithContentDescription("Tontrennung: 2 bis 16 Grautöne").performClick()
+        compose.waitForIdle()
+        assertEquals(listOf("Graustufen", "Tontrennung (4)"), studio.edits.active.map { it.label })
+        compose.onNodeWithText("Grautöne").assertExists()
+        Thread.sleep(600); compose.waitForIdle()
+        shot("5-werkzeuge")
+        compose.onNodeWithContentDescription("Rückgängig").performClick()
+        assertEquals(1, studio.edits.position)
+        compose.onNodeWithContentDescription("Verlauf").performClick()
+        compose.onNodeWithText("2. Tontrennung (4)").assertExists()  // still there to redo
+        // Store the sequence in the first slot, then replay it after going back to the original.
+        compose.onNodeWithContentDescription("Wiederholen").performClick()
+        compose.onNodeWithContentDescription("Platz 1, leer").performScrollTo().performClick()
+        compose.onNodeWithText("Aktuelle Filter hier sichern").performClick()
+        assertEquals(2, studio.slots[0].steps.size)
+        compose.onAllNodesWithText("Original").onLast().performScrollTo().performClick()  // the button (the history lists it too)
+        assertEquals(0, studio.edits.position)
+        compose.onNodeWithContentDescription("Platz 1, 2 Filter").performScrollTo().performClick()
+        compose.onNodeWithText("Graustufen → Tontrennung (4)").assertExists()  // the menu shows what it applies
+        compose.onNodeWithText("Auf dieses Bild anwenden").performClick()
+        compose.waitForIdle()
+        assertEquals(listOf("Graustufen", "Tontrennung (4)"), studio.edits.active.map { it.label })
+        compose.onNodeWithText("Fertig").performClick()
     }
 }

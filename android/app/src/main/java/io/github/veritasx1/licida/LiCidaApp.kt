@@ -98,6 +98,34 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
     }
     val camera = rememberCamera(cameraAllowed, chosenCamera)
 
+    // The toolbox (cards 9/10): filters stack on a 2048-px working copy, rendered in the background.
+    var edits by remember { mutableStateOf(studio.edits) }
+    var slots by remember { mutableStateOf(studio.slots) }
+    var filterSheet by remember { mutableStateOf(false) }
+    var shown by remember { mutableStateOf<Bitmap?>(null) }
+    var busy by remember { mutableStateOf(false) }
+    var previews by remember { mutableStateOf<Map<Filter, Bitmap>>(emptyMap()) }
+    val work = remember(reference) { reference?.let { Reference.scaled(it, 2048) } }
+    LaunchedEffect(work, edits.active) {
+        val base = work ?: run { shown = null; return@LaunchedEffect }
+        if (edits.active.isEmpty()) { shown = base; return@LaunchedEffect }
+        busy = true
+        shown = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+            Reference.bitmap(Edits.render(Reference.pixels(base), edits.active))
+        }
+        busy = false
+    }
+    LaunchedEffect(shown, filterSheet) {
+        val now = shown ?: return@LaunchedEffect
+        if (!filterSheet) return@LaunchedEffect
+        val last = edits.active.lastOrNull()?.filter
+        previews = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+            val thumb = Reference.pixels(Reference.scaled(now, 160))
+            Filter.entries.associateWith { filter -> Reference.bitmap(Filters.apply(thumb, filter, filter.defaultValue, last)) }
+        }
+    }
+    fun edit(next: Edits) { edits = next; studio.edits = next }
+
     fun say(text: String) {
         message = text
         scope.launch { delay(1800); if (message == text) message = null }
@@ -108,6 +136,7 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
         reference = bitmap
         placement = Placement()
         studio.placement = placement
+        edits = Edits(); studio.edits = edits
         mode = Mode.Setup
     }
 
@@ -127,6 +156,7 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
 
     LaunchedEffect(mode) { onDrawMode(mode == Mode.Draw) }
     BackHandler(enabled = cameraSheet) { cameraSheet = false }
+    BackHandler(enabled = filterSheet) { filterSheet = false }
     BackHandler(enabled = mode == Mode.Draw) { mode = Mode.Setup; view = DrawView(); chrome = true }
 
     val shownOpacity = when {
@@ -149,7 +179,7 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
                 scaleY = cameraView.zoom * (if (cameraView.flipV) -1f else 1f)
                 translationX = cameraView.offset.x; translationY = cameraView.offset.y
             })
-            reference?.let { bitmap ->
+            (shown ?: reference)?.let { bitmap ->
                 val image = remember(bitmap) { bitmap.asImageBitmap() }
                 Image(image, contentDescription = "Vorlage", contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize().graphicsLayer {
                     scaleX = placement.scale; scaleY = placement.scale; rotationZ = placement.rotation
@@ -220,6 +250,21 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
         }
 
         when {
+            filterSheet && reference != null -> FilterSheet(edits, previews, slots, busy,
+                onApply = { step -> edit(edits.add(step)) },
+                onValue = { value -> edit(edits.replaceLast(Step(Filter.Posterize, value))) },
+                onUndo = { edit(edits.undo()) }, onRedo = { edit(edits.redo()) }, onJump = { edit(edits.jump(it)) },
+                onStore = { index -> slots = slots.mapIndexed { i, slot -> if (i == index) slot.copy(steps = edits.active) else slot }; studio.slots = slots },
+                onReplay = { index -> edit(edits.replay(slots[index].steps)) },
+                onRename = { index, name -> slots = slots.mapIndexed { i, slot -> if (i == index) slot.copy(name = name) else slot }; studio.slots = slots },
+                onSave = {
+                    val bitmap = shown ?: reference ?: return@FilterSheet
+                    val saved = Reference.saveToPhotos(context, Reference.compose(bitmap, placement, screen.width.toInt(), screen.height.toInt()),
+                        "LiCida-${System.currentTimeMillis() / 1000}")
+                    say(if (saved) "In Fotos gesichert" else "Sichern hat nicht geklappt")
+                },
+                onDone = { filterSheet = false },
+                modifier = Modifier.align(Alignment.BottomCenter).fillMaxHeight(0.52f))
             mode == Mode.Setup && cameraSheet -> CameraSheet(cameraOptions, chosenCamera, fill, ghost, reference != null,
                 onChoose = { option ->
                     if (option.key != chosenCamera?.key) {
@@ -237,15 +282,15 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
                 onPhotos = ::pickPhoto, onFiles = ::pickFile, onCamera = ::takePhoto, onAskCamera = onAskCamera,
                 onRotate = { placement = Composition.quarterTurn(placement); studio.placement = placement },
                 onSave = {
-                    val bitmap = reference ?: return@SetupChrome
+                    val bitmap = shown ?: reference ?: return@SetupChrome
                     val saved = Reference.saveToPhotos(context, Reference.compose(bitmap, placement, screen.width.toInt(), screen.height.toInt()),
                         "LiCida-Vorlage-${System.currentTimeMillis() / 1000}")
                     say(if (saved) "In Fotos gesichert" else "Sichern hat nicht geklappt")
                 },
                 onDraw = { mode = Mode.Draw; view = DrawView(); chrome = true },
-                onCameraSettings = { cameraSheet = true })
+                onCameraSettings = { cameraSheet = true }, onFilters = { filterSheet = true })
             else -> AnimatedVisibility(chrome, enter = fadeIn(), exit = fadeOut()) {
-                DrawChrome(view, drawOpacity, exposureLocked,
+                DrawChrome(view, drawOpacity, exposureLocked, onFilters = { filterSheet = true },
                     onOpacity = { drawOpacity = it }, onOpacityDone = { studio.drawOpacity = drawOpacity },
                     onBack = { mode = Mode.Setup; view = DrawView() },
                     onFocus = { camera.focus(preview); say("Scharfgestellt") },
@@ -266,7 +311,7 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
 private fun SetupChrome(reference: Bitmap?, opacity: Float, hintSeen: Boolean, cameraAllowed: Boolean,
                         onOpacity: (Float) -> Unit, onOpacityDone: () -> Unit,
                         onPhotos: () -> Unit, onFiles: () -> Unit, onCamera: () -> Unit, onAskCamera: () -> Unit,
-                        onRotate: () -> Unit, onSave: () -> Unit, onDraw: () -> Unit, onCameraSettings: () -> Unit) {
+                        onRotate: () -> Unit, onSave: () -> Unit, onDraw: () -> Unit, onCameraSettings: () -> Unit, onFilters: () -> Unit) {
     val ready = reference != null
     Box(Modifier.fillMaxSize()) {
         // Top: files on the left, turn and keep on the right (Camera keeps its top bar this light).
@@ -275,6 +320,8 @@ private fun SetupChrome(reference: Bitmap?, opacity: Float, hintSeen: Boolean, c
             GlassButton(Symbol.Folder, "Bild aus Dateien", onClick = onFiles)
             Spacer(Modifier.size(12.dp))
             GlassButton(Symbol.Aperture, "Kamera wählen und einstellen", enabled = cameraAllowed, onClick = onCameraSettings)
+            Spacer(Modifier.size(12.dp))
+            GlassButton(Symbol.Filters, "Werkzeuge und Filter", enabled = ready, onClick = onFilters)
             Spacer(Modifier.weight(1f))
             GlassButton(Symbol.RotateRight, "Vorlage um 90 Grad drehen", enabled = ready, onClick = onRotate)
             Spacer(Modifier.size(12.dp))
@@ -350,7 +397,7 @@ private fun CameraNeeded(onAsk: () -> Unit, modifier: Modifier) {
 }
 
 @Composable
-private fun DrawChrome(view: DrawView, opacity: Float, exposureLocked: Boolean, onOpacity: (Float) -> Unit, onOpacityDone: () -> Unit,
+private fun DrawChrome(view: DrawView, opacity: Float, exposureLocked: Boolean, onFilters: () -> Unit, onOpacity: (Float) -> Unit, onOpacityDone: () -> Unit,
                        onBack: () -> Unit, onFocus: () -> Unit, onUnlock: () -> Unit, onZoomReset: () -> Unit) {
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.align(Alignment.TopCenter).windowInsetsPadding(WindowInsets.statusBars).padding(top = 8.dp),
@@ -362,6 +409,9 @@ private fun DrawChrome(view: DrawView, opacity: Float, exposureLocked: Boolean, 
             if (view.zoom > 1.01f) BasicText("%.1f×".format(view.zoom).replace('.', ','), style = style(13f, 700, Ink.yellow, tabular = true).copy(textAlign = TextAlign.Center),
                 modifier = Modifier.padding(top = 8.dp).size(44.dp).clip(CircleShape).background(Ink.glass)
                     .clickable(role = Role.Button, onClickLabel = "Ganze Ansicht", onClick = onZoomReset).padding(top = 13.dp))
+        }
+        Box(Modifier.align(Alignment.TopStart).windowInsetsPadding(WindowInsets.statusBars).padding(16.dp)) {
+            GlassButton(Symbol.Filters, "Werkzeuge und Filter", onClick = onFilters)
         }
         Box(Modifier.align(Alignment.TopEnd).windowInsetsPadding(WindowInsets.statusBars).padding(16.dp)) {
             GlassButton(Symbol.Focus, "Scharfstellen", onClick = onFocus)

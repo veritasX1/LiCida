@@ -32,6 +32,10 @@ enum class Symbol {
     Hand,           // hand.draw – the hint for gestures
     Aperture,       // camera.aperture – the camera settings
     Checkmark,      // checkmark
+    Filters,        // camera.filters – the toolbox
+    Undo,           // arrow.uturn.backward
+    Redo,           // arrow.uturn.forward
+    History,        // clock.arrow.circlepath
 }
 
 @Composable
@@ -114,6 +118,24 @@ fun DrawScope.drawSymbol(symbol: Symbol, color: Color, weight: Float = 1.7f) {
             }
         }
         Symbol.Checkmark -> path { m(5f, 12.5f); l(10f, 17.5f); l(19f, 6.5f) }
+        Symbol.Filters -> {
+            drawCircle(color, 5.6f * u, p(12f, 8.6f), style = stroke)
+            drawCircle(color, 5.6f * u, p(8.6f, 14.6f), style = stroke)
+            drawCircle(color, 5.6f * u, p(15.4f, 14.6f), style = stroke)
+        }
+        Symbol.Undo -> {
+            path { m(8.5f, 5f); l(4.5f, 9f); l(8.5f, 13f) }
+            path { m(4.8f, 9f); l(14.5f, 9f); q(20f, 9f, 20f, 14.5f); q(20f, 20f, 14.5f, 20f); l(10f, 20f) }
+        }
+        Symbol.Redo -> {
+            path { m(15.5f, 5f); l(19.5f, 9f); l(15.5f, 13f) }
+            path { m(19.2f, 9f); l(9.5f, 9f); q(4f, 9f, 4f, 14.5f); q(4f, 20f, 9.5f, 20f); l(14f, 20f) }
+        }
+        Symbol.History -> {
+            path { m(4.2f, 12f); q(4.2f, 4.2f, 12f, 4.2f); q(19.8f, 4.2f, 19.8f, 12f); q(19.8f, 19.8f, 12f, 19.8f); q(7.2f, 19.8f, 5.4f, 16f) }
+            path { m(2.4f, 9.8f); l(4.2f, 12.4f); l(6.6f, 10f) }
+            path { m(12f, 7.5f); l(12f, 12.4f); l(15.2f, 14.4f) }
+        }
         Symbol.Hand -> {
             // Two fingers spreading: the pinch hint.
             path { m(8f, 15f); l(4.5f, 8.5f); m(4.5f, 8.5f); l(4.5f, 12f); m(4.5f, 8.5f); l(8f, 8.5f) }
