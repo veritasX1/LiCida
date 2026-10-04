@@ -47,6 +47,7 @@ enum class Symbol {
     Gear,           // gearshape – the settings page
     Maximize,       // arrow.up.left.and.arrow.down.right – the largest drawing
     Reset,          // arrow.counterclockwise – camera back to the start
+    Help,           // questionmark.circle
 }
 
 @Composable
@@ -200,6 +201,11 @@ fun DrawScope.drawSymbol(symbol: Symbol, color: Color, weight: Float = 1.7f) {
         Symbol.Reset -> {
             path { m(5.2f, 9f); q(7.5f, 4.2f, 12.5f, 4.2f); q(19.8f, 4.6f, 19.8f, 12f); q(19.8f, 19.8f, 12f, 19.8f); q(6.4f, 19.8f, 4.6f, 14.8f) }
             path { m(4.6f, 4.6f); l(5f, 9.4f); l(9.6f, 8.6f) }
+        }
+        Symbol.Help -> {
+            drawCircle(color, 9.5f * u, p(12f, 12f), style = stroke)
+            path { m(9.2f, 9.6f); q(9.2f, 6.8f, 12f, 6.8f); q(14.8f, 6.8f, 14.8f, 9.4f); q(14.8f, 11.2f, 12f, 12.4f); l(12f, 14f) }
+            drawCircle(color, 1.2f * u, p(12f, 17.2f))
         }
         Symbol.Hand -> {
             // Two fingers spreading: the pinch hint.
