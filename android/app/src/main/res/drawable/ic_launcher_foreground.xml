@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A pencil over a sheet seen through a lens – placeholder in the spirit of the app. 108 dp canvas, 66 dp safe zone. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <path android:strokeColor="#FFFFFFFF" android:strokeWidth="3.2" android:fillColor="#00000000"
+        android:pathData="M54,54m-22,0a22,22 0 1,0 44,0a22,22 0 1,0 -44,0" />
+    <path android:fillColor="#FFFFD60A" android:pathData="M45,66 L47,58 L63,42 L69,48 L53,64 Z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M45,66 L47,58 L53,64 Z" />
+</vector>
