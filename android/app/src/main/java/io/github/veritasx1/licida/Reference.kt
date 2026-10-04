@@ -61,6 +61,15 @@ object Reference {
         runCatching { ImageDecoder.decodeBitmap(ImageDecoder.createSource(file)) { decoder, _, _ -> decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE } }.getOrNull()
     }
 
+    /** Read a picture without keeping it (e.g. a photo of one's own paints for the palette). */
+    fun decode(context: Context, uri: Uri, side: Int): Bitmap? = runCatching {
+        ImageDecoder.decodeBitmap(ImageDecoder.createSource(context.contentResolver, uri)) { decoder, info, _ ->
+            decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
+            val longest = maxOf(info.size.width, info.size.height)
+            if (longest > side) decoder.setTargetSampleSize(Math.ceil(longest / side.toDouble()).toInt())
+        }
+    }.getOrNull()
+
     /** One's own target picture (card 7): kept privately as ziel.jpg. */
     fun ownTarget(context: Context) = File(context.filesDir, "ziel.jpg")
 

@@ -16,6 +16,8 @@ class Pixels(val width: Int, val height: Int, val argb: IntArray = IntArray(widt
  *  stack; some take a value (Tontrennung: shades 2–16). The ids are stored in the history and in the
  *  three custom slots – never rename them. */
 enum class Filter(val id: String, val label: String, val hint: String, val takesValue: Boolean = false, val defaultValue: Int = 0) {
+    /** Opens the palette editor (card 11); as a step it carries its palette. */
+    ColourPalette("palette", "Farbpalette", "Wenige Farben, einzeln ein- und ausblendbar"),
     Colors64("colors64", "64 Farben", "Auf 64 Farben reduziert"),
     Sepia("sepia", "Sepia", "Bräunlich wie alte Fotos"),
     Gray("gray", "Graustufen", "Ohne Farbe"),
@@ -53,6 +55,7 @@ object Filters {
 
     /** One step; `previous` is the filter applied right before (Schwellwert twice in a row inverts). */
     fun apply(image: Pixels, filter: Filter, value: Int = filter.defaultValue, previous: Filter? = null): Pixels = when (filter) {
+        Filter.ColourPalette -> Palette.find(image, Palette.DEFAULT_COLOURS).render(image)  // preview; the real step carries its palette
         Filter.Colors64 -> map(image) { c -> argb(a(c), q(r(c), 4), q(g(c), 4), q(b(c), 4)) }
         Filter.Sepia -> map(image) { c ->
             val rr = r(c); val gg = g(c); val bb = b(c)
