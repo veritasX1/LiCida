@@ -12,6 +12,15 @@ die Idee von *Camera Lucida* (iOS), neu gebaut für Android und streng nach Appl
 - **Volle Macht dem Benutzer** – nur die Kamera wird erfragt, alles andere entscheidest du.
 - **Transparent entwickelt** – jede Änderung mit Begründung nachvollziehbar.
 
+## Lizenz
+
+LiCida ist freie Software unter der **GNU General Public License, Version 3** (Datei `LICENSE`):
+Jeder darf es für immer benutzen, untersuchen, verändern und weitergeben – und jede Weiterentwicklung
+bleibt ebenso frei. Die Schrift **Inter** (Rasmus Andersson) ist unter der SIL Open Font License 1.1
+eingebunden.
+
+Copyright (C) 2026 Olaf Winkler
+
 ## Stand
 
 Erste Version: Einrichten- und Zeichenmodus, Vorlage aus Fotos/Dateien/Kamera, mit zwei Fingern
