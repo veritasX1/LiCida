@@ -30,6 +30,8 @@ enum class Symbol {
     Focus,          // viewfinder
     Sun,            // sun.max (exposure)
     Hand,           // hand.draw – the hint for gestures
+    Aperture,       // camera.aperture – the camera settings
+    Checkmark,      // checkmark
 }
 
 @Composable
@@ -101,6 +103,17 @@ fun DrawScope.drawSymbol(symbol: Symbol, color: Color, weight: Float = 1.7f) {
                     p(12f + outer * Math.cos(angle).toFloat(), 12f + outer * Math.sin(angle).toFloat()), weight * u, StrokeCap.Round)
             }
         }
+        Symbol.Aperture -> {
+            drawCircle(color, 9f * u, p(12f, 12f), style = stroke)
+            // Six blades: lines from the rim, each turned 60°, around a small hexagon.
+            for (index in 0 until 6) {
+                val a = Math.toRadians(index * 60.0 - 90.0)
+                val b = Math.toRadians(index * 60.0 - 30.0)
+                drawLine(color, p(12f + 9f * Math.cos(a).toFloat(), 12f + 9f * Math.sin(a).toFloat()),
+                    p(12f + 3.6f * Math.cos(b).toFloat(), 12f + 3.6f * Math.sin(b).toFloat()), weight * u, StrokeCap.Round)
+            }
+        }
+        Symbol.Checkmark -> path { m(5f, 12.5f); l(10f, 17.5f); l(19f, 6.5f) }
         Symbol.Hand -> {
             // Two fingers spreading: the pinch hint.
             path { m(8f, 15f); l(4.5f, 8.5f); m(4.5f, 8.5f); l(4.5f, 12f); m(4.5f, 8.5f); l(8f, 8.5f) }

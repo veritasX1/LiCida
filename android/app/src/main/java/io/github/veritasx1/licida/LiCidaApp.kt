@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -68,7 +69,7 @@ enum class Mode { Setup, Draw }
 
 @Composable
 fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCamera: () -> Unit, onDrawMode: (Boolean) -> Unit,
-              startMode: Mode = Mode.Setup) {
+              startMode: Mode = Mode.Setup, cameras: (android.content.Context) -> List<CameraFacts> = Cameras::facts) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var reference by remember { mutableStateOf(initial) }
@@ -84,7 +85,18 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
     var screen by remember { mutableStateOf(Size(1f, 1f)) }
     var message by remember { mutableStateOf<String?>(null) }
     var preview by remember { mutableStateOf<PreviewView?>(null) }
-    val camera = rememberCamera(cameraAllowed)
+    // The camera choice (card 5): the phone's cameras, the remembered one, its own view and fill mode.
+    var cameraOptions by remember { mutableStateOf<List<CameraOption>>(emptyList()) }
+    var cameraKey by remember { mutableStateOf(studio.cameraKey) }
+    var cameraView by remember { mutableStateOf(studio.cameraView) }
+    var fill by remember { mutableStateOf(studio.fill) }
+    var ghost by remember { mutableStateOf(studio.ghost) }
+    var cameraSheet by remember { mutableStateOf(false) }
+    val chosenCamera = CameraCatalog.pick(cameraOptions, cameraKey)
+    LaunchedEffect(cameraAllowed, cameraSheet) {
+        if (cameraAllowed) cameraOptions = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { CameraCatalog.options(cameras(context)) }
+    }
+    val camera = rememberCamera(cameraAllowed, chosenCamera)
 
     fun say(text: String) {
         message = text
@@ -114,10 +126,12 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
     }
 
     LaunchedEffect(mode) { onDrawMode(mode == Mode.Draw) }
+    BackHandler(enabled = cameraSheet) { cameraSheet = false }
     BackHandler(enabled = mode == Mode.Draw) { mode = Mode.Setup; view = DrawView(); chrome = true }
 
     val shownOpacity = when {
         mode == Mode.Draw -> drawOpacity
+        cameraSheet -> if (ghost) 0.35f else 0f
         moving -> minOf(opacity, Composition.WHILE_MOVING)
         else -> opacity
     }
@@ -130,7 +144,11 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
                 translationX = view.offset.x; translationY = view.offset.y
             }
         }) {
-            CameraLayer(camera, onView = { preview = it })
+            CameraLayer(camera, onView = { preview = it }, fill = fill, modifier = Modifier.graphicsLayer {
+                scaleX = cameraView.zoom * (if (cameraView.flipH) -1f else 1f)
+                scaleY = cameraView.zoom * (if (cameraView.flipV) -1f else 1f)
+                translationX = cameraView.offset.x; translationY = cameraView.offset.y
+            })
             reference?.let { bitmap ->
                 val image = remember(bitmap) { bitmap.asImageBitmap() }
                 Image(image, contentDescription = "Vorlage", contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize().graphicsLayer {
@@ -141,8 +159,20 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
             }
         }
 
-        // Gestures.
-        if (mode == Mode.Setup && reference != null) {
+        // Gestures – with the camera sheet open they move the camera picture (handbook p. 14).
+        if (mode == Mode.Setup && cameraSheet) {
+            Box(Modifier.fillMaxSize()
+                .pointerInput(Unit) {
+                    awaitEachGesture {
+                        awaitFirstDown(requireUnconsumed = false)
+                        do { val event = awaitPointerEvent() } while (event.changes.any { it.pressed })
+                        studio.cameraView = cameraView
+                    }
+                }
+                .pointerInput(screen) {
+                    detectTransformGestures { centroid, pan, zoom, _ -> cameraView = Composition.moveCamera(cameraView, centroid, pan, zoom, screen) }
+                })
+        } else if (mode == Mode.Setup && reference != null) {
             Box(Modifier.fillMaxSize()
                 .pointerInput(Unit) {
                     awaitEachGesture {
@@ -189,8 +219,20 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
                 })
         }
 
-        when (mode) {
-            Mode.Setup -> SetupChrome(reference, opacity, hintSeen, cameraAllowed,
+        when {
+            mode == Mode.Setup && cameraSheet -> CameraSheet(cameraOptions, chosenCamera, fill, ghost, reference != null,
+                onChoose = { option ->
+                    if (option.key != chosenCamera?.key) {
+                        cameraKey = option.key; studio.cameraKey = option.key
+                        cameraView = Composition.cameraViewFor(option); studio.cameraView = cameraView
+                    }
+                },
+                onFill = { fill = it; studio.fill = it },
+                onGhost = { ghost = it; studio.ghost = it },
+                onReset = { cameraView = chosenCamera?.let(Composition::cameraViewFor) ?: CameraView(); studio.cameraView = cameraView },
+                onDone = { cameraSheet = false },
+                modifier = Modifier.align(Alignment.BottomCenter).fillMaxHeight(0.5f))
+            mode == Mode.Setup -> SetupChrome(reference, opacity, hintSeen, cameraAllowed,
                 onOpacity = { opacity = it }, onOpacityDone = { studio.opacity = opacity },
                 onPhotos = ::pickPhoto, onFiles = ::pickFile, onCamera = ::takePhoto, onAskCamera = onAskCamera,
                 onRotate = { placement = Composition.quarterTurn(placement); studio.placement = placement },
@@ -200,8 +242,9 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
                         "LiCida-Vorlage-${System.currentTimeMillis() / 1000}")
                     say(if (saved) "In Fotos gesichert" else "Sichern hat nicht geklappt")
                 },
-                onDraw = { mode = Mode.Draw; view = DrawView(); chrome = true })
-            Mode.Draw -> AnimatedVisibility(chrome, enter = fadeIn(), exit = fadeOut()) {
+                onDraw = { mode = Mode.Draw; view = DrawView(); chrome = true },
+                onCameraSettings = { cameraSheet = true })
+            else -> AnimatedVisibility(chrome, enter = fadeIn(), exit = fadeOut()) {
                 DrawChrome(view, drawOpacity, exposureLocked,
                     onOpacity = { drawOpacity = it }, onOpacityDone = { studio.drawOpacity = drawOpacity },
                     onBack = { mode = Mode.Setup; view = DrawView() },
@@ -223,13 +266,15 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
 private fun SetupChrome(reference: Bitmap?, opacity: Float, hintSeen: Boolean, cameraAllowed: Boolean,
                         onOpacity: (Float) -> Unit, onOpacityDone: () -> Unit,
                         onPhotos: () -> Unit, onFiles: () -> Unit, onCamera: () -> Unit, onAskCamera: () -> Unit,
-                        onRotate: () -> Unit, onSave: () -> Unit, onDraw: () -> Unit) {
+                        onRotate: () -> Unit, onSave: () -> Unit, onDraw: () -> Unit, onCameraSettings: () -> Unit) {
     val ready = reference != null
     Box(Modifier.fillMaxSize()) {
         // Top: files on the left, turn and keep on the right (Camera keeps its top bar this light).
         Row(Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars).padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically) {
             GlassButton(Symbol.Folder, "Bild aus Dateien", onClick = onFiles)
+            Spacer(Modifier.size(12.dp))
+            GlassButton(Symbol.Aperture, "Kamera wählen und einstellen", enabled = cameraAllowed, onClick = onCameraSettings)
             Spacer(Modifier.weight(1f))
             GlassButton(Symbol.RotateRight, "Vorlage um 90 Grad drehen", enabled = ready, onClick = onRotate)
             Spacer(Modifier.size(12.dp))
