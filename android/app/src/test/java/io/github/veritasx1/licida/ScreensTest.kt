@@ -9,6 +9,8 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onLast
+import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
@@ -33,7 +35,8 @@ class ScreensTest {
 
     private fun shot(name: String) {
         compose.waitForIdle()
-        if (out != null) compose.onRoot().captureRoboImage("$out/$name.png")
+        // With a dialog open there are two windows: the dialog's is the last one.
+        if (out != null) compose.onAllNodes(androidx.compose.ui.test.isRoot()).onLast().captureRoboImage("$out/$name.png")
     }
 
     /** A drawing-like sample: a simple flower on white. */
@@ -137,5 +140,37 @@ class ScreensTest {
         compose.waitForIdle()
         assertEquals(listOf("Graustufen", "Tontrennung (4)"), studio.edits.active.map { it.label })
         compose.onNodeWithText("Fertig").performClick()
+    }
+
+    @Test
+    fun colourPalette() {
+        val studio = Studio(context).apply { hintSeen = true; edits = Edits() }
+        compose.setContent { LiCidaApp(studio, sample(), cameraAllowed = false, onAskCamera = {}, onDrawMode = {}) }
+        compose.onNodeWithContentDescription("Werkzeuge und Filter").performClick()
+        compose.waitUntil(5000) { runCatching { compose.onNodeWithContentDescription("Farbpalette: Wenige Farben, einzeln ein- und ausblendbar").assertExists() }.isSuccess }
+        compose.onNodeWithContentDescription("Farbpalette: Wenige Farben, einzeln ein- und ausblendbar").performClick()
+        compose.waitUntil(8000) { runCatching { compose.onNodeWithText("Anwenden").assertExists() }.isSuccess }
+        compose.waitUntil(8000) { runCatching { compose.onNodeWithText("Farbpalette").assertExists() }.isSuccess }  // found
+        Thread.sleep(500); compose.waitForIdle()
+        shot("7-palette")
+        // The selected swatch tapped again: the colour picker.
+        compose.onAllNodesWithContentDescription("Farbe")[0].performClick()
+        compose.onAllNodesWithContentDescription("Farbe")[0].performClick()
+        compose.onNodeWithText("Vorher").assertExists()
+        compose.onNodeWithText("Regler").performClick()
+        shot("8-farbwahl")
+        compose.onAllNodesWithText("Fertig").onLast().performClick()
+        compose.onNodeWithText("Anwenden").performClick()
+        compose.waitForIdle()
+        val step = studio.edits.active.single()
+        assertEquals(Filter.ColourPalette, step.filter)
+        // Drawing with colour layers: one off – the layer row is there, the button shrinks.
+        compose.waitUntil(5000) { runCatching { compose.onNodeWithContentDescription("Palette bearbeiten").assertExists() }.isSuccess }
+        compose.onAllNodesWithContentDescription("Farbebene ein")[0].performClick()
+        compose.onNodeWithContentDescription("Farbebene aus").assertExists()
+        Thread.sleep(500); compose.waitForIdle()
+        shot("9-farbebenen")
+        compose.onNodeWithContentDescription("Alle Farben ein").performClick()
+        compose.onAllNodesWithContentDescription("Farbebene aus").assertCountEquals(0)
     }
 }

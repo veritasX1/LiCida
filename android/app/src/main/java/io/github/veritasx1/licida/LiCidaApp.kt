@@ -107,14 +107,44 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
     var busy by remember { mutableStateOf(false) }
     var previews by remember { mutableStateOf<Map<Filter, Bitmap>>(emptyMap()) }
     val work = remember(reference) { reference?.let { Reference.scaled(it, 2048) } }
-    LaunchedEffect(work, edits.active) {
+    // The palette's colour layers while drawing (card 11): which are hidden; reset when the edits change.
+    val lastPalette = edits.active.lastOrNull()?.palette
+    var hiddenLayers by remember(edits) { mutableStateOf<Set<Int>>(emptySet()) }
+    var paletteEditor by remember { mutableStateOf(false) }
+    var paletteBackToSheet by remember { mutableStateOf(false) }
+    var paletteSource by remember { mutableStateOf<Bitmap?>(null) }
+    var wheelOf by remember { mutableStateOf<Palette?>(null) }
+    var importInto by remember { mutableStateOf<((Palette) -> Unit)?>(null) }
+    var importCount by remember { mutableStateOf(Palette.DEFAULT_COLOURS) }
+    val importer = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        val into = importInto ?: return@rememberLauncherForActivityResult
+        uri?.let { Reference.decode(context, it, 480) }?.let { picture -> into(Palette.find(Reference.pixels(picture), importCount)) }
+        importInto = null
+    }
+    LaunchedEffect(work, edits.active, hiddenLayers) {
         val base = work ?: run { shown = null; return@LaunchedEffect }
         if (edits.active.isEmpty()) { shown = base; return@LaunchedEffect }
         busy = true
         shown = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
-            Reference.bitmap(Edits.render(Reference.pixels(base), edits.active))
+            val palette = edits.active.last().palette
+            if (palette != null && hiddenLayers.isNotEmpty())
+                Reference.bitmap(palette.render(Edits.render(Reference.pixels(base), edits.active.dropLast(1)), hiddenLayers))
+            else Reference.bitmap(Edits.render(Reference.pixels(base), edits.active))
         }
         busy = false
+    }
+    /** The editor works on the picture as it is before the palette (when a palette is the last step: before that one). */
+    fun openPalette() {
+        val base = work ?: return
+        scope.launch {
+            paletteSource = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+                val before = if (lastPalette != null) edits.active.dropLast(1) else edits.active
+                Reference.bitmap(Edits.render(Reference.pixels(base), before))
+            }
+            paletteBackToSheet = filterSheet
+            filterSheet = false   // the editor takes the whole screen; "Abbrechen" brings the toolbox back
+            paletteEditor = true
+        }
     }
     LaunchedEffect(shown, filterSheet) {
         val now = shown ?: return@LaunchedEffect
@@ -197,6 +227,7 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
     LaunchedEffect(mode) { onDrawMode(mode == Mode.Draw) }
     BackHandler(enabled = cameraSheet) { cameraSheet = false }
     BackHandler(enabled = filterSheet) { filterSheet = false }
+    BackHandler(enabled = paletteEditor) { paletteEditor = false; filterSheet = paletteBackToSheet }
     BackHandler(enabled = mode == Mode.Draw) { mode = Mode.Setup; view = DrawView(); chrome = true }
 
     val shownOpacity = when {
@@ -314,7 +345,8 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
                     say(if (saved) "In Fotos gesichert" else "Sichern hat nicht geklappt")
                 },
                 onDone = { filterSheet = false },
-                modifier = Modifier.align(Alignment.BottomCenter).fillMaxHeight(0.52f))
+                modifier = Modifier.align(Alignment.BottomCenter).fillMaxHeight(0.52f),
+                onPalette = ::openPalette)
             mode == Mode.Setup && cameraSheet -> CameraSheet(cameraOptions, chosenCamera, fill, ghost, reference != null,
                 onChoose = { option ->
                     if (option.key != chosenCamera?.key) {
@@ -370,6 +402,28 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
                     onUnlock = { camera.unlock(); exposureLocked = false },
                     onZoomReset = { view = DrawView() })
             }
+        }
+
+        if (lastPalette != null && !filterSheet && !cameraSheet && !paletteEditor && (mode == Mode.Setup || chrome)) {
+            PaletteLayers(lastPalette, hiddenLayers, { hiddenLayers = it }, onEdit = ::openPalette,
+                modifier = Modifier.align(Alignment.BottomCenter).windowInsetsPadding(WindowInsets.navigationBars)
+                    .padding(start = 16.dp, end = 16.dp, bottom = if (mode == Mode.Draw) 84.dp else 176.dp))
+        }
+        if (paletteEditor) paletteSource?.let { source ->
+            PaletteEditor(source, lastPalette,
+                onImport = { count, into -> importCount = count; importInto = into; importer.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+                onWheel = { wheelOf = it },
+                onCancel = { paletteEditor = false; filterSheet = paletteBackToSheet },
+                onApply = { palette ->
+                    edit(if (lastPalette != null) edits.replaceLast(Step.palette(palette)) else edits.add(Step.palette(palette)))
+                    paletteEditor = false; filterSheet = false
+                })
+        }
+        wheelOf?.let { palette ->
+            PaletteWheel(palette,
+                onSave = { say(if (Reference.saveToPhotos(context, it, "LiCida-Farbkreis-${System.currentTimeMillis() / 1000}")) "Farbkreis in Fotos gesichert" else "Sichern hat nicht geklappt") },
+                onPrint = { wheel -> runCatching { androidx.print.PrintHelper(context).apply { scaleMode = androidx.print.PrintHelper.SCALE_MODE_FIT }.printBitmap("LiCida-Farbkreis", wheel) } },
+                onClose = { wheelOf = null })
         }
 
         autoBusy?.let { text ->

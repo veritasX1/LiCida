@@ -1,12 +1,25 @@
 package io.github.veritasx1.licida
 
-/** One applied filter (with its value, e.g. 4 shades). */
-data class Step(val filter: Filter, val value: Int = filter.defaultValue) {
-    val label get() = if (filter.takesValue) "${filter.label} ($value)" else filter.label
-    fun encode() = "${filter.id}:$value"
+/** One applied filter (with its value, e.g. 4 shades; a palette step carries its palette in `data`). */
+data class Step(val filter: Filter, val value: Int = filter.defaultValue, val data: String = "") {
+    val label get() = when {
+        filter == Filter.ColourPalette -> "${filter.label} (${palette?.let { it.size - it.removed.size } ?: value} Farben)"
+        filter.takesValue -> "${filter.label} ($value)"
+        else -> filter.label
+    }
+    val palette: Palette? get() = if (filter == Filter.ColourPalette) Palette.decode(data) else null
+
+    fun encode() = "${filter.id}:$value" + if (data.isEmpty()) "" else ":" + java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(data.toByteArray())
 
     companion object {
-        fun decode(text: String) = text.split(":").let { parts -> Filter.byId(parts[0])?.let { Step(it, parts.getOrNull(1)?.toIntOrNull() ?: it.defaultValue) } }
+        fun decode(text: String) = text.split(":").let { parts ->
+            Filter.byId(parts[0])?.let { filter ->
+                val data = parts.getOrNull(2)?.let { runCatching { String(java.util.Base64.getUrlDecoder().decode(it)) }.getOrDefault("") } ?: ""
+                Step(filter, parts.getOrNull(1)?.toIntOrNull() ?: filter.defaultValue, data)
+            }
+        }
+
+        fun palette(palette: Palette) = Step(Filter.ColourPalette, palette.size, palette.encode())
     }
 }
 
@@ -44,7 +57,7 @@ data class Edits(val steps: List<Step> = emptyList(), val position: Int = 0) {
             var image = original
             var previous: Filter? = null
             for (step in steps) {
-                image = Filters.apply(image, step.filter, step.value, previous)
+                image = step.palette?.render(image) ?: Filters.apply(image, step.filter, step.value, previous)
                 // Threshold twice inverts once; a third time is a fresh threshold again.
                 previous = if (step.filter == Filter.Threshold && previous == Filter.Threshold) null else step.filter
             }

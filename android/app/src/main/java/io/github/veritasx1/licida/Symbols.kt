@@ -36,6 +36,9 @@ enum class Symbol {
     Undo,           // arrow.uturn.backward
     Redo,           // arrow.uturn.forward
     History,        // clock.arrow.circlepath
+    Pipette,        // eyedropper
+    Import,         // square.and.arrow.down.on.square – colours from a photo
+    Wheel,          // paintpalette – the palette
 }
 
 @Composable
@@ -135,6 +138,23 @@ fun DrawScope.drawSymbol(symbol: Symbol, color: Color, weight: Float = 1.7f) {
             path { m(4.2f, 12f); q(4.2f, 4.2f, 12f, 4.2f); q(19.8f, 4.2f, 19.8f, 12f); q(19.8f, 19.8f, 12f, 19.8f); q(7.2f, 19.8f, 5.4f, 16f) }
             path { m(2.4f, 9.8f); l(4.2f, 12.4f); l(6.6f, 10f) }
             path { m(12f, 7.5f); l(12f, 12.4f); l(15.2f, 14.4f) }
+        }
+        Symbol.Pipette -> {
+            // The bulb top right, the collar, the glass tube down to the tip.
+            path { m(14.2f, 5.6f); q(16.6f, 3.2f, 18.9f, 5.1f); q(20.8f, 7.4f, 18.4f, 9.8f) }
+            path { m(12.6f, 7.2f); l(16.8f, 11.4f) }
+            path { m(15.2f, 9.8f); l(7.2f, 17.8f); q(5.6f, 19.4f, 4.4f, 19.6f); q(4.6f, 18.4f, 6.2f, 16.8f); l(14.2f, 8.8f) }
+        }
+        Symbol.Import -> {
+            box(7f, 3.5f, 13.5f, 13.5f, 2.5f)
+            path { m(13.75f, 6.5f); l(13.75f, 13f); m(10.8f, 10.2f); l(13.75f, 13.2f); l(16.7f, 10.2f) }
+            path { m(4f, 7.5f); l(4f, 18f); q(4f, 20.5f, 6.5f, 20.5f); l(17f, 20.5f) }
+        }
+        Symbol.Wheel -> {
+            path { m(12f, 3.5f); q(3.5f, 3.5f, 3.5f, 12f); q(3.5f, 20.5f, 12f, 20.5f); q(14f, 20.5f, 14f, 18.5f); q(14f, 16f, 16.5f, 16f); l(18f, 16f)
+                q(20.5f, 16f, 20.5f, 12.5f); q(20.5f, 3.5f, 12f, 3.5f) }
+            drawCircle(color, 1.4f * u, p(8f, 10f)); drawCircle(color, 1.4f * u, p(11.5f, 7f)); drawCircle(color, 1.4f * u, p(15.5f, 8.5f))
+            drawCircle(color, 1.4f * u, p(8.5f, 14.5f))
         }
         Symbol.Hand -> {
             // Two fingers spreading: the pinch hint.

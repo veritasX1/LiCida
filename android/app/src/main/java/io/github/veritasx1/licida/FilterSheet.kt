@@ -63,7 +63,7 @@ private sealed interface SlotQuestion {
 fun FilterSheet(edits: Edits, previews: Map<Filter, Bitmap>, slots: List<Slot>, busy: Boolean,
                 onApply: (Step) -> Unit, onValue: (Int) -> Unit, onUndo: () -> Unit, onRedo: () -> Unit, onJump: (Int) -> Unit,
                 onStore: (Int) -> Unit, onReplay: (Int) -> Unit, onRename: (Int, String) -> Unit, onSave: () -> Unit, onDone: () -> Unit,
-                modifier: Modifier = Modifier) {
+                modifier: Modifier = Modifier, onPalette: () -> Unit = {}) {
     var history by remember { mutableStateOf(false) }
     var question by remember { mutableStateOf<SlotQuestion?>(null) }
     val last = edits.active.lastOrNull()
@@ -87,7 +87,9 @@ fun FilterSheet(edits: Edits, previews: Map<Filter, Bitmap>, slots: List<Slot>, 
                 modifier = Modifier.padding(top = 8.dp)) {
                 itemsIndexed(Filter.entries) { _, filter ->
                     Column(Modifier.width(76.dp).clickable(role = Role.Button) {
-                        onApply(Step(filter, if (filter.takesValue && last?.filter == filter) last.value else filter.defaultValue))
+                        // The palette opens its editor (handbook p. 34); the others apply at once.
+                        if (filter == Filter.ColourPalette) onPalette()
+                        else onApply(Step(filter, if (filter.takesValue && last?.filter == filter) last.value else filter.defaultValue))
                     }.semantics { contentDescription = "${filter.label}: ${filter.hint}" }, horizontalAlignment = Alignment.CenterHorizontally) {
                         Box(Modifier.size(72.dp).clip(RoundedCornerShape(10.dp)).background(Checker)
                             .border(if (last?.filter == filter) 2.dp else 0.dp, Ink.yellow, RoundedCornerShape(10.dp))) {
