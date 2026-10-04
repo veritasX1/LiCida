@@ -93,6 +93,16 @@ class ScreensTest {
         assertEquals(true, studio.cameraView.flipV)  // the front camera looks through a mirror
         compose.onNodeWithText("Ganzes Bild").performClick()
         assertEquals(false, studio.fill)
+        // Correction by hand (card 6): stretch + and the helper grid; the sheet shows the automatic part (card 7).
+        compose.onNodeWithContentDescription("Breite vergrößern").performScrollTo().performClick()
+        compose.waitForIdle()
+        assert(studio.correction.stretchX > 1f) { studio.correction.encode() }
+        compose.onNodeWithContentDescription("Hilfsraster einblenden").performScrollTo().performClick()
+        assertEquals(true, studio.helperGhost)
+        compose.onNodeWithText("Automatisch ausrichten").performScrollTo().assertExists()
+        shot("6-korrektur")
+        compose.onNodeWithText("Korrektur zurücksetzen").performScrollTo().performClick()
+        assertEquals(true, studio.correction.isPlain)
         compose.onNodeWithText("Fertig").performClick()
         compose.onNodeWithContentDescription("Zeichnen").assertExists()
     }

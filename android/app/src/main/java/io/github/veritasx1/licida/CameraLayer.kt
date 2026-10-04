@@ -78,6 +78,9 @@ class Camera(private val context: android.content.Context?, private val lifecycl
         bound?.cameraControl?.cancelFocusAndMetering()
     }
 
+    /** What the camera shows right now, in the view's own coordinates (before any straightening) – for finding the target. */
+    fun snapshot(view: PreviewView?): Bitmap? = view?.bitmap
+
     /** One picture as the new reference, upright. */
     fun capture(context: android.content.Context, onDone: (Bitmap?) -> Unit) {
         if (bound == null) return onDone(null)
@@ -102,7 +105,8 @@ data class CameraView(val zoom: Float = 1f, val offset: Offset = Offset.Zero, va
 /** The camera picture in its box: "Füllen" crops to the screen, "Ganzes Bild" shows the whole 4:3 field.
  *  In previews and tests (no camera there) a dark grey surface. */
 @Composable
-fun CameraLayer(camera: Camera, onView: (PreviewView) -> Unit, modifier: Modifier = Modifier, fill: Boolean = true) {
+fun CameraLayer(camera: Camera, onView: (PreviewView) -> Unit, modifier: Modifier = Modifier, fill: Boolean = true,
+                correction: Correction = Correction()) {
     if (LocalInspectionMode.current || !camera.available) {
         Box(modifier.fillMaxSize().background(Color(0xFF3A3A3C)))
         return
@@ -113,12 +117,23 @@ fun CameraLayer(camera: Camera, onView: (PreviewView) -> Unit, modifier: Modifie
             implementationMode = PreviewView.ImplementationMode.COMPATIBLE
             scaleType = if (fill) PreviewView.ScaleType.FILL_CENTER else PreviewView.ScaleType.FIT_CENTER
             camera.preview.surfaceProvider = surfaceProvider
+            // The straightening needs the view's size: applied again whenever it changes.
+            addOnLayoutChangeListener { view, _, _, _, _, _, _, _, _ -> straighten(view, view.tag as? Correction ?: Correction()) }
             onView(this)
         }
     }, update = { view ->
         val wanted = if (fill) PreviewView.ScaleType.FILL_CENTER else PreviewView.ScaleType.FIT_CENTER
         if (view.scaleType != wanted) view.scaleType = wanted
+        view.tag = correction
+        straighten(view, correction)
     }, modifier = modifier.fillMaxSize())
+}
+
+/** The correction as the view's drawing matrix – a full perspective map, done by the graphics chip (cards 6/7). */
+private fun straighten(view: android.view.View, correction: Correction) {
+    if (view.width == 0 || view.height == 0) return
+    view.animationMatrix = if (correction.isPlain) null
+        else Matrix().apply { setValues(correction.matrix(view.width.toFloat(), view.height.toFloat())) }
 }
 
 @Composable
