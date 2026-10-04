@@ -39,6 +39,9 @@ class MainActivity : ComponentActivity() {
         cameraAllowed.value = granted()  // allowed meanwhile in the system settings
     }
 
+    /** Keys first to LiCida (card 15: keyboard, controller, remote while drawing); the rest as usual. */
+    override fun dispatchKeyEvent(event: android.view.KeyEvent): Boolean = KeyHub.dispatch(event) || super.dispatchKeyEvent(event)
+
     private fun granted() = checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
 
     /** Ask again – or, once Android stops asking, open LiCida's page in the settings (the user decides there). */

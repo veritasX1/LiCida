@@ -120,3 +120,7 @@ fun IosSlider(value: Float, onChange: (Float) -> Unit, description: String, modi
         }
     }
 }
+
+/** A sheet or page takes the touches on it (nothing underneath reacts), without merging its contents into one
+ *  element for TalkBack – which `clickable(enabled = false)` would do. */
+fun Modifier.keepTouches(): Modifier = this.pointerInput(Unit) {}

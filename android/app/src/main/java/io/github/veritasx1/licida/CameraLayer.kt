@@ -29,11 +29,23 @@ import androidx.core.content.ContextCompat
  *  ImageCapture, full 4:3 sensor picture) so that "Ganzes Bild" really shows the camera's whole field –
  *  a CameraController would crop the stream to the screen's shape. All on the phone: no frame is stored
  *  or sent anywhere; only "Vorlage fotografieren" keeps one picture, as the reference. */
-class Camera(private val context: android.content.Context?, private val lifecycle: androidx.lifecycle.LifecycleOwner?) {
+class Camera(private val context: android.content.Context?, private val lifecycle: androidx.lifecycle.LifecycleOwner?,
+             quality: CameraQuality = CameraQuality.Sharp) {
     val available = context != null && lifecycle != null
     private val aspect = androidx.camera.core.resolutionselector.ResolutionSelector.Builder()
         .setAspectRatioStrategy(androidx.camera.core.resolutionselector.AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY).build()
-    val preview: Preview = Preview.Builder().setResolutionSelector(aspect).build()
+    /** The live picture's size (card 15, "Kamerabild"): fewer pixels, or the most the camera gives. */
+    private val live = androidx.camera.core.resolutionselector.ResolutionSelector.Builder()
+        .setAspectRatioStrategy(androidx.camera.core.resolutionselector.AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY)
+        .apply {
+            when (quality) {
+                CameraQuality.Smooth -> setResolutionStrategy(androidx.camera.core.resolutionselector.ResolutionStrategy(android.util.Size(1280, 960),
+                    androidx.camera.core.resolutionselector.ResolutionStrategy.FALLBACK_RULE_CLOSEST_LOWER_THEN_HIGHER))
+                // CameraX keeps the live picture near the screen's size; this takes the most it allows.
+                CameraQuality.Sharp -> setResolutionStrategy(androidx.camera.core.resolutionselector.ResolutionStrategy.HIGHEST_AVAILABLE_STRATEGY)
+            }
+        }.build()
+    val preview: Preview = Preview.Builder().setResolutionSelector(live).build()
     private val still: ImageCapture = ImageCapture.Builder().setResolutionSelector(aspect).build()
     private var bound: androidx.camera.core.Camera? = null
 
@@ -85,6 +97,9 @@ class Camera(private val context: android.content.Context?, private val lifecycl
         bound?.cameraControl?.cancelFocusAndMetering()
     }
 
+    /** The live picture's size as bound, e.g. "1440×1080" (for checking the quality setting). */
+    val liveSize: String? get() = preview.resolutionInfo?.resolution?.let { "${it.width}×${it.height}" }
+
     /** What the camera shows right now, in the view's own coordinates (before any straightening) – for finding the target. */
     fun snapshot(view: PreviewView?): Bitmap? = view?.bitmap
 
@@ -118,7 +133,8 @@ fun CameraLayer(camera: Camera, onView: (PreviewView) -> Unit, modifier: Modifie
         Box(modifier.fillMaxSize().background(Color(0xFF3A3A3C)))
         return
     }
-    AndroidView(factory = { context ->
+    // A new camera (other quality) needs a new view: the surface is handed over only when the view is made.
+    androidx.compose.runtime.key(camera) { AndroidView(factory = { context ->
         PreviewView(context).apply {
             // A TextureView inside: it zooms and moves with the reference (graphicsLayer) in draw mode.
             implementationMode = PreviewView.ImplementationMode.COMPATIBLE
@@ -133,7 +149,7 @@ fun CameraLayer(camera: Camera, onView: (PreviewView) -> Unit, modifier: Modifie
         if (view.scaleType != wanted) view.scaleType = wanted
         view.tag = correction
         straighten(view, correction)
-    }, modifier = modifier.fillMaxSize())
+    }, modifier = modifier.fillMaxSize()) }
 }
 
 /** The correction as the view's drawing matrix – a full perspective map, done by the graphics chip (cards 6/7). */
@@ -144,11 +160,11 @@ private fun straighten(view: android.view.View, correction: Correction) {
 }
 
 @Composable
-fun rememberCamera(enabled: Boolean, option: CameraOption?): Camera {
+fun rememberCamera(enabled: Boolean, option: CameraOption?, quality: CameraQuality = CameraQuality.Sharp): Camera {
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current
     val inPreview = LocalInspectionMode.current
-    val camera = remember(enabled, inPreview) { if (!enabled || inPreview) Camera(null, null) else Camera(context, lifecycle) }
+    val camera = remember(enabled, inPreview, quality) { if (!enabled || inPreview) Camera(null, null) else Camera(context, lifecycle, quality) }
     // The chosen camera (and its zoom, e.g. 0.5× for the ultra-wide of a combined camera).
     androidx.compose.runtime.LaunchedEffect(camera, option) { camera.bind(option) }
     DisposableEffect(camera) { onDispose { camera.release() } }

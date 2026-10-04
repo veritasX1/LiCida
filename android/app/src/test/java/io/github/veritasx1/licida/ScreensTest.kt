@@ -264,4 +264,54 @@ class ScreensTest {
         compose.onNodeWithText("Abbrechen").performClick()
         compose.onNodeWithText("Neu aufnehmen").assertDoesNotExist()
     }
+
+    @Test
+    fun settingsPage() {
+        // Card 15: from the Mehr menu; a key row takes the next key pressed.
+        val studio = Studio(context)
+        compose.setContent { LiCidaApp(studio, sample(), cameraAllowed = true, onAskCamera = {}, onDrawMode = {}) }
+        compose.onNodeWithContentDescription("Mehr").performClick()
+        shot("17-mehr-menue")
+        compose.onNodeWithText("Einstellungen …").performClick()
+        compose.onNodeWithText("Einstellungen").assertExists()
+        shot("18-einstellungen")
+        compose.onNodeWithText("Vorlage aus/ein").performScrollTo().performClick()
+        compose.onNodeWithText("Taste drücken …").assertExists()
+        KeyHub.dispatch(android.view.KeyEvent(android.view.KeyEvent.ACTION_DOWN, android.view.KeyEvent.KEYCODE_VOLUME_UP))
+        compose.waitForIdle()
+        compose.onNodeWithText("Lauter").assertExists()
+        assertEquals(KeyAction.Toggle, studio.keymap.action(android.view.KeyEvent.KEYCODE_VOLUME_UP))
+        shot("19-tasten")
+        compose.onNode(androidx.compose.ui.test.hasScrollAction()).performScrollToNode(androidx.compose.ui.test.hasText("Projektor-Modus"))
+        compose.onNodeWithContentDescription("Projektor-Modus").performClick()
+        assertEquals(true, studio.projector)
+        compose.onNodeWithText("Fertig").performClick()
+        compose.onNodeWithText("Einstellungen").assertDoesNotExist()
+    }
+
+    @Test
+    fun keysWhileDrawing() {
+        val studio = Studio(context).apply { drawOpacity = 0.5f }
+        compose.setContent { LiCidaApp(studio, sample(), cameraAllowed = true, onAskCamera = {}, onDrawMode = {}, startMode = Mode.Draw) }
+        fun press(code: Int) {
+            KeyHub.dispatch(android.view.KeyEvent(android.view.KeyEvent.ACTION_DOWN, code))
+            KeyHub.dispatch(android.view.KeyEvent(android.view.KeyEvent.ACTION_UP, code))
+            compose.waitForIdle()
+        }
+        press(android.view.KeyEvent.KEYCODE_E)
+        compose.onNodeWithText("1,3×").assertExists()
+        press(android.view.KeyEvent.KEYCODE_C)
+        assertEquals(0.6f, studio.drawOpacity, 1e-4f)
+        press(android.view.KeyEvent.KEYCODE_R)
+        compose.onNodeWithText("Vorlage aus").assertExists()
+        // A key nobody has is left to Android.
+        assertEquals(false, KeyHub.dispatch(android.view.KeyEvent(android.view.KeyEvent.ACTION_DOWN, android.view.KeyEvent.KEYCODE_X)))
+    }
+
+    @Test
+    fun projectorHidesTheCamera() {
+        val studio = Studio(context).apply { projector = true }
+        compose.setContent { LiCidaApp(studio, sample(), cameraAllowed = true, onAskCamera = {}, onDrawMode = {}, startMode = Mode.Draw) }
+        shot("20-projektor")
+    }
 }

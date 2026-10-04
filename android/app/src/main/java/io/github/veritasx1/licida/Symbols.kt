@@ -44,6 +44,9 @@ enum class Symbol {
     Share,          // square.and.arrow.up
     Ellipsis,       // ellipsis.circle – the setup's further choices
     Sessions,       // clock.arrow.trianglehead – a kept session: tray with arrow down
+    Gear,           // gearshape – the settings page
+    Maximize,       // arrow.up.left.and.arrow.down.right – the largest drawing
+    Reset,          // arrow.counterclockwise – camera back to the start
 }
 
 @Composable
@@ -179,6 +182,24 @@ fun DrawScope.drawSymbol(symbol: Symbol, color: Color, weight: Float = 1.7f) {
             path { m(12f, 3.5f); l(12f, 13f); m(8.5f, 9.5f); l(12f, 13f); l(15.5f, 9.5f) }
             path { m(3.5f, 14f); l(3.5f, 18.5f); q(3.5f, 20.5f, 5.5f, 20.5f); l(18.5f, 20.5f); q(20.5f, 20.5f, 20.5f, 18.5f); l(20.5f, 14f)
                 m(3.5f, 14f); l(8f, 14f); l(9f, 16.5f); l(15f, 16.5f); l(16f, 14f); l(20.5f, 14f) }
+        }
+        Symbol.Gear -> {
+            // Eight teeth around a ring, a hole in the middle (gearshape).
+            for (index in 0 until 8) {
+                val a = Math.toRadians(index * 45.0)
+                drawLine(color, p(12f + 6.6f * Math.cos(a).toFloat(), 12f + 6.6f * Math.sin(a).toFloat()),
+                    p(12f + 9.2f * Math.cos(a).toFloat(), 12f + 9.2f * Math.sin(a).toFloat()), weight * 1.6f * u, StrokeCap.Round)
+            }
+            drawCircle(color, 6.6f * u, p(12f, 12f), style = stroke)
+            drawCircle(color, 2.6f * u, p(12f, 12f), style = stroke)
+        }
+        Symbol.Maximize -> {
+            path { m(4f, 10f); l(4f, 4f); l(10f, 4f); m(4f, 4f); l(10.5f, 10.5f) }
+            path { m(20f, 14f); l(20f, 20f); l(14f, 20f); m(20f, 20f); l(13.5f, 13.5f) }
+        }
+        Symbol.Reset -> {
+            path { m(5.2f, 9f); q(7.5f, 4.2f, 12.5f, 4.2f); q(19.8f, 4.6f, 19.8f, 12f); q(19.8f, 19.8f, 12f, 19.8f); q(6.4f, 19.8f, 4.6f, 14.8f) }
+            path { m(4.6f, 4.6f); l(5f, 9.4f); l(9.6f, 8.6f) }
         }
         Symbol.Hand -> {
             // Two fingers spreading: the pinch hint.

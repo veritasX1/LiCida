@@ -147,7 +147,7 @@ private fun SheetFrame(title: String, left: String?, right: String?, rightEnable
                        onOutside: () -> Unit, content: @Composable () -> Unit) {
     Box(Modifier.fillMaxSize().clickable(onClick = onOutside), contentAlignment = Alignment.BottomCenter) {
         Column(Modifier.fillMaxWidth().imePadding().clip(RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp)).background(Color(0xFF1C1C1E))
-            .clickable(enabled = false) {}.windowInsetsPadding(WindowInsets.navigationBars).padding(bottom = 12.dp)) {
+            .keepTouches().windowInsetsPadding(WindowInsets.navigationBars).padding(bottom = 12.dp)) {
             Box(Modifier.fillMaxWidth().padding(top = 6.dp), contentAlignment = Alignment.Center) {
                 Box(Modifier.size(36.dp, 5.dp).clip(CircleShape).background(Color(0x66EBEBF5)))
             }
