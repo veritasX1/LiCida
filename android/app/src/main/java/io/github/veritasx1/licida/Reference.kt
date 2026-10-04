@@ -196,6 +196,18 @@ class Studio(context: Context) {
         get() = prefs.getBoolean("helperGhost", false)
         set(value) { prefs.edit().putBoolean("helperGhost", value).apply() }
 
+    /** Which extra buttons show while drawing: "Sitzung sichern", Zeitraffer. */
+    var sessionButton: Boolean
+        get() = prefs.getBoolean("sessionButton", true)
+        set(value) { prefs.edit().putBoolean("sessionButton", value).apply() }
+    var recordButton: Boolean
+        get() = prefs.getBoolean("recordButton", false)
+        set(value) { prefs.edit().putBoolean("recordButton", value).apply() }
+
+    var timelapse: TimelapseSettings
+        get() = TimelapseSettings.decode(prefs.getString("timelapse", null))
+        set(value) { prefs.edit().putString("timelapse", value.encode()).apply() }
+
     /** The gesture hint shows until the user has moved a reference once. */
     var hintSeen: Boolean
         get() = prefs.getBoolean("hintSeen", false)

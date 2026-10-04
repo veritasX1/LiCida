@@ -120,10 +120,12 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
     var paletteEditor by remember { mutableStateOf(false) }
     var paletteBackToSheet by remember { mutableStateOf(false) }
     // The draw mode's further tools (card 12).
-    var tools by remember { mutableStateOf(Tools()) }
+    var tools by remember { mutableStateOf(Tools(sessionButton = studio.sessionButton, recordButton = studio.recordButton)) }
+    LaunchedEffect(tools.sessionButton, tools.recordButton) { studio.sessionButton = tools.sessionButton; studio.recordButton = tools.recordButton }
     var moreSheet by remember { mutableStateOf(false) }
     var capturing by remember { mutableStateOf(false) }
     LaunchedEffect(tools.torch) { camera.torch(tools.torch) }
+
     val flickerAlpha = if (tools.flicker && mode == Mode.Draw) {
         val transition = androidx.compose.animation.core.rememberInfiniteTransition(label = "Flimmern")
         val period = (2400 - tools.flickerSpeed * 2100).toInt()
@@ -209,6 +211,40 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
         }
     }
     fun setCorrection(next: Correction) { correction = next; studio.correction = next }
+
+    // The time-lapse (card 13): a picture at each interval into Android's encoder.
+    var timelapse by remember { mutableStateOf(studio.timelapse) }
+    var recorder by remember { mutableStateOf<TimelapseRecorder?>(null) }
+    var filmFrames by remember { mutableStateOf(0) }
+    fun stopRecording() {
+        val active = recorder ?: return
+        recorder = null
+        active.stop { ok -> say(if (ok) "Zeitraffer in Fotos gesichert" else "Zeitraffer ließ sich nicht sichern") }
+    }
+    fun startRecording() {
+        val (w, h) = Timelapse.size(screen.width.toInt().coerceAtLeast(2), screen.height.toInt().coerceAtLeast(2), timelapse.height)
+        recorder = TimelapseRecorder.start(context, w, h, timelapse) ?: run { say("Aufnahme lässt sich nicht starten"); return }
+        filmFrames = 0
+        if (!exposureLocked) say("Tipp: vorher mit zwei Fingern tippen – Belichtung sperren, damit es nicht flackert")
+    }
+    LaunchedEffect(recorder) {
+        val active = recorder ?: return@LaunchedEffect
+        val activity = context as? android.app.Activity
+        while (recorder === active) {
+            if (timelapse.recordUi && activity != null) captureScreen(activity) { picture -> picture?.let { active.add(it); filmFrames++ } }
+            else camera.snapshot(preview)?.let { raw ->
+                active.add(cameraFrame(raw, correction, cameraView, if (timelapse.ignoreZoom) null else view)); filmFrames++
+            }
+            delay(timelapse.intervalMillis)
+        }
+    }
+    LaunchedEffect(mode) { if (mode != Mode.Draw) stopRecording() }
+    val lifecycleOwner = androidx.compose.ui.platform.LocalLifecycleOwner.current
+    androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
+        val watcher = androidx.lifecycle.LifecycleEventObserver { _, event -> if (event == androidx.lifecycle.Lifecycle.Event.ON_PAUSE) stopRecording() }
+        lifecycleOwner.lifecycle.addObserver(watcher)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(watcher) }
+    }
     fun runAuto() {
         scope.launch {
             for (second in 3 downTo 1) { autoBusy = "Arm aus dem Bild … $second"; delay(1000) }
@@ -439,6 +475,8 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
             else -> AnimatedVisibility(chrome, enter = fadeIn(), exit = fadeOut()) {
                 if (!capturing) DrawChrome(view, drawOpacity, exposureLocked, onFilters = { filterSheet = true },
                     torch = tools.torch, onTorchOff = { tools = tools.copy(torch = false) }, onMore = { moreSheet = true },
+                    record = if (tools.recordButton || recorder != null) { { RecordButton(recorder != null, filmFrames.let { recorder?.filmSeconds ?: 0 }) {
+                        if (recorder != null) stopRecording() else startRecording() } } } else null,
                     onOpacity = { drawOpacity = it }, onOpacityDone = { studio.drawOpacity = drawOpacity },
                     onBack = { mode = Mode.Setup; view = DrawView() },
                     onFocus = { camera.focus(preview); say("Scharfgestellt") },
@@ -454,6 +492,7 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
         }
         if (mode == Mode.Draw && tools.split && !capturing) SplitHandle(tools.splitAt) { tools = tools.copy(splitAt = it) }
         if (moreSheet && mode == Mode.Draw) MoreToolsSheet(tools, camera.hasTorch, { tools = it },
+            extra = { TimelapseRows(tools, timelapse, { tools = it }) { timelapse = it; studio.timelapse = it } },
             onSave = { captureWork { picture -> say(if (Reference.saveToPhotos(context, picture, "LiCida-Zeichnung-${System.currentTimeMillis() / 1000}")) "In Fotos gesichert" else "Sichern hat nicht geklappt") } },
             onShare = {
                 captureWork { picture ->
@@ -592,7 +631,7 @@ private fun CameraNeeded(onAsk: () -> Unit, modifier: Modifier) {
 
 @Composable
 private fun DrawChrome(view: DrawView, opacity: Float, exposureLocked: Boolean, onFilters: () -> Unit,
-                       torch: Boolean, onTorchOff: () -> Unit, onMore: () -> Unit, onOpacity: (Float) -> Unit, onOpacityDone: () -> Unit,
+                       torch: Boolean, onTorchOff: () -> Unit, onMore: () -> Unit, record: (@Composable () -> Unit)?, onOpacity: (Float) -> Unit, onOpacityDone: () -> Unit,
                        onBack: () -> Unit, onFocus: () -> Unit, onUnlock: () -> Unit, onZoomReset: () -> Unit) {
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.align(Alignment.TopCenter).windowInsetsPadding(WindowInsets.statusBars).padding(top = 8.dp),
@@ -610,7 +649,8 @@ private fun DrawChrome(view: DrawView, opacity: Float, exposureLocked: Boolean, 
             // Handbook p. 32: with the flashlight on, a button to turn it off.
             if (torch) { Spacer(Modifier.size(12.dp)); GlassButton(Symbol.Flashlight, "Taschenlampe aus", active = true, onClick = onTorchOff) }
         }
-        Box(Modifier.align(Alignment.TopEnd).windowInsetsPadding(WindowInsets.statusBars).padding(16.dp)) {
+        Row(Modifier.align(Alignment.TopEnd).windowInsetsPadding(WindowInsets.statusBars).padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            record?.let { it(); Spacer(Modifier.size(12.dp)) }
             GlassButton(Symbol.Focus, "Scharfstellen", onClick = onFocus)
         }
         Row(Modifier.align(Alignment.BottomCenter).fillMaxWidth().windowInsetsPadding(WindowInsets.navigationBars).padding(horizontal = 16.dp, vertical = 16.dp),
