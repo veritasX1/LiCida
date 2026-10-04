@@ -196,4 +196,24 @@ class ScreensTest {
         assertEquals(1.8f, step.effects!!.saturation, 0.01f)
         compose.onNodeWithContentDescription("Zeichnen").assertExists()
     }
+
+    @Test
+    fun moreToolsWhileDrawing() {
+        val studio = Studio(context).apply { hintSeen = true; edits = Edits() }
+        compose.setContent { LiCidaApp(studio, sample(), cameraAllowed = true, onAskCamera = {}, onDrawMode = {}) }
+        compose.onNodeWithContentDescription("Zeichnen").performClick()
+        compose.onNodeWithContentDescription("Weitere Werkzeuge").performClick()
+        compose.onNodeWithText("Werkzeuge beim Zeichnen").assertExists()
+        compose.onNodeWithText("Diese Kamera hat kein Licht").assertExists()        // no flashlight here: switch off
+        compose.onNodeWithContentDescription("Geteilte Ansicht").performClick()
+        compose.onNodeWithContentDescription("Flimmern").performClick()
+        compose.onNodeWithContentDescription("Tempo des Flimmerns").assertExists()
+        shot("11-werkzeuge-zeichnen")
+        compose.onNodeWithText("Fertig").performClick()
+        compose.onNodeWithContentDescription("Teiler verschieben").assertExists()
+        compose.onNodeWithContentDescription("Weitere Werkzeuge").performClick()
+        compose.onNodeWithContentDescription("Flimmern").performClick()   // off: the split alone
+        compose.onNodeWithText("Fertig").performClick()
+        shot("12-geteilt")
+    }
 }

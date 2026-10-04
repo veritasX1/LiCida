@@ -52,6 +52,8 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
@@ -85,6 +87,11 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
     var hintSeen by remember { mutableStateOf(studio.hintSeen) }
     var screen by remember { mutableStateOf(Size(1f, 1f)) }
     var message by remember { mutableStateOf<String?>(null) }
+    /** A short note in the middle (like iOS's HUD), gone after a moment. */
+    fun say(text: String) {
+        message = text
+        scope.launch { delay(1800); if (message == text) message = null }
+    }
     var preview by remember { mutableStateOf<PreviewView?>(null) }
     // The camera choice (card 5): the phone's cameras, the remembered one, its own view and fill mode.
     var cameraOptions by remember { mutableStateOf<List<CameraOption>>(emptyList()) }
@@ -112,6 +119,28 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
     var hiddenLayers by remember(edits) { mutableStateOf<Set<Int>>(emptySet()) }
     var paletteEditor by remember { mutableStateOf(false) }
     var paletteBackToSheet by remember { mutableStateOf(false) }
+    // The draw mode's further tools (card 12).
+    var tools by remember { mutableStateOf(Tools()) }
+    var moreSheet by remember { mutableStateOf(false) }
+    var capturing by remember { mutableStateOf(false) }
+    LaunchedEffect(tools.torch) { camera.torch(tools.torch) }
+    val flickerAlpha = if (tools.flicker && mode == Mode.Draw) {
+        val transition = androidx.compose.animation.core.rememberInfiniteTransition(label = "Flimmern")
+        val period = (2400 - tools.flickerSpeed * 2100).toInt()
+        transition.animateFloat(0f, 1f, androidx.compose.animation.core.infiniteRepeatable(
+            androidx.compose.animation.core.tween(period, easing = androidx.compose.animation.core.LinearEasing),
+            androidx.compose.animation.core.RepeatMode.Reverse), label = "Flimmern").value
+    } else 1f
+    /** A picture of the drawing surface without buttons (handbook p. 32: "Share my work"). */
+    fun captureWork(then: (Bitmap) -> Unit) {
+        val activity = context as? android.app.Activity ?: return
+        capturing = true; moreSheet = false
+        scope.launch {
+            delay(180)  // the buttons are gone from the screen
+            captureScreen(activity) { picture -> capturing = false; picture?.let(then) ?: say("Bild ließ sich nicht aufnehmen") }
+        }
+    }
+
     // The colour sliders (card 4): live as a colour matrix on the picture, a step when taken over.
     var effectsSheet by remember { mutableStateOf(false) }
     var effects by remember { mutableStateOf(Effects()) }
@@ -199,10 +228,6 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
         }
     }
 
-    fun say(text: String) {
-        message = text
-        scope.launch { delay(1800); if (message == text) message = null }
-    }
 
     fun use(bitmap: Bitmap?) {
         if (bitmap == null) { say("Das Bild ließ sich nicht öffnen"); return }
@@ -230,11 +255,13 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
     LaunchedEffect(mode) { onDrawMode(mode == Mode.Draw) }
     BackHandler(enabled = cameraSheet) { cameraSheet = false }
     BackHandler(enabled = filterSheet) { filterSheet = false }
+    BackHandler(enabled = moreSheet) { moreSheet = false }
     BackHandler(enabled = effectsSheet) { effectsSheet = false; effects = Effects() }
     BackHandler(enabled = paletteEditor) { paletteEditor = false; filterSheet = paletteBackToSheet }
     BackHandler(enabled = mode == Mode.Draw) { mode = Mode.Setup; view = DrawView(); chrome = true }
 
     val shownOpacity = when {
+        mode == Mode.Draw && tools.split -> 1f
         mode == Mode.Draw -> drawOpacity
         cameraSheet -> if (ghost) 0.35f else 0f
         moving -> minOf(opacity, Composition.WHILE_MOVING)
@@ -263,11 +290,17 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
                 Image(image, contentDescription = "Vorlage", contentScale = ContentScale.Fit,
                     colorFilter = if (effectsSheet && !effects.isNeutral) androidx.compose.ui.graphics.ColorFilter.colorMatrix(
                         androidx.compose.ui.graphics.ColorMatrix(effects.matrix())) else null,
-                    modifier = Modifier.fillMaxSize().graphicsLayer {
-                    scaleX = placement.scale; scaleY = placement.scale; rotationZ = placement.rotation
-                    translationX = placement.offset.x; translationY = placement.offset.y
-                    alpha = shownOpacity
-                })
+                    modifier = Modifier.fillMaxSize().then(if (mode == Mode.Draw && tools.split) Modifier.drawWithContent {
+                        // Split (handbook p. 32): the reference only left of the divider. Clipped before the reference is
+                        // placed, so the line stays upright; the shared layer is zoomed, hence screen → layer coordinates.
+                        val cx = size.width / 2
+                        val local = cx + (tools.splitAt * size.width - cx - view.offset.x) / view.zoom
+                        clipRect(right = local) { this@drawWithContent.drawContent() }
+                    } else Modifier).graphicsLayer {
+                        scaleX = placement.scale; scaleY = placement.scale; rotationZ = placement.rotation
+                        translationX = placement.offset.x; translationY = placement.offset.y
+                        alpha = shownOpacity * (if (tools.flicker && mode == Mode.Draw) flickerAlpha else 1f)
+                    })
             }
         }
 
@@ -404,7 +437,8 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
                 onDraw = { mode = Mode.Draw; view = DrawView(); chrome = true },
                 onCameraSettings = { cameraSheet = true }, onFilters = { filterSheet = true })
             else -> AnimatedVisibility(chrome, enter = fadeIn(), exit = fadeOut()) {
-                DrawChrome(view, drawOpacity, exposureLocked, onFilters = { filterSheet = true },
+                if (!capturing) DrawChrome(view, drawOpacity, exposureLocked, onFilters = { filterSheet = true },
+                    torch = tools.torch, onTorchOff = { tools = tools.copy(torch = false) }, onMore = { moreSheet = true },
                     onOpacity = { drawOpacity = it }, onOpacityDone = { studio.drawOpacity = drawOpacity },
                     onBack = { mode = Mode.Setup; view = DrawView() },
                     onFocus = { camera.focus(preview); say("Scharfgestellt") },
@@ -418,6 +452,18 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
                 modifier = Modifier.align(Alignment.BottomCenter).windowInsetsPadding(WindowInsets.navigationBars)
                     .padding(start = 16.dp, end = 16.dp, bottom = if (mode == Mode.Draw) 84.dp else 176.dp))
         }
+        if (mode == Mode.Draw && tools.split && !capturing) SplitHandle(tools.splitAt) { tools = tools.copy(splitAt = it) }
+        if (moreSheet && mode == Mode.Draw) MoreToolsSheet(tools, camera.hasTorch, { tools = it },
+            onSave = { captureWork { picture -> say(if (Reference.saveToPhotos(context, picture, "LiCida-Zeichnung-${System.currentTimeMillis() / 1000}")) "In Fotos gesichert" else "Sichern hat nicht geklappt") } },
+            onShare = {
+                captureWork { picture ->
+                    val uri = Reference.savePhoto(context, picture, "LiCida-Zeichnung-${System.currentTimeMillis() / 1000}") ?: return@captureWork say("Sichern hat nicht geklappt")
+                    val send = android.content.Intent(android.content.Intent.ACTION_SEND).setType("image/jpeg")
+                        .putExtra(android.content.Intent.EXTRA_STREAM, uri).addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    context.startActivity(android.content.Intent.createChooser(send, "Zeichnung teilen"))
+                }
+            },
+            onClose = { moreSheet = false })
         if (effectsSheet) EffectsSheet(effects, { effects = it }, onCancel = { effectsSheet = false; effects = Effects(); filterSheet = true },
             onApply = { edit(edits.add(Step.effects(effects))); effectsSheet = false; effects = Effects() },
             modifier = Modifier.align(Alignment.BottomCenter))
@@ -545,7 +591,8 @@ private fun CameraNeeded(onAsk: () -> Unit, modifier: Modifier) {
 }
 
 @Composable
-private fun DrawChrome(view: DrawView, opacity: Float, exposureLocked: Boolean, onFilters: () -> Unit, onOpacity: (Float) -> Unit, onOpacityDone: () -> Unit,
+private fun DrawChrome(view: DrawView, opacity: Float, exposureLocked: Boolean, onFilters: () -> Unit,
+                       torch: Boolean, onTorchOff: () -> Unit, onMore: () -> Unit, onOpacity: (Float) -> Unit, onOpacityDone: () -> Unit,
                        onBack: () -> Unit, onFocus: () -> Unit, onUnlock: () -> Unit, onZoomReset: () -> Unit) {
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.align(Alignment.TopCenter).windowInsetsPadding(WindowInsets.statusBars).padding(top = 8.dp),
@@ -558,8 +605,10 @@ private fun DrawChrome(view: DrawView, opacity: Float, exposureLocked: Boolean, 
                 modifier = Modifier.padding(top = 8.dp).size(44.dp).clip(CircleShape).background(Ink.glass)
                     .clickable(role = Role.Button, onClickLabel = "Ganze Ansicht", onClick = onZoomReset).padding(top = 13.dp))
         }
-        Box(Modifier.align(Alignment.TopStart).windowInsetsPadding(WindowInsets.statusBars).padding(16.dp)) {
+        Row(Modifier.align(Alignment.TopStart).windowInsetsPadding(WindowInsets.statusBars).padding(16.dp)) {
             GlassButton(Symbol.Filters, "Werkzeuge und Filter", onClick = onFilters)
+            // Handbook p. 32: with the flashlight on, a button to turn it off.
+            if (torch) { Spacer(Modifier.size(12.dp)); GlassButton(Symbol.Flashlight, "Taschenlampe aus", active = true, onClick = onTorchOff) }
         }
         Box(Modifier.align(Alignment.TopEnd).windowInsetsPadding(WindowInsets.statusBars).padding(16.dp)) {
             GlassButton(Symbol.Focus, "Scharfstellen", onClick = onFocus)
@@ -573,6 +622,8 @@ private fun DrawChrome(view: DrawView, opacity: Float, exposureLocked: Boolean, 
                 IosSlider(opacity, onOpacity, "Deckkraft der Vorlage", Modifier.weight(1f).padding(horizontal = 6.dp), onRelease = onOpacityDone)
                 SymbolIcon(Symbol.Photo, Ink.white, size = 18.dp)
             }
+            Spacer(Modifier.size(12.dp))
+            GlassButton(Symbol.More, "Weitere Werkzeuge", onClick = onMore)
         }
     }
 }

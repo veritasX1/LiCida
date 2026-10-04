@@ -39,6 +39,9 @@ enum class Symbol {
     Pipette,        // eyedropper
     Import,         // square.and.arrow.down.on.square – colours from a photo
     Wheel,          // paintpalette – the palette
+    More,           // chevron.up – the draw mode's further tools
+    Flashlight,     // flashlight.on.fill
+    Share,          // square.and.arrow.up
 }
 
 @Composable
@@ -155,6 +158,16 @@ fun DrawScope.drawSymbol(symbol: Symbol, color: Color, weight: Float = 1.7f) {
                 q(20.5f, 16f, 20.5f, 12.5f); q(20.5f, 3.5f, 12f, 3.5f) }
             drawCircle(color, 1.4f * u, p(8f, 10f)); drawCircle(color, 1.4f * u, p(11.5f, 7f)); drawCircle(color, 1.4f * u, p(15.5f, 8.5f))
             drawCircle(color, 1.4f * u, p(8.5f, 14.5f))
+        }
+        Symbol.More -> path { m(5f, 15f); l(12f, 8f); l(19f, 15f) }
+        Symbol.Flashlight -> {
+            path { m(8f, 3.5f); l(16f, 3.5f); l(16f, 7f); l(14f, 10.5f); l(14f, 20.5f); l(10f, 20.5f); l(10f, 10.5f); l(8f, 7f); close() }
+            path { m(8f, 7f); l(16f, 7f) }
+            drawCircle(color, 1.1f * u, p(12f, 14f))
+        }
+        Symbol.Share -> {
+            path { m(12f, 14.5f); l(12f, 3.5f); m(8f, 7.5f); l(12f, 3.5f); l(16f, 7.5f) }
+            path { m(8.5f, 10f); l(6f, 10f); q(4f, 10f, 4f, 12f); l(4f, 18.5f); q(4f, 20.5f, 6f, 20.5f); l(18f, 20.5f); q(20f, 20.5f, 20f, 18.5f); l(20f, 12f); q(20f, 10f, 18f, 10f); l(15.5f, 10f) }
         }
         Symbol.Hand -> {
             // Two fingers spreading: the pinch hint.

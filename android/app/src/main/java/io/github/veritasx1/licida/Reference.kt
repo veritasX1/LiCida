@@ -109,7 +109,10 @@ object Reference {
     }
 
     /** Into Fotos, album "LiCida" (Android 10+: no storage permission needed). Returns false if it failed. */
-    fun saveToPhotos(context: Context, bitmap: Bitmap, name: String): Boolean = runCatching {
+    fun saveToPhotos(context: Context, bitmap: Bitmap, name: String): Boolean = savePhoto(context, bitmap, name) != null
+
+    /** The same, giving the picture's address (to share it). */
+    fun savePhoto(context: Context, bitmap: Bitmap, name: String): Uri? = runCatching {
         val values = ContentValues().apply {
             put(MediaStore.Images.Media.DISPLAY_NAME, "$name.jpg")
             put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
@@ -117,11 +120,11 @@ object Reference {
             put(MediaStore.Images.Media.IS_PENDING, 1)
         }
         val resolver = context.contentResolver
-        val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values) ?: return false
-        resolver.openOutputStream(uri)?.use { bitmap.compress(Bitmap.CompressFormat.JPEG, 95, it) } ?: return false
+        val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values) ?: return null
+        resolver.openOutputStream(uri)?.use { bitmap.compress(Bitmap.CompressFormat.JPEG, 95, it) } ?: return null
         resolver.update(uri, ContentValues().apply { put(MediaStore.Images.Media.IS_PENDING, 0) }, null, null)
-        true
-    }.getOrDefault(false)
+        uri
+    }.getOrNull()
 }
 
 /** What LiCida remembers on this phone: where the reference lies and how see-through it is. Private
