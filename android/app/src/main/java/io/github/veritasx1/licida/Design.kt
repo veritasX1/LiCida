@@ -63,8 +63,8 @@ fun style(size: Float, weight: Int = 400, color: Color = Ink.white, tabular: Boo
 /** A round glass button floating over the picture (Camera's flash and Live buttons): 44 pt target. */
 @Composable
 fun GlassButton(symbol: Symbol, description: String, enabled: Boolean = true, active: Boolean = false, size: Dp = 44.dp,
-                onClick: () -> Unit) {
-    Box(Modifier.size(size).clip(CircleShape).background(Ink.glass)
+                modifier: Modifier = Modifier, onClick: () -> Unit) {
+    Box(modifier.size(size).clip(CircleShape).background(Ink.glass)
         .clickable(enabled = enabled, role = Role.Button, onClickLabel = description, onClick = onClick)
         .semantics { contentDescription = description }.alpha(if (enabled) 1f else 0.35f),
         contentAlignment = Alignment.Center) {
@@ -74,8 +74,8 @@ fun GlassButton(symbol: Symbol, description: String, enabled: Boolean = true, ac
 
 /** The big round button in the middle of the bar – like Camera's shutter, here "Zeichnen". */
 @Composable
-fun DrawButton(enabled: Boolean, onClick: () -> Unit) {
-    Box(Modifier.size(78.dp).border(4.dp, Ink.white.copy(alpha = if (enabled) 1f else 0.35f), CircleShape)
+fun DrawButton(enabled: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    Box(modifier.size(78.dp).border(4.dp, Ink.white.copy(alpha = if (enabled) 1f else 0.35f), CircleShape)
         .clickable(enabled = enabled, role = Role.Button, onClickLabel = "Zeichnen", onClick = onClick)
         .semantics { contentDescription = "Zeichnen" }, contentAlignment = Alignment.Center) {
         Box(Modifier.size(64.dp).clip(CircleShape).background(Ink.white.copy(alpha = if (enabled) 1f else 0.35f)),

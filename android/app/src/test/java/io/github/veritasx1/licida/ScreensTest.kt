@@ -35,6 +35,10 @@ class ScreensTest {
     private val out = System.getProperty("licida.shots")
     private val context = ApplicationProvider.getApplicationContext<android.app.Application>()
 
+    /** The welcome tour is offered at a first start – in these tests only where it is the subject. */
+    @org.junit.Before
+    fun tourAlreadyOffered() { Studio(context).tourOffered = true }
+
     private fun shot(name: String) {
         compose.waitForIdle()
         // With a dialog open there are two windows: the dialog's is the last one.
@@ -313,5 +317,58 @@ class ScreensTest {
         val studio = Studio(context).apply { projector = true }
         compose.setContent { LiCidaApp(studio, sample(), cameraAllowed = true, onAskCamera = {}, onDrawMode = {}, startMode = Mode.Draw) }
         shot("20-projektor")
+    }
+
+    @Test
+    fun firstStartOffersTheTour() {
+        // Card 16: once, at the first start; the tour walks over every button of the setup screen.
+        val studio = Studio(context).apply { tourOffered = false }
+        compose.setContent { LiCidaApp(studio, sample(), cameraAllowed = true, onAskCamera = {}, onDrawMode = {}) }
+        compose.onNodeWithText("Willkommen bei LiCida").assertExists()
+        shot("21-willkommen")
+        compose.onNodeWithText("Rundgang").performClick()
+        assertEquals(true, studio.tourOffered)
+        compose.onNodeWithText("1 von ${Tour.steps.size}").assertExists()
+        shot("22-rundgang-mehr")
+        repeat(8) { compose.onNodeWithText("Weiter").performClick() }
+        compose.onNodeWithText("9 von ${Tour.steps.size}").assertExists()
+        shot("23-rundgang-zeichnen")
+        compose.onNodeWithText("Weiter").performClick()
+        compose.onNodeWithText("Fertig").performClick()
+        compose.onNodeWithText("Fertig").assertDoesNotExist()
+        compose.onNodeWithText("Willkommen bei LiCida").assertDoesNotExist()
+    }
+
+    @Test
+    fun noTourOfferForOldMasters() {
+        val studio = Studio(context).apply { tourOffered = false; help = HelpLevel.Off }
+        compose.setContent { LiCidaApp(studio, sample(), cameraAllowed = true, onAskCamera = {}, onDrawMode = {}) }
+        compose.onNodeWithText("Willkommen bei LiCida").assertDoesNotExist()
+        compose.onNodeWithText("Mit zwei Fingern verschieben, zoomen und drehen").assertDoesNotExist()
+    }
+
+    @Test
+    fun guideFromTheMenu() {
+        compose.setContent { LiCidaApp(Studio(context), sample(), cameraAllowed = true, onAskCamera = {}, onDrawMode = {}) }
+        compose.onNodeWithContentDescription("Mehr").performClick()
+        compose.onNodeWithText("Hilfe …").performClick()
+        compose.onNodeWithText("Anleitung").assertExists()
+        shot("24-anleitung")
+        compose.onNodeWithText("7. Zeichnen").performClick()
+        compose.onNodeWithText("‹ Anleitung").assertExists()
+        shot("25-kapitel")
+        compose.onNodeWithText("Weiter: Weitere Werkzeuge beim Zeichnen ›").performClick()
+        compose.onNodeWithText("Weitere Werkzeuge beim Zeichnen").assertExists()
+        compose.onNodeWithText("‹ Anleitung").performClick()
+        compose.onNodeWithText("Rundgang starten").performClick()
+        compose.onNodeWithText("1 von ${Tour.steps.size}").assertExists()
+    }
+
+    @Test
+    fun drawHintGoesAtTheFirstTap() {
+        val studio = Studio(context)
+        compose.setContent { LiCidaApp(studio, sample(), cameraAllowed = true, onAskCamera = {}, onDrawMode = {}, startMode = Mode.Draw) }
+        compose.onNodeWithText("Tippen blendet die Knöpfe aus · Doppeltipp zoomt").assertExists()
+        assertEquals(1, studio.hintCount("zeichnen"))
     }
 }

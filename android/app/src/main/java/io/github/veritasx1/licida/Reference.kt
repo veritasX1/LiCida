@@ -231,6 +231,11 @@ class Studio(context: Context) {
         get() = prefs.getBoolean("projector", false)
         set(value) { prefs.edit().putBoolean("projector", value).apply() }
 
+    /** Card 16: the tour is offered once, at the first start. */
+    var tourOffered: Boolean
+        get() = prefs.getBoolean("tourOffered", false)
+        set(value) { prefs.edit().putBoolean("tourOffered", value).apply() }
+
     var keymap: Keymap
         get() = Keymap.decode(prefs.getString("keymap", null))
         set(value) { prefs.edit().putString("keymap", value.encode()).apply() }

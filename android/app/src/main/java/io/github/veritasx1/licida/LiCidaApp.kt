@@ -90,6 +90,14 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
     var gestureDone by remember { mutableStateOf(false) }
     var gestureCounted by remember { mutableStateOf(false) }
     val gestureHint = !gestureDone && help.shows(gestureCount)
+    // Card 16: the draw-mode hint (gone at the first tap or after a while), the tour and the guide.
+    val drawCount = remember { studio.hintCount("zeichnen") }
+    var drawHintDone by remember { mutableStateOf(false) }
+    var drawHintCounted by remember { mutableStateOf(false) }
+    val anchors = remember { androidx.compose.runtime.mutableStateMapOf<String, androidx.compose.ui.geometry.Rect>() }
+    var tourStep by remember { mutableStateOf<Int?>(null) }
+    var guidePage by remember { mutableStateOf(false) }
+    var offerTour by remember { mutableStateOf(!studio.tourOffered && studio.help != HelpLevel.Off) }
     var screen by remember { mutableStateOf(Size(1f, 1f)) }
     var message by remember { mutableStateOf<String?>(null) }
     /** A short note in the middle (like iOS's HUD), gone after a moment. */
@@ -392,6 +400,24 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
     LaunchedEffect(mode) { onDrawMode(mode == Mode.Draw); if (mode != Mode.Draw) referenceOff = false }
     val gestureShowing = gestureHint && reference != null && mode == Mode.Setup && cameraAllowed
     LaunchedEffect(gestureShowing) { if (gestureShowing && !gestureCounted) { gestureCounted = true; studio.countHint("gesten") } }
+    val drawHint = mode == Mode.Draw && chrome && !drawHintDone && help.shows(drawCount)
+    LaunchedEffect(drawHint) {
+        if (!drawHint) return@LaunchedEffect
+        if (!drawHintCounted) { drawHintCounted = true; studio.countHint("zeichnen") }
+        delay(6000); drawHintDone = true
+    }
+    fun startTour() { guidePage = false; setupMenu = false; offerTour = false; studio.tourOffered = true; mode = Mode.Setup; tourStep = 0 }
+    fun saveGuide() {
+        scope.launch {
+            val version = runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull() ?: ""
+            val uri = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { Guide.savePdf(context, Guide.pdf(context, version)) }
+            if (uri == null) { say("Anleitung ließ sich nicht sichern"); return@launch }
+            say("Anleitung in Downloads/LiCida gesichert")
+            val view = android.content.Intent(android.content.Intent.ACTION_VIEW).setDataAndType(uri, "application/pdf")
+                .addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            runCatching { context.startActivity(view) }
+        }
+    }
 
     /** The largest drawing (handbook p. 25): the camera's whole field at its sharpest. */
     fun maximize() {
@@ -464,6 +490,8 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
     BackHandler(enabled = sessionsSheet) { sessionsSheet = false }
     BackHandler(enabled = setupMenu) { setupMenu = false }
     BackHandler(enabled = aligning != null) { aligning = null; alignSnapshot = null }
+    BackHandler(enabled = tourStep != null) { tourStep = null }
+    BackHandler(enabled = guidePage) { guidePage = false }
     BackHandler(enabled = settingsPage) { if (listening != null) listening = null else { settingsPage = false; slots = namedSlots() } }
     BackHandler(enabled = mode == Mode.Draw) { mode = Mode.Setup; view = DrawView(); chrome = true }
 
@@ -477,6 +505,7 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
         else -> opacity
     }
 
+    androidx.compose.runtime.CompositionLocalProvider(LocalTourAnchors provides anchors) {
     Box(Modifier.fillMaxSize().background(Color.Black).onSizeChanged { screen = Size(it.width.toFloat(), it.height.toFloat()) }) {
         // The picture: camera below, reference above – in draw mode zoomed and moved as one.
         Box(Modifier.fillMaxSize().graphicsLayer {
@@ -574,7 +603,7 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
                     detectTransformGestures { centroid, pan, zoom, _ -> view = Composition.zoom(view, centroid, pan, zoom, screen) }
                 }
                 .pointerInput(screen) {
-                    detectTapGestures(onTap = { chrome = !chrome }, onDoubleTap = { view = Composition.doubleTap(view, it, screen) })
+                    detectTapGestures(onTap = { chrome = !chrome; drawHintDone = true }, onDoubleTap = { view = Composition.doubleTap(view, it, screen) })
                 }
                 .pointerInput(Unit) {
                     // Two fingers tap together: exposure for that spot, held (handbook p. 26).
@@ -653,7 +682,7 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
             effectsSheet -> Unit   // while the colour sliders are open, everything else waits (handbook p. 10)
             aligning != null && mode == Mode.Setup -> AlignControls(alignAlpha, { alignAlpha = it }, alignBusy, ::alignAuto,
                 Modifier.align(Alignment.BottomCenter)) { aligning = null; alignSnapshot = null }
-            mode == Mode.Setup -> SetupChrome(reference, opacity, !gestureHint, cameraAllowed,
+            mode == Mode.Setup -> SetupChrome(reference, opacity, !gestureHint || tourStep != null, cameraAllowed,
                 onOpacity = { opacity = it }, onOpacityDone = { studio.opacity = opacity },
                 onPhotos = ::pickPhoto, onFiles = ::pickFile, onCamera = ::takePhoto, onAskCamera = onAskCamera, onMenu = { setupMenu = true },
                 onRotate = { placement = Composition.quarterTurn(placement); studio.placement = placement },
@@ -731,7 +760,17 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
             MenuEntry(Symbol.Sessions, "Sitzungen …") { openSessions() },
             MenuEntry(Symbol.Maximize, "Größtmögliche Zeichnung", ::maximize),
             MenuEntry(Symbol.Reset, "Kamera zurücksetzen", ::resetCamera),
-            MenuEntry(Symbol.Gear, "Einstellungen …") { setupMenu = false; settingsPage = true }))
+            MenuEntry(Symbol.Gear, "Einstellungen …") { setupMenu = false; settingsPage = true },
+            MenuEntry(Symbol.Help, "Hilfe …") { setupMenu = false; guidePage = true }))
+        if (drawHint && !capturing && !moreSheet && !filterSheet) HintPill(Symbol.Hand, "Tippen blendet die Knöpfe aus · Doppeltipp zoomt",
+            Modifier.align(Alignment.TopCenter))
+        if (guidePage) GuidePage(onTour = ::startTour, onPdf = ::saveGuide, onDone = { guidePage = false })
+        tourStep?.let { index ->
+            TourOverlay(index, anchors, onNext = { tourStep = if (index < Tour.steps.lastIndex) index + 1 else null }, onSkip = { tourStep = null })
+        }
+        if (offerTour && cameraAllowed && mode == Mode.Setup && tourStep == null && !settingsPage && !guidePage)
+            AskDialog("Willkommen bei LiCida", "Ein kurzer Rundgang zeigt dir die Knöpfe – eine Minute. Du findest ihn später unter „Mehr“ → „Hilfe“.",
+                "Rundgang", onYes = ::startTour, onNo = { offerTour = false; studio.tourOffered = true })
         if (settingsPage) SettingsPage(settingsState(), listening, ::applySettings, onListen = { listening = it },
             onPermissions = {
                 context.startActivity(android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
@@ -753,6 +792,7 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
             }
         }
     }
+    }
 }
 
 @Composable
@@ -765,36 +805,32 @@ private fun SetupChrome(reference: Bitmap?, opacity: Float, hintSeen: Boolean, c
         // Top: files on the left, turn and keep on the right (Camera keeps its top bar this light).
         Row(Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars).padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically) {
-            GlassButton(Symbol.Ellipsis, "Mehr", onClick = onMenu)
+            GlassButton(Symbol.Ellipsis, "Mehr", modifier = Modifier.tourAnchor("mehr"), onClick = onMenu)
             Spacer(Modifier.size(12.dp))
-            GlassButton(Symbol.Aperture, "Kamera wählen und einstellen", enabled = cameraAllowed, onClick = onCameraSettings)
+            GlassButton(Symbol.Aperture, "Kamera wählen und einstellen", enabled = cameraAllowed, modifier = Modifier.tourAnchor("kamera"), onClick = onCameraSettings)
             Spacer(Modifier.size(12.dp))
-            GlassButton(Symbol.Filters, "Werkzeuge und Filter", enabled = ready, onClick = onFilters)
+            GlassButton(Symbol.Filters, "Werkzeuge und Filter", enabled = ready, modifier = Modifier.tourAnchor("werkzeuge"), onClick = onFilters)
             Spacer(Modifier.weight(1f))
-            GlassButton(Symbol.RotateRight, "Vorlage um 90 Grad drehen", enabled = ready, onClick = onRotate)
+            GlassButton(Symbol.RotateRight, "Vorlage um 90 Grad drehen", enabled = ready, modifier = Modifier.tourAnchor("drehen"), onClick = onRotate)
             Spacer(Modifier.size(12.dp))
-            GlassButton(Symbol.Save, "Vorlage in Fotos sichern", enabled = ready, onClick = onSave)
+            GlassButton(Symbol.Save, "Vorlage in Fotos sichern", enabled = ready, modifier = Modifier.tourAnchor("sichern"), onClick = onSave)
         }
 
         if (!cameraAllowed) CameraNeeded(onAskCamera, Modifier.align(Alignment.Center))
         else if (!ready) EmptyStart(onPhotos, onFiles, onCamera, Modifier.align(Alignment.Center))
-        else if (!hintSeen) Row(Modifier.align(Alignment.TopCenter).windowInsetsPadding(WindowInsets.statusBars).padding(top = 64.dp)
-            .clip(CircleShape).background(Ink.glassStrong).padding(horizontal = 14.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            SymbolIcon(Symbol.Hand, Ink.white, size = 18.dp)
-            BasicText("Mit zwei Fingern verschieben, zoomen und drehen", style = style(13f, 500), modifier = Modifier.padding(start = 8.dp))
-        }
+        else if (!hintSeen) HintPill(Symbol.Hand, "Mit zwei Fingern verschieben, zoomen und drehen", Modifier.align(Alignment.TopCenter))
 
         Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth()) {
-            if (ready) Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), verticalAlignment = Alignment.CenterVertically) {
+            if (ready) Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp).tourAnchor("deckkraft"), verticalAlignment = Alignment.CenterVertically) {
                 BasicText("Vorlage", style = style(13f, 600), modifier = Modifier.widthIn(min = 64.dp))
                 IosSlider(opacity, onOpacity, "Deckkraft der Vorlage", Modifier.weight(1f), onRelease = onOpacityDone)
                 BasicText("${(opacity * 100).toInt()} %", style = style(13f, 500, Ink.secondary, tabular = true).copy(textAlign = TextAlign.End), modifier = Modifier.widthIn(min = 48.dp))
             }
             Row(Modifier.fillMaxWidth().background(Ink.bar).windowInsetsPadding(WindowInsets.navigationBars).padding(horizontal = 28.dp, vertical = 18.dp),
                 horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                PhotosButton(reference, onPhotos)
-                DrawButton(enabled = ready, onClick = onDraw)
-                GlassButton(Symbol.Camera, "Vorlage fotografieren", size = 52.dp, onClick = onCamera)
+                PhotosButton(reference, onPhotos, Modifier.tourAnchor("fotos"))
+                DrawButton(enabled = ready, modifier = Modifier.tourAnchor("zeichnen"), onClick = onDraw)
+                GlassButton(Symbol.Camera, "Vorlage fotografieren", size = 52.dp, modifier = Modifier.tourAnchor("fotografieren"), onClick = onCamera)
             }
         }
     }
@@ -802,8 +838,8 @@ private fun SetupChrome(reference: Bitmap?, opacity: Float, hintSeen: Boolean, c
 
 /** Like Camera's last-photo thumbnail: the current reference, or the Fotos symbol. */
 @Composable
-private fun PhotosButton(reference: Bitmap?, onClick: () -> Unit) {
-    Box(Modifier.size(52.dp).clip(RoundedCornerShape(10.dp)).background(Ink.glass).border(1.5.dp, Ink.white.copy(alpha = 0.9f), RoundedCornerShape(10.dp))
+private fun PhotosButton(reference: Bitmap?, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Box(modifier.size(52.dp).clip(RoundedCornerShape(10.dp)).background(Ink.glass).border(1.5.dp, Ink.white.copy(alpha = 0.9f), RoundedCornerShape(10.dp))
         .clickable(role = Role.Button, onClickLabel = "Bild aus Fotos", onClick = onClick).semantics { contentDescription = "Bild aus Fotos" },
         contentAlignment = Alignment.Center) {
         if (reference != null) {
