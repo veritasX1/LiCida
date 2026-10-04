@@ -53,7 +53,7 @@ fun MoreToolsSheet(tools: Tools, hasTorch: Boolean, onTools: (Tools) -> Unit, on
                    onClose: () -> Unit, extra: @Composable () -> Unit = {}) {
     Box(Modifier.fillMaxSize().clickable(onClick = onClose), contentAlignment = Alignment.BottomCenter) {
         Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp)).background(Color(0xF21C1C1E))
-            .clickable(enabled = false) {}.windowInsetsPadding(WindowInsets.navigationBars).padding(bottom = 12.dp)
+            .keepTouches().windowInsetsPadding(WindowInsets.navigationBars).padding(bottom = 12.dp)
             .verticalScroll(rememberScrollState())) {
             Box(Modifier.fillMaxWidth().padding(top = 6.dp), contentAlignment = Alignment.Center) {
                 Box(Modifier.size(36.dp, 5.dp).clip(CircleShape).background(Color(0x66EBEBF5)))

@@ -213,4 +213,25 @@ class Studio(context: Context) {
     var hintSeen: Boolean
         get() = prefs.getBoolean("hintSeen", false)
         set(value) { prefs.edit().putBoolean("hintSeen", value).apply() }
+
+    // Card 15: the settings page.
+    var help: HelpLevel
+        get() = HelpLevel.entries.firstOrNull { it.name == prefs.getString("help", null) } ?: HelpLevel.Once
+        set(value) { prefs.edit().putString("help", value.name).apply() }
+
+    /** How often a hint has been shown (one count per app start it appeared in). */
+    fun hintCount(id: String): Int = prefs.getInt("hint_$id", if (id == "gesten" && hintSeen) 1 else 0)
+    fun countHint(id: String) { prefs.edit().putInt("hint_$id", hintCount(id) + 1).apply() }
+
+    var cameraQuality: CameraQuality
+        get() = CameraQuality.entries.firstOrNull { it.name == prefs.getString("cameraQuality", null) } ?: CameraQuality.Sharp
+        set(value) { prefs.edit().putString("cameraQuality", value.name).apply() }
+
+    var projector: Boolean
+        get() = prefs.getBoolean("projector", false)
+        set(value) { prefs.edit().putBoolean("projector", value).apply() }
+
+    var keymap: Keymap
+        get() = Keymap.decode(prefs.getString("keymap", null))
+        set(value) { prefs.edit().putString("keymap", value.encode()).apply() }
 }

@@ -194,7 +194,7 @@ private fun SlotDialog(question: SlotQuestion, slots: List<Slot>, edits: Edits, 
         is SlotQuestion.Rename -> Triple("Folge umbenennen", "", "Sichern")
     }
     androidx.compose.ui.window.Dialog(onDismissRequest = onClose) {
-        Column(Modifier.width(270.dp).clip(RoundedCornerShape(14.dp)).background(Color(0xF22C2C2E)).clickable(enabled = false) {},
+        Column(Modifier.width(270.dp).clip(RoundedCornerShape(14.dp)).background(Color(0xF22C2C2E)).keepTouches(),
             horizontalAlignment = Alignment.CenterHorizontally) {
             BasicText(title, style = style(17f, 600).copy(textAlign = TextAlign.Center), modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 18.dp))
             if (body.isNotEmpty()) BasicText(body, style = style(13f, 400).copy(textAlign = TextAlign.Center), modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp))

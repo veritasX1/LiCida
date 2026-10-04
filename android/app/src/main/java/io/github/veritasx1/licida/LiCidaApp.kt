@@ -84,7 +84,12 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
     var chrome by remember { mutableStateOf(true) }
     var moving by remember { mutableStateOf(false) }
     var exposureLocked by remember { mutableStateOf(false) }
-    var hintSeen by remember { mutableStateOf(studio.hintSeen) }
+    // Card 15: hints by help level – the gesture hint counts once per start it shows in, and goes once the user moved the picture.
+    var help by remember { mutableStateOf(studio.help) }
+    val gestureCount = remember { studio.hintCount("gesten") }
+    var gestureDone by remember { mutableStateOf(false) }
+    var gestureCounted by remember { mutableStateOf(false) }
+    val gestureHint = !gestureDone && help.shows(gestureCount)
     var screen by remember { mutableStateOf(Size(1f, 1f)) }
     var message by remember { mutableStateOf<String?>(null) }
     /** A short note in the middle (like iOS's HUD), gone after a moment. */
@@ -104,7 +109,13 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
     LaunchedEffect(cameraAllowed, cameraSheet) {
         if (cameraAllowed) cameraOptions = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { CameraCatalog.options(cameras(context)) }
     }
-    val camera = rememberCamera(cameraAllowed, chosenCamera)
+    var cameraQuality by remember { mutableStateOf(studio.cameraQuality) }
+    val camera = rememberCamera(cameraAllowed, chosenCamera, cameraQuality)
+    var projector by remember { mutableStateOf(studio.projector) }
+    var keymap by remember { mutableStateOf(studio.keymap) }
+    var settingsPage by remember { mutableStateOf(false) }
+    var listening by remember { mutableStateOf<KeyAction?>(null) }
+    var referenceOff by remember { mutableStateOf(false) }
 
     // The toolbox (cards 9/10): filters stack on a 2048-px working copy, rendered in the background.
     var edits by remember { mutableStateOf(studio.edits) }
@@ -378,7 +389,72 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
         camera.capture(context) { bitmap -> bitmap?.let { Reference.keep(context, it) }; use(bitmap) }
     }
 
-    LaunchedEffect(mode) { onDrawMode(mode == Mode.Draw) }
+    LaunchedEffect(mode) { onDrawMode(mode == Mode.Draw); if (mode != Mode.Draw) referenceOff = false }
+    val gestureShowing = gestureHint && reference != null && mode == Mode.Setup && cameraAllowed
+    LaunchedEffect(gestureShowing) { if (gestureShowing && !gestureCounted) { gestureCounted = true; studio.countHint("gesten") } }
+
+    /** The largest drawing (handbook p. 25): the camera's whole field at its sharpest. */
+    fun maximize() {
+        setupMenu = false
+        fill = false; studio.fill = false
+        cameraQuality = CameraQuality.Sharp; studio.cameraQuality = CameraQuality.Sharp
+        say("Ganzes Bild, scharf – jetzt die Vorlage bildschirmfüllend zoomen")
+    }
+    /** "Kamera zurücksetzen" (handbook p. 25): straightening, mirror and the camera's own view back to the start. */
+    fun resetCamera() {
+        setupMenu = false
+        setCorrection(Correction())
+        cameraView = chosenCamera?.let(Composition::cameraViewFor) ?: CameraView(); studio.cameraView = cameraView
+        say("Kamera zurückgesetzt")
+    }
+    fun namedSlots() = slots.mapIndexed { i, slot -> slot.copy(name = slot.name.trim().ifBlank { "Platz ${i + 1}" }) }
+    fun settingsState() = SettingsState(help, fill, cameraQuality, timelapse, slots.map { it.name }, keymap, projector)
+    fun applySettings(next: SettingsState) {
+        if (next.help != help) { help = next.help; studio.help = next.help }
+        if (next.fill != fill) { fill = next.fill; studio.fill = next.fill }
+        if (next.quality != cameraQuality) { cameraQuality = next.quality; studio.cameraQuality = next.quality }
+        if (next.timelapse != timelapse) { timelapse = next.timelapse; studio.timelapse = next.timelapse }
+        if (next.slotNames != slots.map { it.name }) {
+            // While typing a name may be empty for a moment; kept (and shown elsewhere) as "Platz n" then.
+            slots = slots.mapIndexed { i, slot -> slot.copy(name = next.slotNames[i]) }
+            studio.slots = namedSlots()
+        }
+        if (next.keymap != keymap) { keymap = next.keymap; studio.keymap = next.keymap }
+        if (next.projector != projector) { projector = next.projector; studio.projector = next.projector }
+    }
+
+    // Keys (handbook p. 47): while drawing, the mapped ones steer; on the settings page, the next key is taken for a row.
+    KeyListener { event ->
+        val code = event.keyCode
+        val waiting = listening
+        if (settingsPage && waiting != null) {
+            if (event.action == android.view.KeyEvent.ACTION_DOWN) {
+                if (code == android.view.KeyEvent.KEYCODE_BACK) listening = null
+                else if (Keymap.usable(code)) { applySettings(settingsState().copy(keymap = keymap.assign(waiting, code))); listening = null }
+            }
+            return@KeyListener true
+        }
+        val sheetOpen = filterSheet || moreSheet || saveSheet || effectsSheet || paletteEditor || settingsPage || wheelOf != null
+        if (mode != Mode.Draw || sheetOpen) return@KeyListener false
+        val action = keymap.action(code) ?: return@KeyListener false
+        if (event.action != android.view.KeyEvent.ACTION_DOWN) return@KeyListener true
+        val first = event.repeatCount == 0
+        when (action) {
+            KeyAction.Fainter, KeyAction.Stronger -> {
+                drawOpacity = (drawOpacity + if (action == KeyAction.Stronger) KeyMoves.OPACITY_STEP else -KeyMoves.OPACITY_STEP).coerceIn(0f, 1f)
+                studio.drawOpacity = drawOpacity
+                if (referenceOff) referenceOff = false
+            }
+            KeyAction.Toggle -> if (first) { referenceOff = !referenceOff; say(if (referenceOff) "Vorlage aus" else "Vorlage ein") }
+            KeyAction.Flicker -> if (first) { tools = tools.copy(flicker = !tools.flicker); say(if (tools.flicker) "Flimmern an" else "Flimmern aus") }
+            KeyAction.SplitLeft, KeyAction.SplitRight -> {
+                val at = if (tools.split) tools.splitAt + (if (action == KeyAction.SplitRight) KeyMoves.SPLIT_STEP else -KeyMoves.SPLIT_STEP) else tools.splitAt
+                tools = tools.copy(split = true, splitAt = at.coerceIn(0.05f, 0.95f))
+            }
+            else -> view = KeyMoves.view(action, view, screen)
+        }
+        true
+    }
     BackHandler(enabled = cameraSheet) { cameraSheet = false }
     BackHandler(enabled = filterSheet) { filterSheet = false }
     BackHandler(enabled = moreSheet) { moreSheet = false }
@@ -388,11 +464,13 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
     BackHandler(enabled = sessionsSheet) { sessionsSheet = false }
     BackHandler(enabled = setupMenu) { setupMenu = false }
     BackHandler(enabled = aligning != null) { aligning = null; alignSnapshot = null }
+    BackHandler(enabled = settingsPage) { if (listening != null) listening = null else { settingsPage = false; slots = namedSlots() } }
     BackHandler(enabled = mode == Mode.Draw) { mode = Mode.Setup; view = DrawView(); chrome = true }
 
     val shownOpacity = when {
         aligning != null -> 0f
         mode == Mode.Draw && tools.split -> 1f
+        mode == Mode.Draw && referenceOff -> 0f
         mode == Mode.Draw -> drawOpacity
         cameraSheet -> if (ghost) 0.35f else 0f
         moving -> minOf(opacity, Composition.WHILE_MOVING)
@@ -416,6 +494,8 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
                 // Checking the automatic alignment: the target fades in and out where it lies (handbook p. 24).
                 if (checking) checkRect?.let { rect -> CheckOverlay(rect, ownTargetPicture ?: helperPicture, ownTargetPicture != null, checkSpeed) }
             }
+            // Projector mode (handbook p. 47): the camera keeps running (time-lapse), but the screen stays black under the reference.
+            if (projector) Box(Modifier.fillMaxSize().background(Color.Black))
             // Finding the paper again: the session's snapshot, carried along like the reference.
             if (aligning != null) alignSnapshot?.let { snapshot ->
                 val saved = aligning!!.placement
@@ -479,7 +559,7 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
                         do { val event = awaitPointerEvent() } while (event.changes.any { it.pressed })
                         moving = false
                         studio.placement = placement
-                        if (!hintSeen) { hintSeen = true; studio.hintSeen = true }
+                        gestureDone = true
                     }
                 }
                 .pointerInput(screen) {
@@ -573,7 +653,7 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
             effectsSheet -> Unit   // while the colour sliders are open, everything else waits (handbook p. 10)
             aligning != null && mode == Mode.Setup -> AlignControls(alignAlpha, { alignAlpha = it }, alignBusy, ::alignAuto,
                 Modifier.align(Alignment.BottomCenter)) { aligning = null; alignSnapshot = null }
-            mode == Mode.Setup -> SetupChrome(reference, opacity, hintSeen, cameraAllowed,
+            mode == Mode.Setup -> SetupChrome(reference, opacity, !gestureHint, cameraAllowed,
                 onOpacity = { opacity = it }, onOpacityDone = { studio.opacity = opacity },
                 onPhotos = ::pickPhoto, onFiles = ::pickFile, onCamera = ::takePhoto, onAskCamera = onAskCamera, onMenu = { setupMenu = true },
                 onRotate = { placement = Composition.quarterTurn(placement); studio.placement = placement },
@@ -648,7 +728,16 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
 
         if (setupMenu && mode == Mode.Setup) SetupMenu(onClose = { setupMenu = false }, entries = listOf(
             MenuEntry(Symbol.Folder, "Aus Dateien") { setupMenu = false; pickFile() },
-            MenuEntry(Symbol.Sessions, "Sitzungen …") { openSessions() }))
+            MenuEntry(Symbol.Sessions, "Sitzungen …") { openSessions() },
+            MenuEntry(Symbol.Maximize, "Größtmögliche Zeichnung", ::maximize),
+            MenuEntry(Symbol.Reset, "Kamera zurücksetzen", ::resetCamera),
+            MenuEntry(Symbol.Gear, "Einstellungen …") { setupMenu = false; settingsPage = true }))
+        if (settingsPage) SettingsPage(settingsState(), listening, ::applySettings, onListen = { listening = it },
+            onPermissions = {
+                context.startActivity(android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                    android.net.Uri.fromParts("package", context.packageName, null)))
+            },
+            onDone = { listening = null; settingsPage = false; slots = namedSlots() })
         if (saveSheet) SaveSessionSheet(saveSnapshot, saveDescription, { saveDescription = it }, ::retake, { saveSheet = false }, ::saveSession)
         if (sessionsSheet) SessionsSheet(sessionList, { Sessions.thumbnail(context, it.id) }, ::restore,
             onDelete = { gone -> Sessions.delete(context, gone.id); sessionList = sessionList - gone; say("Sitzung gelöscht") },
@@ -901,7 +990,7 @@ class MenuEntry(val symbol: Symbol, val label: String, val action: () -> Unit)
 fun SetupMenu(onClose: () -> Unit, entries: List<MenuEntry>) {
     Box(Modifier.fillMaxSize().clickable(onClick = onClose)) {
         Column(Modifier.windowInsetsPadding(WindowInsets.statusBars).padding(start = 16.dp, top = 64.dp).widthIn(min = 230.dp, max = 280.dp)
-            .clip(RoundedCornerShape(13.dp)).background(Color(0xF22C2C2E))) {
+            .clip(RoundedCornerShape(13.dp)).background(Color(0xFF2C2C2E))) {
             entries.forEachIndexed { index, entry ->
                 if (index > 0) Box(Modifier.fillMaxWidth().height(0.5.dp).background(Ink.separator))
                 Row(Modifier.fillMaxWidth().clickable(role = Role.Button, onClick = entry.action).padding(horizontal = 16.dp, vertical = 11.dp),
