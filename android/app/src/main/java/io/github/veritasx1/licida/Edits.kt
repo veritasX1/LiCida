@@ -4,10 +4,12 @@ package io.github.veritasx1.licida
 data class Step(val filter: Filter, val value: Int = filter.defaultValue, val data: String = "") {
     val label get() = when {
         filter == Filter.ColourPalette -> "${filter.label} (${palette?.let { it.size - it.removed.size } ?: value} Farben)"
+        filter == Filter.ColourEffects -> filter.label
         filter.takesValue -> "${filter.label} ($value)"
         else -> filter.label
     }
     val palette: Palette? get() = if (filter == Filter.ColourPalette) Palette.decode(data) else null
+    val effects: Effects? get() = if (filter == Filter.ColourEffects) Effects.decode(data) else null
 
     fun encode() = "${filter.id}:$value" + if (data.isEmpty()) "" else ":" + java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(data.toByteArray())
 
@@ -20,6 +22,7 @@ data class Step(val filter: Filter, val value: Int = filter.defaultValue, val da
         }
 
         fun palette(palette: Palette) = Step(Filter.ColourPalette, palette.size, palette.encode())
+        fun effects(effects: Effects) = Step(Filter.ColourEffects, 0, effects.encode())
     }
 }
 
@@ -57,7 +60,7 @@ data class Edits(val steps: List<Step> = emptyList(), val position: Int = 0) {
             var image = original
             var previous: Filter? = null
             for (step in steps) {
-                image = step.palette?.render(image) ?: Filters.apply(image, step.filter, step.value, previous)
+                image = step.palette?.render(image) ?: step.effects?.apply(image) ?: Filters.apply(image, step.filter, step.value, previous)
                 // Threshold twice inverts once; a third time is a fresh threshold again.
                 previous = if (step.filter == Filter.Threshold && previous == Filter.Threshold) null else step.filter
             }
