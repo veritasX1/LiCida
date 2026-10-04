@@ -73,6 +73,13 @@ class Camera(private val context: android.content.Context?, private val lifecycl
         bound?.cameraControl?.startFocusAndMetering(FocusMeteringAction.Builder(point, FocusMeteringAction.FLAG_AE).disableAutoCancel().build())
     }
 
+    /** The flashlight (card 12): only where the camera has one. */
+    val hasTorch get() = bound?.cameraInfo?.hasFlashUnit() == true
+
+    fun torch(on: Boolean) {
+        bound?.cameraControl?.enableTorch(on)
+    }
+
     /** Back to automatic exposure (and focus). */
     fun unlock() {
         bound?.cameraControl?.cancelFocusAndMetering()
