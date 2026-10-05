@@ -40,7 +40,7 @@ object CameraCatalog {
         }
         if (main != null) {
             result += CameraOption(DEFAULT, tr("Rückkamera"), tr("Weitwinkel · Standard"), main.id, Facing.Back)
-            if (main.minZoom < 0.99f) result += CameraOption("back-0.5", tr("Rückkamera"), "Ultraweitwinkel · %.1f×".format(main.minZoom).replace('.', ','),
+            if (main.minZoom < 0.99f) result += CameraOption("back-0.5", tr("Rückkamera"), tr("Ultraweitwinkel") + " · %.1f×".format(main.minZoom).let { if (io.github.veritasx1.licida.i18n.I18n.language() == "en") it else it.replace('.', ',') },
                 main.id, Facing.Back, main.minZoom)
         }
         backs.filter { it != main && !it.logical }.sortedByDescending { it.fieldOfView }.forEach { lens ->

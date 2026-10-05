@@ -1,5 +1,7 @@
 package io.github.veritasx1.licida
 
+import io.github.veritasx1.licida.i18n.tr
+
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
@@ -58,15 +60,15 @@ class ScreensTest {
     @Test
     fun startWithoutImage() {
         compose.setContent { LiCidaApp(Studio(context), null, cameraAllowed = true, onAskCamera = {}, onDrawMode = {}) }
-        compose.onNodeWithText("Was möchtest du zeichnen?").assertExists()
-        compose.onNodeWithContentDescription("Zeichnen").assertExists()
+        compose.onNodeWithText(tr("Was möchtest du zeichnen?")).assertExists()
+        compose.onNodeWithContentDescription(tr("Zeichnen")).assertExists()
         shot("1-start")
     }
 
     @Test
     fun cameraAskedFirst() {
         compose.setContent { LiCidaApp(Studio(context), null, cameraAllowed = false, onAskCamera = {}, onDrawMode = {}) }
-        compose.onNodeWithText("LiCida braucht die Kamera").assertExists()
+        compose.onNodeWithText(tr("LiCida braucht die Kamera")).assertExists()
         shot("0-kamera")
     }
 
@@ -75,14 +77,14 @@ class ScreensTest {
         val studio = Studio(context).apply { hintSeen = false; placement = Placement(scale = 0.9f, rotation = -8f) }
         var drawing = false
         compose.setContent { LiCidaApp(studio, sample(), cameraAllowed = true, onAskCamera = {}, onDrawMode = { drawing = it }) }
-        compose.onNodeWithText("Mit zwei Fingern verschieben, zoomen und drehen").assertExists()
+        compose.onNodeWithText(tr("Mit zwei Fingern verschieben, zoomen und drehen")).assertExists()
         shot("2-einrichten")
-        compose.onNodeWithContentDescription("Zeichnen").performClick()
+        compose.onNodeWithContentDescription(tr("Zeichnen")).performClick()
         compose.waitForIdle()
         assertEquals(true, drawing)
-        compose.onNodeWithContentDescription("Zurück zum Einrichten").assertExists()
+        compose.onNodeWithContentDescription(tr("Zurück zum Einrichten")).assertExists()
         shot("3-zeichnen")
-        compose.onNodeWithContentDescription("Zurück zum Einrichten").performClick()
+        compose.onNodeWithContentDescription(tr("Zurück zum Einrichten")).performClick()
         compose.waitForIdle()
         assertEquals(false, drawing)
     }
@@ -93,131 +95,131 @@ class ScreensTest {
         val moto = listOf(CameraFacts("0", Facing.Back, 5.56f, 8.16f), CameraFacts("1", Facing.Front, 3.27f, 4.608f),
             CameraFacts("2", Facing.Back, 1.66f, 3.6736f))
         compose.setContent { LiCidaApp(studio, sample(), cameraAllowed = true, onAskCamera = {}, onDrawMode = {}, cameras = { moto }) }
-        compose.onNodeWithContentDescription("Kamera wählen und einstellen").performClick()
-        compose.waitUntil(3000) { runCatching { compose.onNodeWithText("Ultraweitwinkel · 95° Bildwinkel").assertExists() }.isSuccess }
+        compose.onNodeWithContentDescription(tr("Kamera wählen und einstellen")).performClick()
+        compose.waitUntil(3000) { runCatching { compose.onNodeWithText(tr("{kind} · {toInt}° Bildwinkel", "kind" to tr("Ultraweitwinkel"), "toInt" to 95)).assertExists() }.isSuccess }
         shot("4-kamera-blatt")
-        compose.onNodeWithText("Frontkamera").performClick()
+        compose.onNodeWithText(tr("Frontkamera")).performClick()
         compose.waitForIdle()
         assertEquals("front", studio.cameraKey)
         assertEquals(true, studio.cameraView.flipV)  // the front camera looks through a mirror
-        compose.onNodeWithText("Ganzes Bild").performClick()
+        compose.onNodeWithText(tr("Ganzes Bild")).performClick()
         assertEquals(false, studio.fill)
         // Correction by hand (card 6): stretch + and the helper grid; the sheet shows the automatic part (card 7).
-        compose.onNodeWithContentDescription("Breite vergrößern").performScrollTo().performClick()
+        compose.onNodeWithContentDescription(tr("{value} vergrößern", "value" to tr("Breite"))).performScrollTo().performClick()
         compose.waitForIdle()
         assert(studio.correction.stretchX > 1f) { studio.correction.encode() }
-        compose.onNodeWithContentDescription("Hilfsraster einblenden").performScrollTo().performClick()
+        compose.onNodeWithContentDescription(tr("Hilfsraster einblenden")).performScrollTo().performClick()
         assertEquals(true, studio.helperGhost)
-        compose.onNodeWithText("Automatisch ausrichten").performScrollTo().assertExists()
+        compose.onNodeWithText(tr("Automatisch ausrichten")).performScrollTo().assertExists()
         shot("6-korrektur")
-        compose.onNodeWithText("Korrektur zurücksetzen").performScrollTo().performClick()
+        compose.onNodeWithText(tr("Korrektur zurücksetzen")).performScrollTo().performClick()
         assertEquals(true, studio.correction.isPlain)
-        compose.onNodeWithText("Fertig").performClick()
-        compose.onNodeWithContentDescription("Zeichnen").assertExists()
+        compose.onNodeWithText(tr("Fertig")).performClick()
+        compose.onNodeWithContentDescription(tr("Zeichnen")).assertExists()
     }
 
     @Test
     fun toolbox() {
         val studio = Studio(context).apply { hintSeen = true; edits = Edits(); slots = List(3) { Slot.decode(null, it) } }
         compose.setContent { LiCidaApp(studio, sample(), cameraAllowed = false, onAskCamera = {}, onDrawMode = {}) }
-        compose.onNodeWithContentDescription("Werkzeuge und Filter").performClick()
-        compose.waitUntil(5000) { runCatching { compose.onNodeWithContentDescription("Graustufen: Ohne Farbe").assertExists() }.isSuccess }
-        compose.onNodeWithContentDescription("Graustufen: Ohne Farbe").performClick()
+        compose.onNodeWithContentDescription(tr("Werkzeuge und Filter")).performClick()
+        compose.waitUntil(5000) { runCatching { compose.onNodeWithContentDescription("${tr("Graustufen")}: ${tr("Ohne Farbe")}").assertExists() }.isSuccess }
+        compose.onNodeWithContentDescription("${tr("Graustufen")}: ${tr("Ohne Farbe")}").performClick()
         compose.onNode(androidx.compose.ui.test.hasScrollToIndexAction())
-            .performScrollToNode(androidx.compose.ui.test.hasContentDescription("Tontrennung: 2 bis 16 Grautöne"))
-        compose.onNodeWithContentDescription("Tontrennung: 2 bis 16 Grautöne").performClick()
+            .performScrollToNode(androidx.compose.ui.test.hasContentDescription("${tr("Tontrennung")}: ${tr("2 bis 16 Grautöne")}"))
+        compose.onNodeWithContentDescription("${tr("Tontrennung")}: ${tr("2 bis 16 Grautöne")}").performClick()
         compose.waitForIdle()
-        assertEquals(listOf("Graustufen", "Tontrennung (4)"), studio.edits.active.map { it.label })
-        compose.onNodeWithText("Grautöne").assertExists()
+        assertEquals(listOf(tr("Graustufen"), "${tr("Tontrennung")} (4)"), studio.edits.active.map { it.label })
+        compose.onNodeWithText(tr("Grautöne")).assertExists()
         Thread.sleep(600); compose.waitForIdle()
         shot("5-werkzeuge")
-        compose.onNodeWithContentDescription("Rückgängig").performClick()
+        compose.onNodeWithContentDescription(tr("Rückgängig")).performClick()
         assertEquals(1, studio.edits.position)
-        compose.onNodeWithContentDescription("Verlauf").performClick()
-        compose.onNodeWithText("2. Tontrennung (4)").assertExists()  // still there to redo
+        compose.onNodeWithContentDescription(tr("Verlauf")).performClick()
+        compose.onNodeWithText("2. ${tr("Tontrennung")} (4)").assertExists()  // still there to redo
         // Store the sequence in the first slot, then replay it after going back to the original.
-        compose.onNodeWithContentDescription("Wiederholen").performClick()
-        compose.onNodeWithContentDescription("Platz 1, leer").performScrollTo().performClick()
-        compose.onNodeWithText("Aktuelle Filter hier sichern").performClick()
+        compose.onNodeWithContentDescription(tr("Wiederholen")).performClick()
+        compose.onNodeWithContentDescription("${tr("Platz {value}", "value" to 1)}, ${tr("leer")}").performScrollTo().performClick()
+        compose.onNodeWithText(tr("Aktuelle Filter hier sichern")).performClick()
         assertEquals(2, studio.slots[0].steps.size)
-        compose.onAllNodesWithText("Original").onLast().performScrollTo().performClick()  // the button (the history lists it too)
+        compose.onAllNodesWithText(tr("Original")).onLast().performScrollTo().performClick()  // the button (the history lists it too)
         assertEquals(0, studio.edits.position)
-        compose.onNodeWithContentDescription("Platz 1, 2 Filter").performScrollTo().performClick()
-        compose.onNodeWithText("Graustufen → Tontrennung (4)").assertExists()  // the menu shows what it applies
-        compose.onNodeWithText("Auf dieses Bild anwenden").performClick()
+        compose.onNodeWithContentDescription("${tr("Platz {value}", "value" to 1)}, ${tr("{size} Filter", "size" to 2)}").performScrollTo().performClick()
+        compose.onNodeWithText("${tr("Graustufen")} → ${tr("Tontrennung")} (4)").assertExists()  // the menu shows what it applies
+        compose.onNodeWithText(tr("Auf dieses Bild anwenden")).performClick()
         compose.waitForIdle()
-        assertEquals(listOf("Graustufen", "Tontrennung (4)"), studio.edits.active.map { it.label })
-        compose.onNodeWithText("Fertig").performClick()
+        assertEquals(listOf(tr("Graustufen"), "${tr("Tontrennung")} (4)"), studio.edits.active.map { it.label })
+        compose.onNodeWithText(tr("Fertig")).performClick()
     }
 
     @Test
     fun colourPalette() {
         val studio = Studio(context).apply { hintSeen = true; edits = Edits() }
         compose.setContent { LiCidaApp(studio, sample(), cameraAllowed = false, onAskCamera = {}, onDrawMode = {}) }
-        compose.onNodeWithContentDescription("Werkzeuge und Filter").performClick()
-        compose.waitUntil(5000) { runCatching { compose.onNodeWithContentDescription("Farbpalette: Wenige Farben, einzeln ein- und ausblendbar").assertExists() }.isSuccess }
-        compose.onNodeWithContentDescription("Farbpalette: Wenige Farben, einzeln ein- und ausblendbar").performClick()
-        compose.waitUntil(8000) { runCatching { compose.onNodeWithText("Anwenden").assertExists() }.isSuccess }
-        compose.waitUntil(8000) { runCatching { compose.onNodeWithText("Farbpalette").assertExists() }.isSuccess }  // found
+        compose.onNodeWithContentDescription(tr("Werkzeuge und Filter")).performClick()
+        compose.waitUntil(5000) { runCatching { compose.onNodeWithContentDescription("${tr("Farbpalette")}: ${tr("Wenige Farben, einzeln ein- und ausblendbar")}").assertExists() }.isSuccess }
+        compose.onNodeWithContentDescription("${tr("Farbpalette")}: ${tr("Wenige Farben, einzeln ein- und ausblendbar")}").performClick()
+        compose.waitUntil(8000) { runCatching { compose.onNodeWithText(tr("Anwenden")).assertExists() }.isSuccess }
+        compose.waitUntil(8000) { runCatching { compose.onNodeWithText(tr("Farbpalette")).assertExists() }.isSuccess }  // found
         Thread.sleep(500); compose.waitForIdle()
         shot("7-palette")
         // The selected swatch tapped again: the colour picker.
-        compose.onAllNodesWithContentDescription("Farbe")[0].performClick()
-        compose.onAllNodesWithContentDescription("Farbe")[0].performClick()
-        compose.onNodeWithText("Vorher").assertExists()
-        compose.onNodeWithText("Regler").performClick()
+        compose.onAllNodesWithContentDescription(tr("Farbe"))[0].performClick()
+        compose.onAllNodesWithContentDescription(tr("Farbe"))[0].performClick()
+        compose.onNodeWithText(tr("Vorher")).assertExists()
+        compose.onNodeWithText(tr("Regler")).performClick()
         shot("8-farbwahl")
-        compose.onAllNodesWithText("Fertig").onLast().performClick()
-        compose.onNodeWithText("Anwenden").performClick()
+        compose.onAllNodesWithText(tr("Fertig")).onLast().performClick()
+        compose.onNodeWithText(tr("Anwenden")).performClick()
         compose.waitForIdle()
         val step = studio.edits.active.single()
         assertEquals(Filter.ColourPalette, step.filter)
         // Drawing with colour layers: one off – the layer row is there, the button shrinks.
-        compose.waitUntil(5000) { runCatching { compose.onNodeWithContentDescription("Palette bearbeiten").assertExists() }.isSuccess }
-        compose.onAllNodesWithContentDescription("Farbebene ein")[0].performClick()
-        compose.onNodeWithContentDescription("Farbebene aus").assertExists()
+        compose.waitUntil(5000) { runCatching { compose.onNodeWithContentDescription(tr("Palette bearbeiten")).assertExists() }.isSuccess }
+        compose.onAllNodesWithContentDescription(tr("Farbebene ein"))[0].performClick()
+        compose.onNodeWithContentDescription(tr("Farbebene aus")).assertExists()
         Thread.sleep(500); compose.waitForIdle()
         shot("9-farbebenen")
-        compose.onNodeWithContentDescription("Alle Farben ein").performClick()
-        compose.onAllNodesWithContentDescription("Farbebene aus").assertCountEquals(0)
+        compose.onNodeWithContentDescription(tr("Alle Farben ein")).performClick()
+        compose.onAllNodesWithContentDescription(tr("Farbebene aus")).assertCountEquals(0)
     }
 
     @Test
     fun colourEffects() {
         val studio = Studio(context).apply { hintSeen = true; edits = Edits() }
         compose.setContent { LiCidaApp(studio, sample(), cameraAllowed = false, onAskCamera = {}, onDrawMode = {}) }
-        compose.onNodeWithContentDescription("Werkzeuge und Filter").performClick()
-        compose.waitUntil(5000) { runCatching { compose.onNodeWithContentDescription("Farbeffekte: Helligkeit, Kontrast, Sättigung, Farbton").assertExists() }.isSuccess }
-        compose.onNodeWithContentDescription("Farbeffekte: Helligkeit, Kontrast, Sättigung, Farbton").performClick()
-        compose.onNodeWithContentDescription("Zeichnen").assertDoesNotExist()      // everything else waits
-        compose.onNodeWithContentDescription("Sättigung").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.SetProgress) { it(0.9f) }
-        compose.onNodeWithContentDescription("Farbton").performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.SetProgress) { it(0.8f) }
+        compose.onNodeWithContentDescription(tr("Werkzeuge und Filter")).performClick()
+        compose.waitUntil(5000) { runCatching { compose.onNodeWithContentDescription("${tr("Farbeffekte")}: ${tr("Helligkeit, Kontrast, Sättigung, Farbton")}").assertExists() }.isSuccess }
+        compose.onNodeWithContentDescription("${tr("Farbeffekte")}: ${tr("Helligkeit, Kontrast, Sättigung, Farbton")}").performClick()
+        compose.onNodeWithContentDescription(tr("Zeichnen")).assertDoesNotExist()      // everything else waits
+        compose.onNodeWithContentDescription(tr("Sättigung")).performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.SetProgress) { it(0.9f) }
+        compose.onNodeWithContentDescription(tr("Farbton")).performSemanticsAction(androidx.compose.ui.semantics.SemanticsActions.SetProgress) { it(0.8f) }
         shot("10-farbeffekte")
-        compose.onNodeWithText("Übernehmen").performClick()
+        compose.onNodeWithText(tr("Übernehmen")).performClick()
         compose.waitForIdle()
         val step = studio.edits.active.single()
         assertEquals(Filter.ColourEffects, step.filter)
         assertEquals(1.8f, step.effects!!.saturation, 0.01f)
-        compose.onNodeWithContentDescription("Zeichnen").assertExists()
+        compose.onNodeWithContentDescription(tr("Zeichnen")).assertExists()
     }
 
     @Test
     fun moreToolsWhileDrawing() {
         val studio = Studio(context).apply { hintSeen = true; edits = Edits() }
         compose.setContent { LiCidaApp(studio, sample(), cameraAllowed = true, onAskCamera = {}, onDrawMode = {}) }
-        compose.onNodeWithContentDescription("Zeichnen").performClick()
-        compose.onNodeWithContentDescription("Weitere Werkzeuge").performClick()
-        compose.onNodeWithText("Werkzeuge beim Zeichnen").assertExists()
-        compose.onNodeWithText("Diese Kamera hat kein Licht").assertExists()        // no flashlight here: switch off
-        compose.onNodeWithContentDescription("Geteilte Ansicht").performClick()
-        compose.onNodeWithContentDescription("Flimmern").performClick()
-        compose.onNodeWithContentDescription("Tempo des Flimmerns").assertExists()
+        compose.onNodeWithContentDescription(tr("Zeichnen")).performClick()
+        compose.onNodeWithContentDescription(tr("Weitere Werkzeuge")).performClick()
+        compose.onNodeWithText(tr("Werkzeuge beim Zeichnen")).assertExists()
+        compose.onNodeWithText(tr("Diese Kamera hat kein Licht")).assertExists()        // no flashlight here: switch off
+        compose.onNodeWithContentDescription(tr("Geteilte Ansicht")).performClick()
+        compose.onNodeWithContentDescription(tr("Flimmern")).performClick()
+        compose.onNodeWithContentDescription(tr("Tempo des Flimmerns")).assertExists()
         shot("11-werkzeuge-zeichnen")
-        compose.onNodeWithText("Fertig").performClick()
-        compose.onNodeWithContentDescription("Teiler verschieben").assertExists()
-        compose.onNodeWithContentDescription("Weitere Werkzeuge").performClick()
-        compose.onNodeWithContentDescription("Flimmern").performClick()   // off: the split alone
-        compose.onNodeWithText("Fertig").performClick()
+        compose.onNodeWithText(tr("Fertig")).performClick()
+        compose.onNodeWithContentDescription(tr("Teiler verschieben")).assertExists()
+        compose.onNodeWithContentDescription(tr("Weitere Werkzeuge")).performClick()
+        compose.onNodeWithContentDescription(tr("Flimmern")).performClick()   // off: the split alone
+        compose.onNodeWithText(tr("Fertig")).performClick()
         shot("12-geteilt")
     }
 
@@ -236,21 +238,21 @@ class ScreensTest {
 
         val studio = Studio(context).apply { hintSeen = true; edits = Edits() }
         compose.setContent { LiCidaApp(studio, sample(), cameraAllowed = true, onAskCamera = {}, onDrawMode = {}) }
-        compose.onNodeWithContentDescription("Mehr").performClick()
-        compose.onNodeWithText("Aus Dateien").assertExists()
+        compose.onNodeWithContentDescription(tr("Mehr")).performClick()
+        compose.onNodeWithText(tr("Aus Dateien")).assertExists()
         shot("14-mehr")
-        compose.onNodeWithText("Sitzungen …").performClick()
-        compose.waitUntil(3000) { compose.onAllNodesWithText("Blume im Garten").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText(tr("Sitzungen …")).performClick()
+        compose.waitUntil(3000) { compose.onAllNodesWithText(tr("Blume im Garten")).fetchSemanticsNodes().isNotEmpty() }
         shot("15-sitzungen")
-        compose.onNodeWithText("Blume im Garten").performClick()
-        compose.waitUntil(3000) { compose.onAllNodesWithText("Blatt wiederfinden").fetchSemanticsNodes().isNotEmpty() }
-        compose.onNodeWithContentDescription("Schnappschuss der Sitzung").assertExists()
+        compose.onNodeWithText(tr("Blume im Garten")).performClick()
+        compose.waitUntil(3000) { compose.onAllNodesWithText(tr("Blatt wiederfinden")).fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithContentDescription(tr("Schnappschuss der Sitzung")).assertExists()
         assertEquals(Placement(0.8f, 5f), studio.placement)
         assertEquals(1, studio.edits.active.size)
         assertEquals(4f, studio.correction.tilt)
         shot("16-wiederfinden")
-        compose.onNodeWithText("Fertig").performClick()
-        compose.onNodeWithContentDescription("Schnappschuss der Sitzung").assertDoesNotExist()
+        compose.onNodeWithText(tr("Fertig")).performClick()
+        compose.onNodeWithContentDescription(tr("Schnappschuss der Sitzung")).assertDoesNotExist()
 
         Sessions.delete(context, kept.id)
         assertEquals(0, Sessions.list(context).size)
@@ -260,13 +262,13 @@ class ScreensTest {
     fun saveSessionSheetWhileDrawing() {
         val studio = Studio(context).apply { hintSeen = true; edits = Edits(); sessionButton = true }
         compose.setContent { LiCidaApp(studio, sample(), cameraAllowed = true, onAskCamera = {}, onDrawMode = {}) }
-        compose.onNodeWithContentDescription("Zeichnen").performClick()
-        compose.onNodeWithContentDescription("Sitzung sichern").performClick()
-        compose.onNodeWithText("Neu aufnehmen").assertExists()
-        compose.onNodeWithContentDescription("Beschreibung").assertExists()
+        compose.onNodeWithContentDescription(tr("Zeichnen")).performClick()
+        compose.onNodeWithContentDescription(tr("Sitzung sichern")).performClick()
+        compose.onNodeWithText(tr("Neu aufnehmen")).assertExists()
+        compose.onNodeWithContentDescription(tr("Beschreibung")).assertExists()
         shot("13-sitzung-sichern")
-        compose.onNodeWithText("Abbrechen").performClick()
-        compose.onNodeWithText("Neu aufnehmen").assertDoesNotExist()
+        compose.onNodeWithText(tr("Abbrechen")).performClick()
+        compose.onNodeWithText(tr("Neu aufnehmen")).assertDoesNotExist()
     }
 
     @Test
@@ -274,23 +276,23 @@ class ScreensTest {
         // Card 15: from the Mehr menu; a key row takes the next key pressed.
         val studio = Studio(context)
         compose.setContent { LiCidaApp(studio, sample(), cameraAllowed = true, onAskCamera = {}, onDrawMode = {}) }
-        compose.onNodeWithContentDescription("Mehr").performClick()
+        compose.onNodeWithContentDescription(tr("Mehr")).performClick()
         shot("17-mehr-menue")
-        compose.onNodeWithText("Einstellungen …").performClick()
-        compose.onNodeWithText("Einstellungen").assertExists()
+        compose.onNodeWithText(tr("Einstellungen …")).performClick()
+        compose.onNodeWithText(tr("Einstellungen")).assertExists()
         shot("18-einstellungen")
-        compose.onNodeWithText("Vorlage aus/ein").performScrollTo().performClick()
-        compose.onNodeWithText("Taste drücken …").assertExists()
+        compose.onNodeWithText(tr("Vorlage aus/ein")).performScrollTo().performClick()
+        compose.onNodeWithText(tr("Taste drücken …")).assertExists()
         KeyHub.dispatch(android.view.KeyEvent(android.view.KeyEvent.ACTION_DOWN, android.view.KeyEvent.KEYCODE_VOLUME_UP))
         compose.waitForIdle()
-        compose.onNodeWithText("Lauter").assertExists()
+        compose.onNodeWithText(tr("Lauter")).assertExists()
         assertEquals(KeyAction.Toggle, studio.keymap.action(android.view.KeyEvent.KEYCODE_VOLUME_UP))
         shot("19-tasten")
-        compose.onNode(androidx.compose.ui.test.hasScrollAction()).performScrollToNode(androidx.compose.ui.test.hasText("Projektor-Modus"))
-        compose.onNodeWithContentDescription("Projektor-Modus").performClick()
+        compose.onNode(androidx.compose.ui.test.hasScrollAction()).performScrollToNode(androidx.compose.ui.test.hasText(tr("Projektor-Modus")))
+        compose.onNodeWithContentDescription(tr("Projektor-Modus")).performClick()
         assertEquals(true, studio.projector)
-        compose.onNodeWithText("Fertig").performClick()
-        compose.onNodeWithText("Einstellungen").assertDoesNotExist()
+        compose.onNodeWithText(tr("Fertig")).performClick()
+        compose.onNodeWithText(tr("Einstellungen")).assertDoesNotExist()
     }
 
     @Test
@@ -303,11 +305,11 @@ class ScreensTest {
             compose.waitForIdle()
         }
         press(android.view.KeyEvent.KEYCODE_E)
-        compose.onNodeWithText("1,3×").assertExists()
+        compose.onNodeWithText(tr("1,3×")).assertExists()
         press(android.view.KeyEvent.KEYCODE_C)
         assertEquals(0.6f, studio.drawOpacity, 1e-4f)
         press(android.view.KeyEvent.KEYCODE_R)
-        compose.onNodeWithText("Vorlage aus").assertExists()
+        compose.onNodeWithText(tr("Vorlage aus")).assertExists()
         // A key nobody has is left to Android.
         assertEquals(false, KeyHub.dispatch(android.view.KeyEvent(android.view.KeyEvent.ACTION_DOWN, android.view.KeyEvent.KEYCODE_X)))
     }
@@ -324,51 +326,51 @@ class ScreensTest {
         // Card 16: once, at the first start; the tour walks over every button of the setup screen.
         val studio = Studio(context).apply { tourOffered = false }
         compose.setContent { LiCidaApp(studio, sample(), cameraAllowed = true, onAskCamera = {}, onDrawMode = {}) }
-        compose.onNodeWithText("Willkommen bei LiCida").assertExists()
+        compose.onNodeWithText(tr("Willkommen bei LiCida")).assertExists()
         shot("21-willkommen")
-        compose.onNodeWithText("Rundgang").performClick()
+        compose.onNodeWithText(tr("Rundgang")).performClick()
         assertEquals(true, studio.tourOffered)
-        compose.onNodeWithText("1 von ${Tour.steps.size}").assertExists()
+        compose.onNodeWithText(tr("{value} von {size}", "value" to 1, "size" to Tour.steps.size)).assertExists()
         shot("22-rundgang-mehr")
-        repeat(8) { compose.onNodeWithText("Weiter").performClick() }
-        compose.onNodeWithText("9 von ${Tour.steps.size}").assertExists()
+        repeat(8) { compose.onNodeWithText(tr("Weiter")).performClick() }
+        compose.onNodeWithText(tr("{value} von {size}", "value" to 9, "size" to Tour.steps.size)).assertExists()
         shot("23-rundgang-zeichnen")
-        compose.onNodeWithText("Weiter").performClick()
-        compose.onNodeWithText("Fertig").performClick()
-        compose.onNodeWithText("Fertig").assertDoesNotExist()
-        compose.onNodeWithText("Willkommen bei LiCida").assertDoesNotExist()
+        compose.onNodeWithText(tr("Weiter")).performClick()
+        compose.onNodeWithText(tr("Fertig")).performClick()
+        compose.onNodeWithText(tr("Fertig")).assertDoesNotExist()
+        compose.onNodeWithText(tr("Willkommen bei LiCida")).assertDoesNotExist()
     }
 
     @Test
     fun noTourOfferForOldMasters() {
         val studio = Studio(context).apply { tourOffered = false; help = HelpLevel.Off }
         compose.setContent { LiCidaApp(studio, sample(), cameraAllowed = true, onAskCamera = {}, onDrawMode = {}) }
-        compose.onNodeWithText("Willkommen bei LiCida").assertDoesNotExist()
-        compose.onNodeWithText("Mit zwei Fingern verschieben, zoomen und drehen").assertDoesNotExist()
+        compose.onNodeWithText(tr("Willkommen bei LiCida")).assertDoesNotExist()
+        compose.onNodeWithText(tr("Mit zwei Fingern verschieben, zoomen und drehen")).assertDoesNotExist()
     }
 
     @Test
     fun guideFromTheMenu() {
         compose.setContent { LiCidaApp(Studio(context), sample(), cameraAllowed = true, onAskCamera = {}, onDrawMode = {}) }
-        compose.onNodeWithContentDescription("Mehr").performClick()
-        compose.onNodeWithText("Hilfe …").performClick()
-        compose.onNodeWithText("Anleitung").assertExists()
+        compose.onNodeWithContentDescription(tr("Mehr")).performClick()
+        compose.onNodeWithText(tr("Hilfe …")).performClick()
+        compose.onNodeWithText(tr("Anleitung")).assertExists()
         shot("24-anleitung")
-        compose.onNodeWithText("7. Zeichnen").performClick()
-        compose.onNodeWithText("‹ Anleitung").assertExists()
+        compose.onNodeWithText("7. ${tr("Zeichnen")}").performClick()
+        compose.onNodeWithText(tr("‹ Anleitung")).assertExists()
         shot("25-kapitel")
-        compose.onNodeWithText("Weiter: Weitere Werkzeuge beim Zeichnen ›").performClick()
-        compose.onNodeWithText("Weitere Werkzeuge beim Zeichnen").assertExists()
-        compose.onNodeWithText("‹ Anleitung").performClick()
-        compose.onNodeWithText("Rundgang starten").performClick()
-        compose.onNodeWithText("1 von ${Tour.steps.size}").assertExists()
+        compose.onNodeWithText(tr("Weiter: {value} ›", "value" to tr("Weitere Werkzeuge beim Zeichnen"))).performClick()
+        compose.onNodeWithText(tr("Weitere Werkzeuge beim Zeichnen")).assertExists()
+        compose.onNodeWithText(tr("‹ Anleitung")).performClick()
+        compose.onNodeWithText(tr("Rundgang starten")).performClick()
+        compose.onNodeWithText(tr("{value} von {size}", "value" to 1, "size" to Tour.steps.size)).assertExists()
     }
 
     @Test
     fun drawHintGoesAtTheFirstTap() {
         val studio = Studio(context)
         compose.setContent { LiCidaApp(studio, sample(), cameraAllowed = true, onAskCamera = {}, onDrawMode = {}, startMode = Mode.Draw) }
-        compose.onNodeWithText("Tippen blendet die Knöpfe aus · Doppeltipp zoomt").assertExists()
+        compose.onNodeWithText(tr("Tippen blendet die Knöpfe aus · Doppeltipp zoomt")).assertExists()
         assertEquals(1, studio.hintCount("zeichnen"))
     }
 }

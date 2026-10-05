@@ -57,8 +57,8 @@ enum class KeyAction(val label: String, val defaultKey: Int) {
     PanDown(tr("Nach unten"), KeyEvent.KEYCODE_S),
     Fainter(tr("Vorlage schwächer"), KeyEvent.KEYCODE_Z),
     Stronger(tr("Vorlage stärker"), KeyEvent.KEYCODE_C),
-    Toggle("Vorlage aus/ein", KeyEvent.KEYCODE_R),
-    Flicker("Flimmern aus/ein", KeyEvent.KEYCODE_F),
+    Toggle(tr("Vorlage aus/ein"), KeyEvent.KEYCODE_R),
+    Flicker(tr("Flimmern aus/ein"), KeyEvent.KEYCODE_F),
     SplitLeft(tr("Teiler nach links"), KeyEvent.KEYCODE_1),
     SplitRight(tr("Teiler nach rechts"), KeyEvent.KEYCODE_3),
 }

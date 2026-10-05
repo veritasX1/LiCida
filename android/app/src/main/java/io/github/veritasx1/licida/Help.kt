@@ -191,7 +191,7 @@ fun GuidePage(onTour: () -> Unit, onPdf: () -> Unit, onDone: () -> Unit) {
                 }
                 BasicText(tr("Zeigt dir die Knöpfe beim Einrichten – eine Minute."), style = style(13f, 400, Ink.secondary),
                     modifier = Modifier.padding(start = 36.dp, end = 36.dp, top = 6.dp))
-                BasicText("KAPITEL", style = style(13f, 400, Ink.secondary), modifier = Modifier.padding(start = 36.dp, top = 28.dp, bottom = 6.dp))
+                BasicText(tr("Kapitel").uppercase(), style = style(13f, 400, Ink.secondary), modifier = Modifier.padding(start = 36.dp, top = 28.dp, bottom = 6.dp))
                 Column(Modifier.padding(horizontal = 16.dp).clip(RoundedCornerShape(12.dp)).background(Color(0xFF1C1C1E))) {
                     Guide.chapters.forEachIndexed { index, item ->
                         if (index > 0) Line()
@@ -201,7 +201,7 @@ fun GuidePage(onTour: () -> Unit, onPdf: () -> Unit, onDone: () -> Unit) {
                 Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 28.dp).clip(RoundedCornerShape(12.dp)).background(Color(0xFF1C1C1E))) {
                     ListRow(tr("Anleitung als PDF sichern"), Ink.yellow, onPdf)
                 }
-                BasicText("Zum Ausdrucken oder Lesen am Computer – landet in „Downloads/LiCida“.", style = style(13f, 400, Ink.secondary),
+                BasicText(tr("Zum Ausdrucken oder Lesen am Computer – landet in „Downloads/LiCida“."), style = style(13f, 400, Ink.secondary),
                     modifier = Modifier.padding(start = 36.dp, end = 36.dp, top = 6.dp))
             }
         }
