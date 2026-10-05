@@ -51,13 +51,13 @@ fun CameraSheet(options: List<CameraOption>, chosen: CameraOption?, fill: Boolea
             Box(Modifier.size(36.dp, 5.dp).clip(CircleShape).background(Color(0x66EBEBF5)))  // grabber
         }
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Spacer(Modifier.width(56.dp))
+            Spacer(Modifier.width(84.dp))
             BasicText(tr("Kamera"), style = style(17f, 600).copy(textAlign = TextAlign.Center), modifier = Modifier.weight(1f))
             BasicText(tr("Fertig"), style = style(17f, 600, Ink.yellow).copy(textAlign = TextAlign.End),
-                modifier = Modifier.width(56.dp).clickable(role = Role.Button, onClick = onDone).padding(vertical = 6.dp))
+                modifier = Modifier.width(84.dp).clickable(role = Role.Button, onClick = onDone).padding(vertical = 6.dp))
         }
         Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 16.dp).padding(bottom = 12.dp)) {
-            Section("KAMERA")
+            Section(tr("Kamera"))
             Group {
                 options.forEachIndexed { index, option ->
                     if (index > 0) Separator()
@@ -73,7 +73,7 @@ fun CameraSheet(options: List<CameraOption>, chosen: CameraOption?, fill: Boolea
                 }
                 if (options.isEmpty()) BasicText(tr("Keine Kamera gefunden"), style = style(17f, 400, Ink.secondary), modifier = Modifier.padding(16.dp))
             }
-            Section("BILD")
+            Section(tr("Bild"))
             Group {
                 Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                     BasicText(tr("Ausschnitt"), style = style(17f), modifier = Modifier.weight(1f))
@@ -107,7 +107,7 @@ class CorrectionControls(
 
 @Composable
 private fun CorrectionSections(c: CorrectionControls) {
-    Section("KORREKTUR VON HAND")
+    Section(tr("Korrektur von Hand"))
     Group {
         val tilt = c.correction.tilt
         SliderRow(tr("Neigung"), "${tilt.toInt()}°", (tilt + Correction.MAX_TILT) / (2 * Correction.MAX_TILT), tr("Neigung der Kamera"),
@@ -138,9 +138,9 @@ private fun CorrectionSections(c: CorrectionControls) {
     BasicText(tr("Leg das gedruckte Zielbild auf und blende das Hilfsraster ein: Neigung und Strecken so wählen, dass sich beide decken."),
         style = style(13f, 400, Ink.secondary), modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 6.dp))
 
-    Section("AUTOMATISCH")
+    Section(tr("Automatisch"))
     Group {
-        CheckRow("LiCida-Zielbild", tr("Ausdrucken oder auf einem zweiten Bildschirm zeigen"), !c.ownTarget) { c.onTargetKind(false) }
+        CheckRow(tr("LiCida-Zielbild"), tr("Ausdrucken oder auf einem zweiten Bildschirm zeigen"), !c.ownTarget) { c.onTargetKind(false) }
         Separator()
         CheckRow(tr("Eigenes Bild"), tr("Etwas Flaches mit klaren Kanten, z. B. eine Zeitschrift"), c.ownTarget) { c.onPickOwnTarget() }
         Separator()
@@ -153,7 +153,7 @@ private fun CorrectionSections(c: CorrectionControls) {
             .clickable(enabled = c.busy == null, role = Role.Button, onClick = c.onAuto).padding(vertical = 14.dp))
     BasicText(tr("Zielbild flach in den Blick der Kamera legen, Arm aus dem Bild – LiCida richtet das Kamerabild so aus, als schaue die Kamera senkrecht von oben."),
         style = style(13f, 400, Ink.secondary), modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 6.dp))
-    Section("EINSTELLUNG")
+    Section(tr("Einstellung"))
     Group {
         ActionRow(tr("Diese Ausrichtung sichern"), onClick = c.onSaveSetting)
         Separator()
@@ -187,7 +187,7 @@ private fun StretchRow(label: String, value: Float, onChange: (Float) -> Unit, o
         for ((sign, text) in listOf(-1 to "−", 1 to "+")) {
             BasicText(text, style = style(20f, 500).copy(textAlign = TextAlign.Center), modifier = Modifier.padding(start = 6.dp).size(width = 44.dp, height = 34.dp)
                 .clip(RoundedCornerShape(8.dp)).background(Color(0x3D767680))
-                .semantics { contentDescription = "$label ${if (sign < 0) "verringern" else "vergrößern"}" }
+                .semantics { contentDescription = if (sign < 0) tr("{value} verringern", "value" to label) else tr("{value} vergrößern", "value" to label) }
                 .pointerInput(Unit) {
                     awaitEachGesture {
                         awaitFirstDown()
@@ -228,7 +228,7 @@ private fun ActionRow(label: String, enabled: Boolean = true, onClick: () -> Uni
 }
 
 @Composable
-private fun Section(title: String) = BasicText(title, style = style(13f, 400, Ink.secondary), modifier = Modifier.padding(start = 16.dp, top = 14.dp, bottom = 6.dp))
+private fun Section(title: String) = BasicText(title.uppercase(), style = style(13f, 400, Ink.secondary), modifier = Modifier.padding(start = 16.dp, top = 14.dp, bottom = 6.dp))
 
 @Composable
 private fun Group(content: @Composable () -> Unit) {

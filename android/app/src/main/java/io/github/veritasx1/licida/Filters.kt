@@ -28,7 +28,7 @@ enum class Filter(val id: String, val label: String, val hint: String, val takes
     Posterize("posterize", tr("Tontrennung"), tr("2 bis 16 Grautöne"), takesValue = true, defaultValue = 4),
     Wash("wash", tr("Lasurwerte"), tr("Grauwerte zum Schichten von Lasuren")),
     ComicColor("comic", tr("Comic"), tr("Wenig Farben, Pastell, schwarze Tusche")),
-    ComicBw("comicbw", "Comic s/w", tr("Schwarzweiß mit Tusche")),
+    ComicBw("comicbw", tr("Comic s/w"), tr("Schwarzweiß mit Tusche")),
     Neon("neon", tr("Neon"), tr("Leuchtende Linien auf Schwarz")),
     Blur("blur", tr("Weichzeichnen"), tr("Glättet – mehrmals für mehr")),
     Edges("edges", tr("Kanten"), tr("Schwarze Linien, sonst durchsichtig")),

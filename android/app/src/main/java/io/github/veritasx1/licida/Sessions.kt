@@ -185,7 +185,7 @@ fun SaveSessionSheet(snapshot: Bitmap?, description: String, onDescription: (Str
                         .padding(horizontal = 12.dp, vertical = 8.dp))
                 }
             }
-            BasicText("BESCHREIBUNG", style = style(13f, 400, Ink.secondary), modifier = Modifier.padding(start = 16.dp, top = 18.dp, bottom = 6.dp))
+            BasicText(tr("Beschreibung").uppercase(), style = style(13f, 400, Ink.secondary), modifier = Modifier.padding(start = 16.dp, top = 18.dp, bottom = 6.dp))
             Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Color(0xFF2C2C2E)).padding(horizontal = 16.dp, vertical = 12.dp)) {
                 BasicTextField(description, onDescription, singleLine = true, textStyle = style(17f), cursorBrush = SolidColor(Ink.yellow),
                     modifier = Modifier.fillMaxWidth().semantics { contentDescription = tr("Beschreibung") })

@@ -112,7 +112,7 @@ fun FilterSheet(edits: Edits, previews: Map<Filter, Bitmap>, slots: List<Slot>, 
                 IosSlider((last.value - 2) / 14f, { onValue(2 + (it * 14).toInt()) }, tr("Anzahl der Grautöne"), Modifier.weight(1f))
                 BasicText("${last.value}", style = style(15f, 600, Ink.secondary, tabular = true).copy(textAlign = TextAlign.End), modifier = Modifier.width(32.dp))
             }
-            BasicText("EIGENE FOLGEN", style = style(13f, 400, Ink.secondary), modifier = Modifier.padding(start = 32.dp, top = 14.dp, bottom = 6.dp))
+            BasicText(tr("Eigene Folgen").uppercase(), style = style(13f, 400, Ink.secondary), modifier = Modifier.padding(start = 32.dp, top = 14.dp, bottom = 6.dp))
             Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 slots.forEachIndexed { index, slot ->
                     SlotCard(slot, Modifier.weight(1f)) { question = SlotQuestion.Menu(index) }
@@ -166,10 +166,10 @@ private fun History(edits: Edits, onJump: (Int) -> Unit) {
 @Composable
 private fun SlotCard(slot: Slot, modifier: Modifier, onClick: () -> Unit) {
     Column(modifier.clip(RoundedCornerShape(12.dp)).background(Color(0xFF2C2C2E)).clickable(role = Role.Button, onClick = onClick)
-        .semantics { contentDescription = "${slot.name}, ${if (slot.steps.isEmpty()) "leer" else "${slot.steps.size} Filter"}" }
+        .semantics { contentDescription = "${slot.name}, ${if (slot.steps.isEmpty()) tr("leer") else tr("{size} Filter", "size" to slot.steps.size)}" }
         .padding(vertical = 12.dp, horizontal = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         BasicText(slot.name, style = style(15f, 600).copy(textAlign = TextAlign.Center), maxLines = 1, overflow = TextOverflow.Ellipsis)
-        BasicText(if (slot.steps.isEmpty()) "leer" else tr("{size} Filter", "size" to slot.steps.size), style = style(12f, 400, Ink.secondary), modifier = Modifier.padding(top = 2.dp))
+        BasicText(if (slot.steps.isEmpty()) tr("leer") else tr("{size} Filter", "size" to slot.steps.size), style = style(12f, 400, Ink.secondary), modifier = Modifier.padding(top = 2.dp))
     }
 }
 

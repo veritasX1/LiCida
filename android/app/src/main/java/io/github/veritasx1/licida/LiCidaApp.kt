@@ -890,7 +890,7 @@ private fun DrawChrome(view: DrawView, opacity: Float, exposureLocked: Boolean, 
         Column(Modifier.align(Alignment.TopCenter).windowInsetsPadding(WindowInsets.statusBars).padding(top = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally) {
             // Like Camera's "AE/AF-SPERRE": yellow, tap to release.
-            if (exposureLocked) BasicText("BELICHTUNG GESPERRT", style = style(12f, 700, Color.Black),
+            if (exposureLocked) BasicText(tr("Belichtung gesperrt").uppercase(), style = style(12f, 700, Color.Black),
                 modifier = Modifier.clip(RoundedCornerShape(5.dp)).background(Ink.yellow).clickable(role = Role.Button, onClickLabel = tr("Belichtung lösen"), onClick = onUnlock)
                     .padding(horizontal = 8.dp, vertical = 4.dp))
             if (view.zoom > 1.01f) BasicText("%.1f×".format(view.zoom).replace('.', ','), style = style(13f, 700, Ink.yellow, tabular = true).copy(textAlign = TextAlign.Center),
