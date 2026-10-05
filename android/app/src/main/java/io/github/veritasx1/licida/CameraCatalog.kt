@@ -1,5 +1,7 @@
 package io.github.veritasx1.licida
 
+import io.github.veritasx1.licida.i18n.tr
+
 import kotlin.math.atan
 
 /** What the phone reports about one camera (Camera2): enough to name it the way people know it. */
@@ -37,21 +39,21 @@ object CameraCatalog {
             list.minByOrNull { kotlin.math.abs(it.fieldOfView - 70.0) }
         }
         if (main != null) {
-            result += CameraOption(DEFAULT, "Rückkamera", "Weitwinkel · Standard", main.id, Facing.Back)
-            if (main.minZoom < 0.99f) result += CameraOption("back-0.5", "Rückkamera", "Ultraweitwinkel · %.1f×".format(main.minZoom).replace('.', ','),
+            result += CameraOption(DEFAULT, tr("Rückkamera"), tr("Weitwinkel · Standard"), main.id, Facing.Back)
+            if (main.minZoom < 0.99f) result += CameraOption("back-0.5", tr("Rückkamera"), "Ultraweitwinkel · %.1f×".format(main.minZoom).replace('.', ','),
                 main.id, Facing.Back, main.minZoom)
         }
         backs.filter { it != main && !it.logical }.sortedByDescending { it.fieldOfView }.forEach { lens ->
             val wider = main != null && lens.fieldOfView > main.fieldOfView + 10
             val narrower = main != null && lens.fieldOfView < main.fieldOfView - 10
-            val kind = when { wider -> "Ultraweitwinkel"; narrower -> "Tele"; else -> "Weitere Kamera" }
-            result += CameraOption("back-${lens.id}", "Rückkamera", "$kind · ${lens.fieldOfView.toInt()}° Bildwinkel", lens.id, Facing.Back)
+            val kind = when { wider -> tr("Ultraweitwinkel"); narrower -> tr("Tele"); else -> tr("Weitere Kamera") }
+            result += CameraOption("back-${lens.id}", tr("Rückkamera"), tr("{kind} · {toInt}° Bildwinkel", "kind" to kind, "toInt" to (lens.fieldOfView.toInt())), lens.id, Facing.Back)
         }
         cameras.firstOrNull { it.facing == Facing.Front }?.let {
-            result += CameraOption("front", "Frontkamera", "Mit Spiegelaufsatz · Bild wird gespiegelt", it.id, Facing.Front)
+            result += CameraOption("front", tr("Frontkamera"), tr("Mit Spiegelaufsatz · Bild wird gespiegelt"), it.id, Facing.Front)
         }
         cameras.filter { it.facing == Facing.External }.forEachIndexed { index, usb ->
-            result += CameraOption("usb-${usb.id}", if (index == 0) "USB-Kamera" else "USB-Kamera ${index + 1}", "Angeschlossen", usb.id, Facing.External)
+            result += CameraOption("usb-${usb.id}", if (index == 0) "USB-Kamera" else tr("USB-Kamera {value}", "value" to (index + 1)), tr("Angeschlossen"), usb.id, Facing.External)
         }
         return result
     }

@@ -1,5 +1,7 @@
 package io.github.veritasx1.licida
 
+import io.github.veritasx1.licida.i18n.tr
+
 import android.content.ContentValues
 import android.content.Context
 import android.graphics.Typeface
@@ -63,70 +65,48 @@ data class Chapter(val title: String, val paragraphs: List<String>)
 /** The guide – written for someone who has never used such an app ("Tante Erna"), without support mail or videos. */
 object Guide {
     val chapters = listOf(
-        Chapter("Was LiCida macht", listOf(
-            "LiCida legt eine Vorlage über das Kamerabild deines Papiers. Du schaust beim Zeichnen auf den Bildschirm und " +
-                "ziehst die Linien der Vorlage auf dem Papier nach – wie mit einer Camera lucida, dem Zeichengerät der alten Meister.",
-            "Alles bleibt auf deinem Gerät. LiCida hat keinen Internetzugang, sammelt nichts und kostet nichts.")),
-        Chapter("Aufbau", listOf(
-            "Das Handy muss fest über dem Papier stehen, die Kamera nach unten – auf einem Handyhalter, einem Stativ oder " +
-                "einem Stapel Bücher. Es darf sich beim Zeichnen nicht bewegen.",
-            "Klebe das Papier fest. Gutes, gleichmäßiges Licht hilft; die Taschenlampe unter „Weitere Werkzeuge“ hellt auf.",
-            "Zwischen Kamera und Papier brauchst du Platz für deine Hand. Je höher die Kamera, desto größer kann die Zeichnung werden.")),
-        Chapter("Vorlage wählen", listOf(
-            "Beim ersten Öffnen fragt LiCida: „Was möchtest du zeichnen?“ Wähle ein Bild aus deinen Fotos, aus deinen Dateien " +
-                "(auch Cloud-Ordner, die Android kennt) oder fotografiere etwas.",
-            "LiCida sieht nur das eine Bild, das du auswählst. Später wechselst du die Vorlage über das kleine Bild unten links, " +
-                "über „Mehr“ (der Knopf mit den drei Punkten) oder die Kamera unten rechts.")),
-        Chapter("Vorlage einrichten", listOf(
-            "Jetzt bestimmst du, wie groß und wo die Zeichnung wird: Mit zwei Fingern verschiebst, zoomst und drehst du die Vorlage. " +
-                "Dabei wird sie durchsichtig, damit du das Papier darunter siehst.",
-            "Der Regler „Vorlage“ stellt ein, wie kräftig sie über dem Papier liegt. Der Knopf mit dem Pfeil dreht sie um 90 Grad, " +
-                "der Knopf daneben sichert sie so, wie du sie eingerichtet hast, in deinen Fotos.",
-            "Tipp: Füll den Bildschirm mit dem, was du zeichnen willst – dann wird die Zeichnung am größten.")),
-        Chapter("Kamera wählen und ausrichten", listOf(
-            "Der Knopf mit der Blende öffnet die Kamera-Einstellungen. Oben wählst du die Kamera, darunter „Füllen“ oder „Ganzes Bild“. " +
-                "„Ganzes Bild“ zeigt das ganze Blickfeld und erlaubt die größte Zeichnung. Mit zwei Fingern verschiebst und zoomst du das Kamerabild.",
-            "Steht die Kamera schräg über dem Papier, wirkt das Bild verzerrt. Unter „Korrektur von Hand“ gleichst du Neigung, Höhe und " +
-                "Seitenverhältnis aus, mit dem Hilfsraster als Maß. Spiegeln braucht man für einen Spiegelaufsatz vor der Frontkamera.",
-            "Bequemer geht es „Automatisch“: Drucke das Zielbild aus (oder nimm eine Zeitschrift als eigenes Bild), leg es flach unter " +
-                "die Kamera und tippe auf „Automatisch ausrichten“. LiCida richtet das Bild aus, als schaue die Kamera senkrecht von oben. " +
-                "Eine gelungene Ausrichtung kannst du sichern und später wiederherstellen.")),
-        Chapter("Werkzeuge und Filter", listOf(
-            "Der Knopf mit den drei Kreisen öffnet den Werkzeugkasten. Filter verändern die Vorlage und wirken aufeinander: " +
-                "Graustufen, Sepia, Tontrennung (2 bis 16 Grautöne), Lasurwerte, Comic, Neon, Kanten, Schwellwert, Raster, Eckmarken und mehr.",
-            "Rückgängig, Wiederholen und der Verlauf bringen jeden früheren Schritt zurück. Unter „Eigene Folgen“ merkst du dir Filter " +
-                "und wendest sie später auf andere Bilder an.",
-            "Die Farbpalette fasst die Vorlage zu wenigen Farben zusammen. Du kannst Farben ersetzen oder angleichen, mit der Pipette " +
-                "aus dem Original nehmen, aus einem Foto übernehmen und als Farbkreis sichern. Beim Zeichnen blendest du einzelne Farben aus.",
-            "„Farbeffekte“ ändern Helligkeit, Kontrast, Sättigung und Farbton.")),
-        Chapter("Zeichnen", listOf(
-            "Tippe auf den großen Stift unten in der Mitte. Jetzt sind Kamera und Vorlage gekoppelt: Zoomst oder schiebst du mit zwei " +
-                "Fingern, bewegt sich beides zusammen und bleibt deckungsgleich. Doppeltipp zoomt dreifach heran und wieder zurück.",
-            "Ein Tipp blendet alle Knöpfe aus und wieder ein. Der Regler unten verschiebt zwischen Kamera und Vorlage.",
-            "Der Knopf oben rechts stellt scharf. Tippst du mit zwei Fingern gleichzeitig, wird die Belichtung für diese Stelle gesperrt – " +
-                "gut bei dunklem Papier und für den Zeitraffer. Ein Tipp auf „Belichtung gesperrt“ löst sie wieder.",
-            "Der Pfeil unten links führt zurück zum Einrichten.")),
-        Chapter("Weitere Werkzeuge beim Zeichnen", listOf(
-            "Der Pfeil unten rechts öffnet weitere Werkzeuge: Taschenlampe, geteilte Ansicht (links Vorlage, rechts Kamera – " +
-                "zum Farbvergleich) und Flimmern (die Vorlage blendet ein und aus; stimmt die Farbe, verschwindet das Flimmern).",
-            "„In Fotos sichern“ und „Teilen …“ nehmen ein Bild deiner Zeichenfläche ohne Knöpfe auf. Geteilt wird nur, wohin du es selbst schickst.",
-            "Mit dem Schalter „Zeitraffer“ erscheint ein Aufnahmeknopf. Das Video landet in deinen Fotos; das Tempo bestimmt, wie kurz es wird.")),
-        Chapter("Sitzungen", listOf(
-            "Beim Zeichnen sichert der Knopf oben rechts eine Sitzung: Vorlage, Filter, Lage, Kamera und Ausrichtung, dazu ein " +
-                "Schnappschuss deines Blatts. „Neu aufnehmen“ zählt 3, 2, 1, damit deine Hand aus dem Bild ist.",
-            "Später öffnest du sie über „Mehr“ → „Sitzungen …“. Der Schnappschuss liegt dann über dem Kamerabild: Leg dein Blatt " +
-                "passend hin oder tippe auf „Automatisch ausrichten“. Nach links wischen löscht eine Sitzung.")),
-        Chapter("Einstellungen und Tasten", listOf(
-            "„Mehr“ → „Einstellungen …“: wie oft Hinweise erscheinen (Aus ist für alte Meister), Bildausschnitt und Schärfe der Kamera, " +
-                "Zeitraffer, die Namen deiner Filterfolgen und der Projektor-Modus, in dem das Kamerabild schwarz bleibt.",
-            "Beim Zeichnen steuert auch eine Bluetooth-Tastatur, ein Controller oder ein Selfie-Auslöser LiCida: E und Q zoomen, " +
-                "W A S D schieben, Z und C ändern die Deckkraft, R schaltet die Vorlage aus und ein, F das Flimmern, 1 und 3 bewegen " +
-                "den Teiler. In den Einstellungen belegst du jede Taste neu.",
-            "„Größtmögliche Zeichnung“ im Menü stellt die Kamera auf das ganze, scharfe Bild; „Kamera zurücksetzen“ nimmt alle Korrekturen zurück.")),
-        Chapter("Deine Daten", listOf(
-            "LiCida hat keinen Internetzugang und keine Werbung, keine Käufe, keine Abos. Bilder, Sitzungen und Einstellungen liegen " +
-                "nur auf diesem Gerät. Fotos, Videos und diese Anleitung landen nur dort, wo du sie sicherst.",
-            "LiCida ist freie Software (GPL-3.0): Jeder darf sie nutzen, ansehen und verbessern – für immer kostenlos.")),
+        Chapter(tr("Was LiCida macht"), listOf(
+            tr("LiCida legt eine Vorlage über das Kamerabild deines Papiers. Du schaust beim Zeichnen auf den Bildschirm und ziehst die Linien der Vorlage auf dem Papier nach – wie mit einer Camera lucida, dem Zeichengerät der alten Meister."),
+            tr("Alles bleibt auf deinem Gerät. LiCida hat keinen Internetzugang, sammelt nichts und kostet nichts."))),
+        Chapter(tr("Aufbau"), listOf(
+            tr("Das Handy muss fest über dem Papier stehen, die Kamera nach unten – auf einem Handyhalter, einem Stativ oder einem Stapel Bücher. Es darf sich beim Zeichnen nicht bewegen."),
+            tr("Klebe das Papier fest. Gutes, gleichmäßiges Licht hilft; die Taschenlampe unter „Weitere Werkzeuge“ hellt auf."),
+            tr("Zwischen Kamera und Papier brauchst du Platz für deine Hand. Je höher die Kamera, desto größer kann die Zeichnung werden."))),
+        Chapter(tr("Vorlage wählen"), listOf(
+            tr("Beim ersten Öffnen fragt LiCida: „Was möchtest du zeichnen?“ Wähle ein Bild aus deinen Fotos, aus deinen Dateien (auch Cloud-Ordner, die Android kennt) oder fotografiere etwas."),
+            tr("LiCida sieht nur das eine Bild, das du auswählst. Später wechselst du die Vorlage über das kleine Bild unten links, über „Mehr“ (der Knopf mit den drei Punkten) oder die Kamera unten rechts."))),
+        Chapter(tr("Vorlage einrichten"), listOf(
+            tr("Jetzt bestimmst du, wie groß und wo die Zeichnung wird: Mit zwei Fingern verschiebst, zoomst und drehst du die Vorlage. Dabei wird sie durchsichtig, damit du das Papier darunter siehst."),
+            tr("Der Regler „Vorlage“ stellt ein, wie kräftig sie über dem Papier liegt. Der Knopf mit dem Pfeil dreht sie um 90 Grad, der Knopf daneben sichert sie so, wie du sie eingerichtet hast, in deinen Fotos."),
+            tr("Tipp: Füll den Bildschirm mit dem, was du zeichnen willst – dann wird die Zeichnung am größten."))),
+        Chapter(tr("Kamera wählen und ausrichten"), listOf(
+            tr("Der Knopf mit der Blende öffnet die Kamera-Einstellungen. Oben wählst du die Kamera, darunter „Füllen“ oder „Ganzes Bild“. „Ganzes Bild“ zeigt das ganze Blickfeld und erlaubt die größte Zeichnung. Mit zwei Fingern verschiebst und zoomst du das Kamerabild."),
+            tr("Steht die Kamera schräg über dem Papier, wirkt das Bild verzerrt. Unter „Korrektur von Hand“ gleichst du Neigung, Höhe und Seitenverhältnis aus, mit dem Hilfsraster als Maß. Spiegeln braucht man für einen Spiegelaufsatz vor der Frontkamera."),
+            tr("Bequemer geht es „Automatisch“: Drucke das Zielbild aus (oder nimm eine Zeitschrift als eigenes Bild), leg es flach unter die Kamera und tippe auf „Automatisch ausrichten“. LiCida richtet das Bild aus, als schaue die Kamera senkrecht von oben. Eine gelungene Ausrichtung kannst du sichern und später wiederherstellen."))),
+        Chapter(tr("Werkzeuge und Filter"), listOf(
+            tr("Der Knopf mit den drei Kreisen öffnet den Werkzeugkasten. Filter verändern die Vorlage und wirken aufeinander: Graustufen, Sepia, Tontrennung (2 bis 16 Grautöne), Lasurwerte, Comic, Neon, Kanten, Schwellwert, Raster, Eckmarken und mehr."),
+            tr("Rückgängig, Wiederholen und der Verlauf bringen jeden früheren Schritt zurück. Unter „Eigene Folgen“ merkst du dir Filter und wendest sie später auf andere Bilder an."),
+            tr("Die Farbpalette fasst die Vorlage zu wenigen Farben zusammen. Du kannst Farben ersetzen oder angleichen, mit der Pipette aus dem Original nehmen, aus einem Foto übernehmen und als Farbkreis sichern. Beim Zeichnen blendest du einzelne Farben aus."),
+            tr("„Farbeffekte“ ändern Helligkeit, Kontrast, Sättigung und Farbton."))),
+        Chapter(tr("Zeichnen"), listOf(
+            tr("Tippe auf den großen Stift unten in der Mitte. Jetzt sind Kamera und Vorlage gekoppelt: Zoomst oder schiebst du mit zwei Fingern, bewegt sich beides zusammen und bleibt deckungsgleich. Doppeltipp zoomt dreifach heran und wieder zurück."),
+            tr("Ein Tipp blendet alle Knöpfe aus und wieder ein. Der Regler unten verschiebt zwischen Kamera und Vorlage."),
+            tr("Der Knopf oben rechts stellt scharf. Tippst du mit zwei Fingern gleichzeitig, wird die Belichtung für diese Stelle gesperrt – gut bei dunklem Papier und für den Zeitraffer. Ein Tipp auf „Belichtung gesperrt“ löst sie wieder."),
+            tr("Der Pfeil unten links führt zurück zum Einrichten."))),
+        Chapter(tr("Weitere Werkzeuge beim Zeichnen"), listOf(
+            tr("Der Pfeil unten rechts öffnet weitere Werkzeuge: Taschenlampe, geteilte Ansicht (links Vorlage, rechts Kamera – zum Farbvergleich) und Flimmern (die Vorlage blendet ein und aus; stimmt die Farbe, verschwindet das Flimmern)."),
+            tr("„In Fotos sichern“ und „Teilen …“ nehmen ein Bild deiner Zeichenfläche ohne Knöpfe auf. Geteilt wird nur, wohin du es selbst schickst."),
+            tr("Mit dem Schalter „Zeitraffer“ erscheint ein Aufnahmeknopf. Das Video landet in deinen Fotos; das Tempo bestimmt, wie kurz es wird."))),
+        Chapter(tr("Sitzungen"), listOf(
+            tr("Beim Zeichnen sichert der Knopf oben rechts eine Sitzung: Vorlage, Filter, Lage, Kamera und Ausrichtung, dazu ein Schnappschuss deines Blatts. „Neu aufnehmen“ zählt 3, 2, 1, damit deine Hand aus dem Bild ist."),
+            tr("Später öffnest du sie über „Mehr“ → „Sitzungen …“. Der Schnappschuss liegt dann über dem Kamerabild: Leg dein Blatt passend hin oder tippe auf „Automatisch ausrichten“. Nach links wischen löscht eine Sitzung."))),
+        Chapter(tr("Einstellungen und Tasten"), listOf(
+            tr("„Mehr“ → „Einstellungen …“: wie oft Hinweise erscheinen (Aus ist für alte Meister), Bildausschnitt und Schärfe der Kamera, Zeitraffer, die Namen deiner Filterfolgen und der Projektor-Modus, in dem das Kamerabild schwarz bleibt."),
+            tr("Beim Zeichnen steuert auch eine Bluetooth-Tastatur, ein Controller oder ein Selfie-Auslöser LiCida: E und Q zoomen, W A S D schieben, Z und C ändern die Deckkraft, R schaltet die Vorlage aus und ein, F das Flimmern, 1 und 3 bewegen den Teiler. In den Einstellungen belegst du jede Taste neu."),
+            tr("„Größtmögliche Zeichnung“ im Menü stellt die Kamera auf das ganze, scharfe Bild; „Kamera zurücksetzen“ nimmt alle Korrekturen zurück."))),
+        Chapter(tr("Deine Daten"), listOf(
+            tr("LiCida hat keinen Internetzugang und keine Werbung, keine Käufe, keine Abos. Bilder, Sitzungen und Einstellungen liegen nur auf diesem Gerät. Fotos, Videos und diese Anleitung landen nur dort, wo du sie sicherst."),
+            tr("LiCida ist freie Software (GPL-3.0): Jeder darf sie nutzen, ansehen und verbessern – für immer kostenlos."))),
     )
 
     /** The guide as a PDF (A4, Inter), for printing or reading elsewhere. */
@@ -144,7 +124,7 @@ object Guide {
         var page: PdfDocument.Page? = null
         var y = 0f
         fun finish() { page?.let { p ->
-            if (number > 1) p.canvas.drawText("LiCida – Anleitung · Seite $number", margin, height - 32f, paint(8f, false, grey = true))
+            if (number > 1) p.canvas.drawText(tr("LiCida – Anleitung · Seite {number}", "number" to number), margin, height - 32f, paint(8f, false, grey = true))
             document.finishPage(p) } }
         fun newPage() { finish(); number++; page = document.startPage(PdfDocument.PageInfo.Builder(width, height, number).create()); y = margin }
         fun place(text: String, paint: TextPaint, before: Float) {
@@ -156,9 +136,9 @@ object Guide {
         newPage()
         y = 260f
         place("LiCida", paint(40f, true), 0f)
-        place("Zeichnen mit Kamera und Vorlage", paint(18f, false), 8f)
-        place("Anleitung · Version $version", paint(11f, false, grey = true), 24f)
-        place("Ohne Internet, ohne Käufe, ohne Datensammlung. Alles bleibt auf deinem Gerät.", paint(11f, false, grey = true), 6f)
+        place(tr("Zeichnen mit Kamera und Vorlage"), paint(18f, false), 8f)
+        place(tr("Anleitung · Version {version}", "version" to version), paint(11f, false, grey = true), 24f)
+        place(tr("Ohne Internet, ohne Käufe, ohne Datensammlung. Alles bleibt auf deinem Gerät."), paint(11f, false, grey = true), 6f)
         chapters.forEachIndexed { index, chapter ->
             if (index == 0) newPage()
             place("${index + 1}  ${chapter.title}", paint(16f, true), if (y > margin) 26f else 0f)
@@ -191,10 +171,10 @@ fun GuidePage(onTour: () -> Unit, onPdf: () -> Unit, onDone: () -> Unit) {
     androidx.activity.compose.BackHandler(enabled = open != null) { open = null }
     Column(Modifier.fillMaxSize().background(Color.Black).keepTouches().windowInsetsPadding(WindowInsets.statusBars)) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-            if (open != null) BasicText("‹ Anleitung", style = style(17f, 400, Ink.yellow),
+            if (open != null) BasicText(tr("‹ Anleitung"), style = style(17f, 400, Ink.yellow),
                 modifier = Modifier.clickable(role = Role.Button) { open = null }.padding(4.dp))
             Box(Modifier.weight(1f))
-            BasicText("Fertig", style = style(17f, 600, Ink.yellow), modifier = Modifier.clickable(role = Role.Button, onClick = onDone).padding(4.dp))
+            BasicText(tr("Fertig"), style = style(17f, 600, Ink.yellow), modifier = Modifier.clickable(role = Role.Button, onClick = onDone).padding(4.dp))
         }
         val chapter = open?.let { Guide.chapters[it] }
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).windowInsetsPadding(WindowInsets.navigationBars).padding(bottom = 32.dp)) {
@@ -202,14 +182,14 @@ fun GuidePage(onTour: () -> Unit, onPdf: () -> Unit, onDone: () -> Unit) {
                 BasicText(chapter.title, style = style(28f, 700), modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp).semantics { heading() })
                 chapter.paragraphs.forEach { BasicText(it, style = style(17f), modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 14.dp)) }
                 val next = open!! + 1
-                if (next < Guide.chapters.size) BasicText("Weiter: ${Guide.chapters[next].title} ›", style = style(17f, 400, Ink.yellow),
+                if (next < Guide.chapters.size) BasicText(tr("Weiter: {value} ›", "value" to (Guide.chapters[next].title)), style = style(17f, 400, Ink.yellow),
                     modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 28.dp).clickable(role = Role.Button) { open = next }.padding(vertical = 6.dp))
             } else {
-                BasicText("Anleitung", style = style(34f, 700), modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp).semantics { heading() })
+                BasicText(tr("Anleitung"), style = style(34f, 700), modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp).semantics { heading() })
                 Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 20.dp).clip(RoundedCornerShape(12.dp)).background(Color(0xFF1C1C1E))) {
-                    ListRow("Rundgang starten", Ink.yellow, onTour)
+                    ListRow(tr("Rundgang starten"), Ink.yellow, onTour)
                 }
-                BasicText("Zeigt dir die Knöpfe beim Einrichten – eine Minute.", style = style(13f, 400, Ink.secondary),
+                BasicText(tr("Zeigt dir die Knöpfe beim Einrichten – eine Minute."), style = style(13f, 400, Ink.secondary),
                     modifier = Modifier.padding(start = 36.dp, end = 36.dp, top = 6.dp))
                 BasicText("KAPITEL", style = style(13f, 400, Ink.secondary), modifier = Modifier.padding(start = 36.dp, top = 28.dp, bottom = 6.dp))
                 Column(Modifier.padding(horizontal = 16.dp).clip(RoundedCornerShape(12.dp)).background(Color(0xFF1C1C1E))) {
@@ -219,7 +199,7 @@ fun GuidePage(onTour: () -> Unit, onPdf: () -> Unit, onDone: () -> Unit) {
                     }
                 }
                 Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 28.dp).clip(RoundedCornerShape(12.dp)).background(Color(0xFF1C1C1E))) {
-                    ListRow("Anleitung als PDF sichern", Ink.yellow, onPdf)
+                    ListRow(tr("Anleitung als PDF sichern"), Ink.yellow, onPdf)
                 }
                 BasicText("Zum Ausdrucken oder Lesen am Computer – landet in „Downloads/LiCida“.", style = style(13f, 400, Ink.secondary),
                     modifier = Modifier.padding(start = 36.dp, end = 36.dp, top = 6.dp))
@@ -251,17 +231,16 @@ data class TourStep(val anchor: String?, val title: String, val text: String)
 
 object Tour {
     val steps = listOf(
-        TourStep("mehr", "Mehr", "Bilder aus Dateien, gesicherte Sitzungen, die größtmögliche Zeichnung, Einstellungen und diese Hilfe."),
-        TourStep("kamera", "Kamera", "Welche Kamera, wie viel vom Bild – und die Ausrichtung, damit das Papier wie von oben gesehen wirkt."),
-        TourStep("werkzeuge", "Werkzeuge und Filter", "Graustufen, Tontrennung, Kanten, Raster und mehr; dazu Farbpalette und Farbeffekte."),
-        TourStep("drehen", "Drehen", "Dreht die Vorlage um 90 Grad."),
-        TourStep("sichern", "Vorlage sichern", "Legt die Vorlage so, wie du sie eingerichtet hast, in deine Fotos."),
-        TourStep(null, "Größe und Lage", "Mit zwei Fingern verschiebst, zoomst und drehst du die Vorlage. So bestimmst du, wie groß " +
-            "und wo deine Zeichnung auf dem Papier wird."),
-        TourStep("deckkraft", "Deckkraft", "Wie kräftig die Vorlage über dem Papier liegt."),
-        TourStep("fotos", "Vorlage aus Fotos", "Ein Bild aus deinen Fotos. LiCida sieht nur das, welches du auswählst."),
-        TourStep("zeichnen", "Zeichnen", "Koppelt Kamera und Vorlage. Zoomen und Schieben bewegt dann beides – das Handy bleibt ab jetzt ruhig stehen."),
-        TourStep("fotografieren", "Vorlage fotografieren", "Fotografiere etwas als Vorlage."),
+        TourStep("mehr", tr("Mehr"), tr("Bilder aus Dateien, gesicherte Sitzungen, die größtmögliche Zeichnung, Einstellungen und diese Hilfe.")),
+        TourStep("kamera", tr("Kamera"), tr("Welche Kamera, wie viel vom Bild – und die Ausrichtung, damit das Papier wie von oben gesehen wirkt.")),
+        TourStep("werkzeuge", tr("Werkzeuge und Filter"), tr("Graustufen, Tontrennung, Kanten, Raster und mehr; dazu Farbpalette und Farbeffekte.")),
+        TourStep("drehen", tr("Drehen"), tr("Dreht die Vorlage um 90 Grad.")),
+        TourStep("sichern", tr("Vorlage sichern"), tr("Legt die Vorlage so, wie du sie eingerichtet hast, in deine Fotos.")),
+        TourStep(null, tr("Größe und Lage"), tr("Mit zwei Fingern verschiebst, zoomst und drehst du die Vorlage. So bestimmst du, wie groß und wo deine Zeichnung auf dem Papier wird.")),
+        TourStep("deckkraft", tr("Deckkraft"), tr("Wie kräftig die Vorlage über dem Papier liegt.")),
+        TourStep("fotos", tr("Vorlage aus Fotos"), tr("Ein Bild aus deinen Fotos. LiCida sieht nur das, welches du auswählst.")),
+        TourStep("zeichnen", tr("Zeichnen"), tr("Koppelt Kamera und Vorlage. Zoomen und Schieben bewegt dann beides – das Handy bleibt ab jetzt ruhig stehen.")),
+        TourStep("fotografieren", tr("Vorlage fotografieren"), tr("Fotografiere etwas als Vorlage.")),
     )
 }
 
@@ -298,10 +277,10 @@ fun TourOverlay(index: Int, anchors: Map<String, Rect>, onNext: () -> Unit, onSk
             BasicText(step.title, style = style(17f, 600), modifier = Modifier.semantics { heading() })
             BasicText(step.text, style = style(15f, 400, Ink.secondary), modifier = Modifier.padding(top = 4.dp))
             Row(Modifier.fillMaxWidth().padding(top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                BasicText("Überspringen", style = style(15f, 400, Ink.secondary), modifier = Modifier.clickable(role = Role.Button, onClick = onSkip).padding(4.dp))
-                BasicText("${index + 1} von ${Tour.steps.size}", style = style(13f, 400, Ink.secondary, tabular = true),
+                BasicText(tr("Überspringen"), style = style(15f, 400, Ink.secondary), modifier = Modifier.clickable(role = Role.Button, onClick = onSkip).padding(4.dp))
+                BasicText(tr("{value} von {size}", "value" to (index + 1), "size" to Tour.steps.size), style = style(13f, 400, Ink.secondary, tabular = true),
                     modifier = Modifier.weight(1f).padding(horizontal = 8.dp))
-                BasicText(if (index == Tour.steps.lastIndex) "Fertig" else "Weiter", style = style(17f, 600, Ink.yellow),
+                BasicText(if (index == Tour.steps.lastIndex) tr("Fertig") else tr("Weiter"), style = style(17f, 600, Ink.yellow),
                     modifier = Modifier.clickable(role = Role.Button, onClick = onNext).padding(4.dp))
             }
         }

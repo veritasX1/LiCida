@@ -1,5 +1,7 @@
 package io.github.veritasx1.licida
 
+import io.github.veritasx1.licida.i18n.tr
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -50,8 +52,8 @@ fun CameraSheet(options: List<CameraOption>, chosen: CameraOption?, fill: Boolea
         }
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             Spacer(Modifier.width(56.dp))
-            BasicText("Kamera", style = style(17f, 600).copy(textAlign = TextAlign.Center), modifier = Modifier.weight(1f))
-            BasicText("Fertig", style = style(17f, 600, Ink.yellow).copy(textAlign = TextAlign.End),
+            BasicText(tr("Kamera"), style = style(17f, 600).copy(textAlign = TextAlign.Center), modifier = Modifier.weight(1f))
+            BasicText(tr("Fertig"), style = style(17f, 600, Ink.yellow).copy(textAlign = TextAlign.End),
                 modifier = Modifier.width(56.dp).clickable(role = Role.Button, onClick = onDone).padding(vertical = 6.dp))
         }
         Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 16.dp).padding(bottom = 12.dp)) {
@@ -69,26 +71,25 @@ fun CameraSheet(options: List<CameraOption>, chosen: CameraOption?, fill: Boolea
                         if (option.key == chosen?.key) SymbolIcon(Symbol.Checkmark, Ink.yellow, size = 20.dp, weight = 2.2f)
                     }
                 }
-                if (options.isEmpty()) BasicText("Keine Kamera gefunden", style = style(17f, 400, Ink.secondary), modifier = Modifier.padding(16.dp))
+                if (options.isEmpty()) BasicText(tr("Keine Kamera gefunden"), style = style(17f, 400, Ink.secondary), modifier = Modifier.padding(16.dp))
             }
             Section("BILD")
             Group {
                 Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                    BasicText("Ausschnitt", style = style(17f), modifier = Modifier.weight(1f))
-                    Segmented(listOf("Füllen", "Ganzes Bild"), if (fill) 0 else 1) { onFill(it == 0) }
+                    BasicText(tr("Ausschnitt"), style = style(17f), modifier = Modifier.weight(1f))
+                    Segmented(listOf(tr("Füllen"), tr("Ganzes Bild")), if (fill) 0 else 1) { onFill(it == 0) }
                 }
                 Separator()
                 Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    BasicText("Vorlage einblenden", style = style(17f, 400, if (hasReference) Ink.white else Ink.secondary), modifier = Modifier.weight(1f))
-                    IosSwitch(ghost && hasReference, enabled = hasReference, description = "Vorlage einblenden", onChange = onGhost)
+                    BasicText(tr("Vorlage einblenden"), style = style(17f, 400, if (hasReference) Ink.white else Ink.secondary), modifier = Modifier.weight(1f))
+                    IosSwitch(ghost && hasReference, enabled = hasReference, description = tr("Vorlage einblenden"), onChange = onGhost)
                 }
                 Separator()
-                BasicText("Kamerabild zurücksetzen", style = style(17f, 400, Ink.yellow),
+                BasicText(tr("Kamerabild zurücksetzen"), style = style(17f, 400, Ink.yellow),
                     modifier = Modifier.fillMaxWidth().clickable(role = Role.Button, onClick = onReset).padding(horizontal = 16.dp, vertical = 12.dp))
             }
             correcting?.let { CorrectionSections(it) }
-            BasicText("Mit zwei Fingern oben im Bild zoomst und verschiebst du das Kamerabild. Besser: die Kamera näher oder weiter weg stellen – "
-                + "das hält das Bild scharf. „Ganzes Bild“ zeigt das ganze Blickfeld der Kamera und erlaubt die größte Zeichnung.",
+            BasicText(tr("Mit zwei Fingern oben im Bild zoomst und verschiebst du das Kamerabild. Besser: die Kamera näher oder weiter weg stellen – das hält das Bild scharf. „Ganzes Bild“ zeigt das ganze Blickfeld der Kamera und erlaubt die größte Zeichnung."),
                 style = style(13f, 400, Ink.secondary), modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp))
         }
     }
@@ -109,54 +110,54 @@ private fun CorrectionSections(c: CorrectionControls) {
     Section("KORREKTUR VON HAND")
     Group {
         val tilt = c.correction.tilt
-        SliderRow("Neigung", "${tilt.toInt()}°", (tilt + Correction.MAX_TILT) / (2 * Correction.MAX_TILT), "Neigung der Kamera",
+        SliderRow(tr("Neigung"), "${tilt.toInt()}°", (tilt + Correction.MAX_TILT) / (2 * Correction.MAX_TILT), tr("Neigung der Kamera"),
             { c.onCorrection(c.correction.copy(tilt = (it * 2 - 1) * Correction.MAX_TILT)) }, c.onCorrectionDone)
         Separator()
-        SliderRow("Höhe", "%.1f".format(c.correction.height).replace('.', ','), (c.correction.height - 1f) / 9f, "Höhe über der Zeichenfläche",
+        SliderRow(tr("Höhe"), "%.1f".format(c.correction.height).replace('.', ','), (c.correction.height - 1f) / 9f, tr("Höhe über der Zeichenfläche"),
             { c.onCorrection(c.correction.copy(height = 1f + it * 9f)) }, c.onCorrectionDone)
         Separator()
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-            BasicText("Spiegeln", style = style(17f), modifier = Modifier.weight(1f))
-            Toggle("↔", "Waagerecht spiegeln", c.flipH) { c.onFlip(true) }
+            BasicText(tr("Spiegeln"), style = style(17f), modifier = Modifier.weight(1f))
+            Toggle("↔", tr("Waagerecht spiegeln"), c.flipH) { c.onFlip(true) }
             Spacer(Modifier.width(8.dp))
-            Toggle("↕", "Senkrecht spiegeln", c.flipV) { c.onFlip(false) }
+            Toggle("↕", tr("Senkrecht spiegeln"), c.flipV) { c.onFlip(false) }
         }
         Separator()
-        StretchRow("Breite", c.correction.stretchX, { c.onCorrection(c.correction.copy(stretchX = it)) }, c.onCorrectionDone)
+        StretchRow(tr("Breite"), c.correction.stretchX, { c.onCorrection(c.correction.copy(stretchX = it)) }, c.onCorrectionDone)
         Separator()
-        StretchRow("Länge", c.correction.stretchY, { c.onCorrection(c.correction.copy(stretchY = it)) }, c.onCorrectionDone)
+        StretchRow(tr("Länge"), c.correction.stretchY, { c.onCorrection(c.correction.copy(stretchY = it)) }, c.onCorrectionDone)
         Separator()
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            BasicText("Hilfsraster einblenden", style = style(17f), modifier = Modifier.weight(1f))
-            IosSwitch(c.helperGhost, description = "Hilfsraster einblenden", onChange = c.onHelperGhost)
+            BasicText(tr("Hilfsraster einblenden"), style = style(17f), modifier = Modifier.weight(1f))
+            IosSwitch(c.helperGhost, description = tr("Hilfsraster einblenden"), onChange = c.onHelperGhost)
         }
         Separator()
-        BasicText("Korrektur zurücksetzen", style = style(17f, 400, Ink.yellow),
+        BasicText(tr("Korrektur zurücksetzen"), style = style(17f, 400, Ink.yellow),
             modifier = Modifier.fillMaxWidth().clickable(role = Role.Button, onClick = c.onResetCorrection).padding(horizontal = 16.dp, vertical = 12.dp))
     }
-    BasicText("Leg das gedruckte Zielbild auf und blende das Hilfsraster ein: Neigung und Strecken so wählen, dass sich beide decken.",
+    BasicText(tr("Leg das gedruckte Zielbild auf und blende das Hilfsraster ein: Neigung und Strecken so wählen, dass sich beide decken."),
         style = style(13f, 400, Ink.secondary), modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 6.dp))
 
     Section("AUTOMATISCH")
     Group {
-        CheckRow("LiCida-Zielbild", "Ausdrucken oder auf einem zweiten Bildschirm zeigen", !c.ownTarget) { c.onTargetKind(false) }
+        CheckRow("LiCida-Zielbild", tr("Ausdrucken oder auf einem zweiten Bildschirm zeigen"), !c.ownTarget) { c.onTargetKind(false) }
         Separator()
-        CheckRow("Eigenes Bild", "Etwas Flaches mit klaren Kanten, z. B. eine Zeitschrift", c.ownTarget) { c.onPickOwnTarget() }
+        CheckRow(tr("Eigenes Bild"), tr("Etwas Flaches mit klaren Kanten, z. B. eine Zeitschrift"), c.ownTarget) { c.onPickOwnTarget() }
         Separator()
-        ActionRow("Zielbild drucken …", onClick = c.onPrintTarget)
+        ActionRow(tr("Zielbild drucken …"), onClick = c.onPrintTarget)
         Separator()
-        ActionRow("Zielbild in Fotos sichern", onClick = c.onSaveTarget)
+        ActionRow(tr("Zielbild in Fotos sichern"), onClick = c.onSaveTarget)
     }
-    BasicText(c.busy ?: "Automatisch ausrichten", style = style(17f, 600, androidx.compose.ui.graphics.Color.Black).copy(textAlign = TextAlign.Center),
+    BasicText(c.busy ?: tr("Automatisch ausrichten"), style = style(17f, 600, androidx.compose.ui.graphics.Color.Black).copy(textAlign = TextAlign.Center),
         modifier = Modifier.padding(top = 12.dp).fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(if (c.busy == null) Ink.yellow else Ink.secondary)
             .clickable(enabled = c.busy == null, role = Role.Button, onClick = c.onAuto).padding(vertical = 14.dp))
-    BasicText("Zielbild flach in den Blick der Kamera legen, Arm aus dem Bild – LiCida richtet das Kamerabild so aus, als schaue die Kamera senkrecht von oben.",
+    BasicText(tr("Zielbild flach in den Blick der Kamera legen, Arm aus dem Bild – LiCida richtet das Kamerabild so aus, als schaue die Kamera senkrecht von oben."),
         style = style(13f, 400, Ink.secondary), modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 6.dp))
     Section("EINSTELLUNG")
     Group {
-        ActionRow("Diese Ausrichtung sichern", onClick = c.onSaveSetting)
+        ActionRow(tr("Diese Ausrichtung sichern"), onClick = c.onSaveSetting)
         Separator()
-        ActionRow("Gesicherte wiederherstellen", enabled = c.hasSaved, onClick = c.onRestoreSetting)
+        ActionRow(tr("Gesicherte wiederherstellen"), enabled = c.hasSaved, onClick = c.onRestoreSetting)
     }
 }
 
@@ -204,7 +205,7 @@ private fun StretchRow(label: String, value: Float, onChange: (Float) -> Unit, o
         }
         BasicText("1:1", style = style(15f, 600, Ink.yellow).copy(textAlign = TextAlign.Center),
             modifier = Modifier.padding(start = 6.dp).size(width = 40.dp, height = 34.dp).clip(RoundedCornerShape(8.dp))
-                .clickable(role = Role.Button, onClickLabel = "$label zurücksetzen") { onChange(1f); onDone() }.padding(top = 7.dp))
+                .clickable(role = Role.Button, onClickLabel = tr("{label} zurücksetzen", "label" to label)) { onChange(1f); onDone() }.padding(top = 7.dp))
     }
 }
 

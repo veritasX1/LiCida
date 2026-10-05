@@ -1,5 +1,7 @@
 package io.github.veritasx1.licida
 
+import io.github.veritasx1.licida.i18n.tr
+
 import android.content.ContentValues
 import android.content.Context
 import android.graphics.Bitmap
@@ -29,7 +31,7 @@ data class TimelapseSettings(val speed: Int = 60, val height: Int = 1080, val qu
     fun encode() = "$speed;$height;$quality;$recordUi;$ignoreZoom"
 
     companion object {
-        val QUALITIES = listOf("Gut", "Besser", "Beste")
+        val QUALITIES = listOf(tr("Gut"), tr("Besser"), tr("Beste"))
         val HEIGHTS = listOf(720, 1080, 1440)
         val SPEEDS = listOf(2, 5, 10, 30, 60, 120, 300, 600)
 
@@ -73,7 +75,7 @@ object Timelapse {
  *  library) with exact timestamps – 30 a second – straight into Fotos (Movies/LiCida). Encoding on its own thread. */
 class TimelapseRecorder private constructor(private val context: Context, private val uri: Uri, val width: Int, val height: Int,
                                             settings: TimelapseSettings) {
-    private val thread = HandlerThread("Zeitraffer").apply { start() }
+    private val thread = HandlerThread(tr("Zeitraffer")).apply { start() }
     private val handler = Handler(thread.looper)
     private val descriptor = context.contentResolver.openFileDescriptor(uri, "rw")!!
     private val muxer = MediaMuxer(descriptor.fileDescriptor, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
@@ -183,7 +185,7 @@ class TimelapseRecorder private constructor(private val context: Context, privat
         /** A new film in Fotos (album LiCida) – null if it cannot be made. */
         fun start(context: Context, width: Int, height: Int, settings: TimelapseSettings): TimelapseRecorder? = runCatching {
             val values = ContentValues().apply {
-                put(MediaStore.Video.Media.DISPLAY_NAME, "LiCida-Zeitraffer-${System.currentTimeMillis() / 1000}.mp4")
+                put(MediaStore.Video.Media.DISPLAY_NAME, tr("LiCida-Zeitraffer-{currentTimeMillis}.mp4", "currentTimeMillis" to (System.currentTimeMillis() / 1000)))
                 put(MediaStore.Video.Media.MIME_TYPE, "video/mp4")
                 put(MediaStore.Video.Media.RELATIVE_PATH, "Movies/LiCida")
                 put(MediaStore.Video.Media.IS_PENDING, 1)

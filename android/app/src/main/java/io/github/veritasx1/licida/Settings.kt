@@ -1,5 +1,7 @@
 package io.github.veritasx1.licida
 
+import io.github.veritasx1.licida.i18n.tr
+
 import android.view.KeyEvent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -22,6 +24,8 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,28 +39,28 @@ import androidx.compose.ui.unit.dp
 
 /** How often LiCida's hints appear (handbook p. 25): never ("Alter Meister"), once, three times or always. */
 enum class HelpLevel(val label: String, val times: Int) {
-    Off("Aus", 0), Once("1×", 1), Thrice("3×", 3), Always("Immer", Int.MAX_VALUE);
+    Off(tr("Aus"), 0), Once("1×", 1), Thrice("3×", 3), Always(tr("Immer"), Int.MAX_VALUE);
 
     fun shows(alreadyShown: Int) = alreadyShown < times
 }
 
 /** The camera picture against delay (handbook p. 46): fewer pixels are quicker on slow phones and long cables. */
-enum class CameraQuality(val label: String) { Smooth("Flüssig"), Sharp("Scharf") }
+enum class CameraQuality(val label: String) { Smooth(tr("Flüssig")), Sharp(tr("Scharf")) }
 
 /** What a key (Bluetooth keyboard, game controller, selfie remote) does while drawing (handbook p. 47). */
 enum class KeyAction(val label: String, val defaultKey: Int) {
-    ZoomIn("Näher heran", KeyEvent.KEYCODE_E),
-    ZoomOut("Weiter weg", KeyEvent.KEYCODE_Q),
-    PanLeft("Nach links", KeyEvent.KEYCODE_A),
-    PanRight("Nach rechts", KeyEvent.KEYCODE_D),
-    PanUp("Nach oben", KeyEvent.KEYCODE_W),
-    PanDown("Nach unten", KeyEvent.KEYCODE_S),
-    Fainter("Vorlage schwächer", KeyEvent.KEYCODE_Z),
-    Stronger("Vorlage stärker", KeyEvent.KEYCODE_C),
+    ZoomIn(tr("Näher heran"), KeyEvent.KEYCODE_E),
+    ZoomOut(tr("Weiter weg"), KeyEvent.KEYCODE_Q),
+    PanLeft(tr("Nach links"), KeyEvent.KEYCODE_A),
+    PanRight(tr("Nach rechts"), KeyEvent.KEYCODE_D),
+    PanUp(tr("Nach oben"), KeyEvent.KEYCODE_W),
+    PanDown(tr("Nach unten"), KeyEvent.KEYCODE_S),
+    Fainter(tr("Vorlage schwächer"), KeyEvent.KEYCODE_Z),
+    Stronger(tr("Vorlage stärker"), KeyEvent.KEYCODE_C),
     Toggle("Vorlage aus/ein", KeyEvent.KEYCODE_R),
     Flicker("Flimmern aus/ein", KeyEvent.KEYCODE_F),
-    SplitLeft("Teiler nach links", KeyEvent.KEYCODE_1),
-    SplitRight("Teiler nach rechts", KeyEvent.KEYCODE_3),
+    SplitLeft(tr("Teiler nach links"), KeyEvent.KEYCODE_1),
+    SplitRight(tr("Teiler nach rechts"), KeyEvent.KEYCODE_3),
 }
 
 /** The keys as the user set them; a key belongs to one action at most. */
@@ -83,26 +87,26 @@ data class Keymap(val keys: Map<KeyAction, Int> = KeyAction.entries.associateWit
         /** "E", "1", "Lauter" – what is printed on the key, in words where nothing is. */
         fun label(code: Int): String = when (code) {
             KeyEvent.KEYCODE_UNKNOWN -> "–"
-            KeyEvent.KEYCODE_SPACE -> "Leertaste"
-            KeyEvent.KEYCODE_ENTER -> "Eingabe"
-            KeyEvent.KEYCODE_TAB -> "Tab"
+            KeyEvent.KEYCODE_SPACE -> tr("Leertaste")
+            KeyEvent.KEYCODE_ENTER -> tr("Eingabe")
+            KeyEvent.KEYCODE_TAB -> tr("Tab")
             KeyEvent.KEYCODE_DPAD_LEFT -> "←"
             KeyEvent.KEYCODE_DPAD_RIGHT -> "→"
             KeyEvent.KEYCODE_DPAD_UP -> "↑"
             KeyEvent.KEYCODE_DPAD_DOWN -> "↓"
-            KeyEvent.KEYCODE_VOLUME_UP -> "Lauter"
-            KeyEvent.KEYCODE_VOLUME_DOWN -> "Leiser"
-            KeyEvent.KEYCODE_PAGE_UP -> "Bild ↑"
-            KeyEvent.KEYCODE_PAGE_DOWN -> "Bild ↓"
-            KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> "Wiedergabe"
-            KeyEvent.KEYCODE_MEDIA_NEXT -> "Weiter"
-            KeyEvent.KEYCODE_MEDIA_PREVIOUS -> "Zurück"
+            KeyEvent.KEYCODE_VOLUME_UP -> tr("Lauter")
+            KeyEvent.KEYCODE_VOLUME_DOWN -> tr("Leiser")
+            KeyEvent.KEYCODE_PAGE_UP -> tr("Bild ↑")
+            KeyEvent.KEYCODE_PAGE_DOWN -> tr("Bild ↓")
+            KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE -> tr("Wiedergabe")
+            KeyEvent.KEYCODE_MEDIA_NEXT -> tr("Weiter")
+            KeyEvent.KEYCODE_MEDIA_PREVIOUS -> tr("Zurück")
             else -> when {
                 code in KeyEvent.KEYCODE_A..KeyEvent.KEYCODE_Z -> ('A' + (code - KeyEvent.KEYCODE_A)).toString()
                 code in KeyEvent.KEYCODE_0..KeyEvent.KEYCODE_9 -> ('0' + (code - KeyEvent.KEYCODE_0)).toString()
-                code in KeyEvent.KEYCODE_BUTTON_1..KeyEvent.KEYCODE_BUTTON_16 -> "Taste ${code - KeyEvent.KEYCODE_BUTTON_1 + 1}"
-                code in GAMEPAD -> "Taste " + GAMEPAD.getValue(code)
-                else -> "Taste $code"
+                code in KeyEvent.KEYCODE_BUTTON_1..KeyEvent.KEYCODE_BUTTON_16 -> tr("Taste {value}", "value" to (code - KeyEvent.KEYCODE_BUTTON_1 + 1))
+                code in GAMEPAD -> tr("Taste {value}", "value" to GAMEPAD.getValue(code))
+                else -> tr("Taste {code}", "code" to code)
             }
         }
 
@@ -112,7 +116,7 @@ data class Keymap(val keys: Map<KeyAction, Int> = KeyAction.entries.associateWit
             KeyEvent.KEYCODE_BUTTON_X to "X", KeyEvent.KEYCODE_BUTTON_Y to "Y", KeyEvent.KEYCODE_BUTTON_Z to "Z",
             KeyEvent.KEYCODE_BUTTON_L1 to "L1", KeyEvent.KEYCODE_BUTTON_R1 to "R1", KeyEvent.KEYCODE_BUTTON_L2 to "L2",
             KeyEvent.KEYCODE_BUTTON_R2 to "R2", KeyEvent.KEYCODE_BUTTON_THUMBL to "L3", KeyEvent.KEYCODE_BUTTON_THUMBR to "R3",
-            KeyEvent.KEYCODE_BUTTON_START to "Start", KeyEvent.KEYCODE_BUTTON_SELECT to "Select", KeyEvent.KEYCODE_BUTTON_MODE to "Mode")
+            KeyEvent.KEYCODE_BUTTON_START to tr("Start"), KeyEvent.KEYCODE_BUTTON_SELECT to tr("Select"), KeyEvent.KEYCODE_BUTTON_MODE to tr("Mode"))
 
         /** Keys that stay Android's: going back and home are never taken. */
         fun usable(code: Int) = code != KeyEvent.KEYCODE_BACK && code != KeyEvent.KEYCODE_HOME && code != KeyEvent.KEYCODE_UNKNOWN &&
@@ -168,57 +172,68 @@ fun SettingsPage(state: SettingsState, listening: KeyAction?, onChange: (Setting
                  onPermissions: () -> Unit, onDone: () -> Unit) {
     Column(Modifier.fillMaxSize().background(Color.Black).keepTouches().windowInsetsPadding(WindowInsets.statusBars)) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp), horizontalArrangement = Arrangement.End) {
-            BasicText("Fertig", style = style(17f, 600, Ink.yellow), modifier = Modifier.clickable(role = Role.Button, onClick = onDone).padding(4.dp))
+            BasicText(tr("Fertig"), style = style(17f, 600, Ink.yellow), modifier = Modifier.clickable(role = Role.Button, onClick = onDone).padding(4.dp))
         }
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).imePadding().windowInsetsPadding(WindowInsets.navigationBars)
             .padding(bottom = 32.dp)) {
-            BasicText("Einstellungen", style = style(34f, 700), modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp))
+            BasicText(tr("Einstellungen"), style = style(34f, 700), modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp))
 
-            Group("Hilfe", "„Aus“ ist für alte Meister: keine Hinweise mehr. Gezählt wird je Hinweis.") {
-                Stacked("Hinweise zeigen") {
+            // Language: like the system or chosen here – takes effect at the next start.
+            run {
+                val i18n = io.github.veritasx1.licida.i18n.I18n
+                val codes = listOf<String?>(null) + i18n.LANGUAGES.keys
+                var chosen by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(i18n.chosen) }
+                Group(tr("Sprache"), tr("Die Sprache wechselt beim nächsten Start von LiCida.")) {
+                    Stacked(tr("Sprache")) {
+                        Segmented(listOf(tr("System")) + i18n.LANGUAGES.values, codes.indexOf(chosen).coerceAtLeast(0)) { chosen = codes[it]; i18n.chosen = codes[it] }
+                    }
+                }
+            }
+
+            Group(tr("Hilfe"), tr("„Aus“ ist für alte Meister: keine Hinweise mehr. Gezählt wird je Hinweis.")) {
+                Stacked(tr("Hinweise zeigen")) {
                     Segmented(HelpLevel.entries.map { it.label }, state.help.ordinal) { onChange(state.copy(help = HelpLevel.entries[it])) }
                 }
             }
 
-            Group("Kamera", "„Ganzes Bild“ zeigt das ganze Blickfeld und erlaubt die größte Zeichnung. „Flüssig“ nimmt weniger Bildpunkte – " +
-                "hilft, wenn das Kamerabild nachzieht; „Scharf“ nimmt so viele, wie die Vorschau der Kamera hergibt.") {
+            Group(tr("Kamera"), tr("„Ganzes Bild“ zeigt das ganze Blickfeld und erlaubt die größte Zeichnung. „Flüssig“ nimmt weniger Bildpunkte – hilft, wenn das Kamerabild nachzieht; „Scharf“ nimmt so viele, wie die Vorschau der Kamera hergibt.")) {
                 Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                    BasicText("Bildausschnitt", style = style(17f), modifier = Modifier.weight(1f))
-                    Segmented(listOf("Füllen", "Ganzes Bild"), if (state.fill) 0 else 1) { onChange(state.copy(fill = it == 0)) }
+                    BasicText(tr("Bildausschnitt"), style = style(17f), modifier = Modifier.weight(1f))
+                    Segmented(listOf(tr("Füllen"), tr("Ganzes Bild")), if (state.fill) 0 else 1) { onChange(state.copy(fill = it == 0)) }
                 }
                 Line()
                 Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                    BasicText("Kamerabild", style = style(17f), modifier = Modifier.weight(1f))
+                    BasicText(tr("Kamerabild"), style = style(17f), modifier = Modifier.weight(1f))
                     Segmented(CameraQuality.entries.map { it.label }, state.quality.ordinal) { onChange(state.copy(quality = CameraQuality.entries[it])) }
                 }
             }
 
-            Group("Zeitraffer", "Die Höhe gilt für die kurze Seite; die lange passt sich dem Bildschirm an.") {
-                SwitchRow("Oberfläche mitfilmen", "Knöpfe und Regler sind im Video zu sehen", state.timelapse.recordUi, true) {
+            Group(tr("Zeitraffer"), tr("Die Höhe gilt für die kurze Seite; die lange passt sich dem Bildschirm an.")) {
+                SwitchRow(tr("Oberfläche mitfilmen"), tr("Knöpfe und Regler sind im Video zu sehen"), state.timelapse.recordUi, true) {
                     onChange(state.copy(timelapse = state.timelapse.copy(recordUi = it)))
                 }
                 Line()
-                SwitchRow("Zoomen ausblenden", "Das Video zeigt immer das ganze Blatt – als hättest du nie hineingezoomt",
+                SwitchRow(tr("Zoomen ausblenden"), tr("Das Video zeigt immer das ganze Blatt – als hättest du nie hineingezoomt"),
                     state.timelapse.ignoreZoom, !state.timelapse.recordUi) { onChange(state.copy(timelapse = state.timelapse.copy(ignoreZoom = it))) }
                 Line()
                 Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                    BasicText("Auflösung", style = style(17f), modifier = Modifier.weight(1f))
+                    BasicText(tr("Auflösung"), style = style(17f), modifier = Modifier.weight(1f))
                     Segmented(TimelapseSettings.HEIGHTS.map { "${it}p" }, TimelapseSettings.HEIGHTS.indexOf(state.timelapse.height).coerceAtLeast(0)) {
                         onChange(state.copy(timelapse = state.timelapse.copy(height = TimelapseSettings.HEIGHTS[it])))
                     }
                 }
                 Line()
                 Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                    BasicText("Qualität", style = style(17f), modifier = Modifier.weight(1f))
+                    BasicText(tr("Qualität"), style = style(17f), modifier = Modifier.weight(1f))
                     Segmented(TimelapseSettings.QUALITIES, state.timelapse.quality) { onChange(state.copy(timelapse = state.timelapse.copy(quality = it))) }
                 }
             }
 
-            Group("Eigene Filterfolgen", "Die Namen der drei Plätze im Werkzeugkasten.") {
+            Group(tr("Eigene Filterfolgen"), tr("Die Namen der drei Plätze im Werkzeugkasten.")) {
                 state.slotNames.forEachIndexed { index, name ->
                     if (index > 0) Line()
                     Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                        BasicText("Platz ${index + 1}", style = style(17f), modifier = Modifier.widthIn(min = 88.dp))
+                        BasicText(tr("Platz {value}", "value" to (index + 1)), style = style(17f), modifier = Modifier.widthIn(min = 88.dp))
                         BasicTextField(name, { text -> onChange(state.copy(slotNames = state.slotNames.mapIndexed { i, old -> if (i == index) text.take(24) else old })) },
                             singleLine = true, textStyle = style(17f, 400, Ink.secondary).copy(textAlign = TextAlign.End), cursorBrush = SolidColor(Ink.yellow),
                             modifier = Modifier.weight(1f))
@@ -226,35 +241,32 @@ fun SettingsPage(state: SettingsState, listening: KeyAction?, onChange: (Setting
                 }
             }
 
-            Group("Tastatur und Fernbedienung", "Beim Zeichnen steuern eine Bluetooth-Tastatur, ein Controller oder ein Selfie-Auslöser " +
-                "(sendet meist „Lauter“) LiCida aus der Ferne – praktisch, wenn das Handy weit weg über einem großen Blatt hängt. " +
-                "Zum Ändern eine Zeile antippen und die neue Taste drücken.") {
+            Group(tr("Tastatur und Fernbedienung"), tr("Beim Zeichnen steuern eine Bluetooth-Tastatur, ein Controller oder ein Selfie-Auslöser (sendet meist „Lauter“) LiCida aus der Ferne – praktisch, wenn das Handy weit weg über einem großen Blatt hängt. Zum Ändern eine Zeile antippen und die neue Taste drücken.")) {
                 KeyAction.entries.forEachIndexed { index, action ->
                     if (index > 0) Line()
                     val code = state.keymap.keys[action] ?: KeyEvent.KEYCODE_UNKNOWN
-                    Row(Modifier.fillMaxWidth().clickable(role = Role.Button, onClickLabel = "Taste ändern") { onListen(if (listening == action) null else action) }
+                    Row(Modifier.fillMaxWidth().clickable(role = Role.Button, onClickLabel = tr("Taste ändern")) { onListen(if (listening == action) null else action) }
                         .padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                         BasicText(action.label, style = style(17f), modifier = Modifier.weight(1f))
-                        if (listening == action) BasicText("Taste drücken …", style = style(17f, 600, Ink.yellow))
+                        if (listening == action) BasicText(tr("Taste drücken …"), style = style(17f, 600, Ink.yellow))
                         else BasicText(Keymap.label(code), style = style(17f, 400, Ink.secondary, tabular = true))
                     }
                 }
                 Line()
-                BasicText("Standardtasten", style = style(17f, 400, Ink.yellow),
+                BasicText(tr("Standardtasten"), style = style(17f, 400, Ink.yellow),
                     modifier = Modifier.fillMaxWidth().clickable(role = Role.Button) { onListen(null); onChange(state.copy(keymap = Keymap())) }
                         .padding(horizontal = 16.dp, vertical = 12.dp))
             }
 
-            Group("Experte", "Für einen Projektor: Das Kamerabild bleibt schwarz, nur die Vorlage leuchtet; Flimmern blendet zwischen Vorlage " +
-                "und Schwarz. Die Kamera läuft weiter – der Zeitraffer filmt also trotzdem.") {
-                SwitchRow("Projektor-Modus", "Kamerabild ausblenden", state.projector, true) { onChange(state.copy(projector = it)) }
+            Group(tr("Experte"), tr("Für einen Projektor: Das Kamerabild bleibt schwarz, nur die Vorlage leuchtet; Flimmern blendet zwischen Vorlage und Schwarz. Die Kamera läuft weiter – der Zeitraffer filmt also trotzdem.")) {
+                SwitchRow(tr("Projektor-Modus"), tr("Kamerabild ausblenden"), state.projector, true) { onChange(state.copy(projector = it)) }
             }
 
-            Group("Datenschutz", "LiCida hat keinen Internetzugang. Bilder, Sitzungen und Einstellungen bleiben auf diesem Gerät.") {
+            Group(tr("Datenschutz"), tr("LiCida hat keinen Internetzugang. Bilder, Sitzungen und Einstellungen bleiben auf diesem Gerät.")) {
                 Row(Modifier.fillMaxWidth().clickable(role = Role.Button, onClick = onPermissions).padding(horizontal = 16.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically) {
-                    BasicText("Berechtigungen", style = style(17f), modifier = Modifier.weight(1f))
-                    BasicText("Android-Einstellungen ›", style = style(17f, 400, Ink.secondary))
+                    BasicText(tr("Berechtigungen"), style = style(17f), modifier = Modifier.weight(1f))
+                    BasicText(tr("Android-Einstellungen ›"), style = style(17f, 400, Ink.secondary))
                 }
             }
         }

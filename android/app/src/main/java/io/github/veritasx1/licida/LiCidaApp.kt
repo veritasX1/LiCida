@@ -1,5 +1,7 @@
 package io.github.veritasx1.licida
 
+import io.github.veritasx1.licida.i18n.tr
+
 import android.graphics.Bitmap
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -146,11 +148,11 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
     LaunchedEffect(tools.torch) { camera.torch(tools.torch) }
 
     val flickerAlpha = if (tools.flicker && mode == Mode.Draw) {
-        val transition = androidx.compose.animation.core.rememberInfiniteTransition(label = "Flimmern")
+        val transition = androidx.compose.animation.core.rememberInfiniteTransition(label = tr("Flimmern"))
         val period = (2400 - tools.flickerSpeed * 2100).toInt()
         transition.animateFloat(0f, 1f, androidx.compose.animation.core.infiniteRepeatable(
             androidx.compose.animation.core.tween(period, easing = androidx.compose.animation.core.LinearEasing),
-            androidx.compose.animation.core.RepeatMode.Reverse), label = "Flimmern").value
+            androidx.compose.animation.core.RepeatMode.Reverse), label = tr("Flimmern")).value
     } else 1f
     /** A picture of the drawing surface without buttons (handbook p. 32: "Share my work"). */
     fun captureWork(then: (Bitmap) -> Unit) {
@@ -158,7 +160,7 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
         capturing = true; moreSheet = false
         scope.launch {
             delay(180)  // the buttons are gone from the screen
-            captureScreen(activity) { picture -> capturing = false; picture?.let(then) ?: say("Bild ließ sich nicht aufnehmen") }
+            captureScreen(activity) { picture -> capturing = false; picture?.let(then) ?: say(tr("Bild ließ sich nicht aufnehmen")) }
         }
     }
 
@@ -238,13 +240,13 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
     fun stopRecording() {
         val active = recorder ?: return
         recorder = null
-        active.stop { ok -> say(if (ok) "Zeitraffer in Fotos gesichert" else "Zeitraffer ließ sich nicht sichern") }
+        active.stop { ok -> say(if (ok) tr("Zeitraffer in Fotos gesichert") else tr("Zeitraffer ließ sich nicht sichern")) }
     }
     fun startRecording() {
         val (w, h) = Timelapse.size(screen.width.toInt().coerceAtLeast(2), screen.height.toInt().coerceAtLeast(2), timelapse.height)
-        recorder = TimelapseRecorder.start(context, w, h, timelapse) ?: run { say("Aufnahme lässt sich nicht starten"); return }
+        recorder = TimelapseRecorder.start(context, w, h, timelapse) ?: run { say(tr("Aufnahme lässt sich nicht starten")); return }
         filmFrames = 0
-        if (!exposureLocked) say("Tipp: vorher mit zwei Fingern tippen – Belichtung sperren, damit es nicht flackert")
+        if (!exposureLocked) say(tr("Tipp: vorher mit zwei Fingern tippen – Belichtung sperren, damit es nicht flackert"))
     }
     LaunchedEffect(recorder) {
         val active = recorder ?: return@LaunchedEffect
@@ -266,13 +268,13 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
     }
     fun runAuto() {
         scope.launch {
-            for (second in 3 downTo 1) { autoBusy = "Arm aus dem Bild … $second"; delay(1000) }
-            autoBusy = "Suche das Zielbild …"
+            for (second in 3 downTo 1) { autoBusy = tr("Arm aus dem Bild … {second}", "second" to second); delay(1000) }
+            autoBusy = tr("Suche das Zielbild …")
             val shot = camera.snapshot(preview)
             val found = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { shot?.let { AutoAlign.find(it, ownAspect) } }
             autoBusy = null
             if (found == null) {
-                val text = "Zielbild nicht gefunden – flach hinlegen, gut beleuchten, ganz ins Bild"
+                val text = tr("Zielbild nicht gefunden – flach hinlegen, gut beleuchten, ganz ins Bild")
                 message = text; delay(2600); if (message == text) message = null
                 return@launch
             }
@@ -306,7 +308,7 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
     fun retake() {
         saveSheet = false
         scope.launch {
-            for (second in 3 downTo 1) { countdown = "Hand aus dem Bild … $second"; delay(1000) }
+            for (second in 3 downTo 1) { countdown = tr("Hand aus dem Bild … {second}", "second" to second); delay(1000) }
             countdown = null; delay(150)
             saveSnapshot = cameraPicture() ?: saveSnapshot
             saveSheet = true
@@ -319,7 +321,7 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
         saveSheet = false
         scope.launch {
             val ok = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { Sessions.save(context, session, Reference.file(context), picture) }
-            say(if (ok) "Sitzung gesichert" else "Sitzung ließ sich nicht sichern")
+            say(if (ok) tr("Sitzung gesichert") else tr("Sitzung ließ sich nicht sichern"))
         }
     }
     fun openSessions() {
@@ -335,7 +337,7 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
                 val file = Sessions.reference(context, session.id)
                 runCatching { file.copyTo(Reference.file(context), overwrite = true); Reference.restore(context) }.getOrNull() to Sessions.snapshot(context, session.id)
             }
-            val picture = loaded.first ?: run { say("Die Sitzung ließ sich nicht öffnen"); return@launch }
+            val picture = loaded.first ?: run { say(tr("Die Sitzung ließ sich nicht öffnen")); return@launch }
             reference = picture
             placement = session.placement; studio.placement = placement
             opacity = session.opacity; studio.opacity = opacity
@@ -368,14 +370,14 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
                 }
             }
             alignBusy = false
-            if (found == null) { say("Blatt nicht wiedergefunden – von Hand verschieben"); return@launch }
+            if (found == null) { say(tr("Blatt nicht wiedergefunden – von Hand verschieben")); return@launch }
             placement = found.carry(session.placement); studio.placement = placement
-            say("Ausgerichtet")
+            say(tr("Ausgerichtet"))
         }
     }
 
     fun use(bitmap: Bitmap?) {
-        if (bitmap == null) { say("Das Bild ließ sich nicht öffnen"); return }
+        if (bitmap == null) { say(tr("Das Bild ließ sich nicht öffnen")); return }
         reference = bitmap
         placement = Placement()
         studio.placement = placement
@@ -411,7 +413,7 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
         scope.launch {
             val version = runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }.getOrNull() ?: ""
             val uri = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { Guide.savePdf(context, Guide.pdf(context, version)) }
-            if (uri == null) { say("Anleitung ließ sich nicht sichern"); return@launch }
+            if (uri == null) { say(tr("Anleitung ließ sich nicht sichern")); return@launch }
             say("Anleitung in Downloads/LiCida gesichert")
             val view = android.content.Intent(android.content.Intent.ACTION_VIEW).setDataAndType(uri, "application/pdf")
                 .addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
@@ -424,16 +426,16 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
         setupMenu = false
         fill = false; studio.fill = false
         cameraQuality = CameraQuality.Sharp; studio.cameraQuality = CameraQuality.Sharp
-        say("Ganzes Bild, scharf – jetzt die Vorlage bildschirmfüllend zoomen")
+        say(tr("Ganzes Bild, scharf – jetzt die Vorlage bildschirmfüllend zoomen"))
     }
     /** "Kamera zurücksetzen" (handbook p. 25): straightening, mirror and the camera's own view back to the start. */
     fun resetCamera() {
         setupMenu = false
         setCorrection(Correction())
         cameraView = chosenCamera?.let(Composition::cameraViewFor) ?: CameraView(); studio.cameraView = cameraView
-        say("Kamera zurückgesetzt")
+        say(tr("Kamera zurückgesetzt"))
     }
-    fun namedSlots() = slots.mapIndexed { i, slot -> slot.copy(name = slot.name.trim().ifBlank { "Platz ${i + 1}" }) }
+    fun namedSlots() = slots.mapIndexed { i, slot -> slot.copy(name = slot.name.trim().ifBlank { tr("Platz {value}", "value" to (i + 1)) }) }
     fun settingsState() = SettingsState(help, fill, cameraQuality, timelapse, slots.map { it.name }, keymap, projector)
     fun applySettings(next: SettingsState) {
         if (next.help != help) { help = next.help; studio.help = next.help }
@@ -471,8 +473,8 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
                 studio.drawOpacity = drawOpacity
                 if (referenceOff) referenceOff = false
             }
-            KeyAction.Toggle -> if (first) { referenceOff = !referenceOff; say(if (referenceOff) "Vorlage aus" else "Vorlage ein") }
-            KeyAction.Flicker -> if (first) { tools = tools.copy(flicker = !tools.flicker); say(if (tools.flicker) "Flimmern an" else "Flimmern aus") }
+            KeyAction.Toggle -> if (first) { referenceOff = !referenceOff; say(if (referenceOff) tr("Vorlage aus") else tr("Vorlage ein")) }
+            KeyAction.Flicker -> if (first) { tools = tools.copy(flicker = !tools.flicker); say(if (tools.flicker) tr("Flimmern an") else tr("Flimmern aus")) }
             KeyAction.SplitLeft, KeyAction.SplitRight -> {
                 val at = if (tools.split) tools.splitAt + (if (action == KeyAction.SplitRight) KeyMoves.SPLIT_STEP else -KeyMoves.SPLIT_STEP) else tools.splitAt
                 tools = tools.copy(split = true, splitAt = at.coerceIn(0.05f, 0.95f))
@@ -529,7 +531,7 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
             if (aligning != null) alignSnapshot?.let { snapshot ->
                 val saved = aligning!!.placement
                 val image = remember(snapshot) { snapshot.asImageBitmap() }
-                Image(image, contentDescription = "Schnappschuss der Sitzung", contentScale = ContentScale.FillBounds,
+                Image(image, contentDescription = tr("Schnappschuss der Sitzung"), contentScale = ContentScale.FillBounds,
                     modifier = Modifier.fillMaxSize().graphicsLayer {
                         val scale = placement.scale / saved.scale
                         val angle = placement.rotation - saved.rotation
@@ -543,7 +545,7 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
             }
             (shown ?: reference)?.let { bitmap ->
                 val image = remember(bitmap) { bitmap.asImageBitmap() }
-                Image(image, contentDescription = "Vorlage", contentScale = ContentScale.Fit,
+                Image(image, contentDescription = tr("Vorlage"), contentScale = ContentScale.Fit,
                     colorFilter = if (effectsSheet && !effects.isNeutral) androidx.compose.ui.graphics.ColorFilter.colorMatrix(
                         androidx.compose.ui.graphics.ColorMatrix(effects.matrix())) else null,
                     modifier = Modifier.fillMaxSize().then(if (mode == Mode.Draw && tools.split) Modifier.drawWithContent {
@@ -563,7 +565,7 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
         // The helper grid as a ghost over the screen: lay the printed target so that it matches (handbook p. 19).
         if (helperGhost && mode == Mode.Setup) {
             val ghostImage = remember(helperPicture) { helperPicture.asImageBitmap() }
-            Image(ghostImage, contentDescription = "Hilfsraster", contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize().graphicsLayer { alpha = 0.45f })
+            Image(ghostImage, contentDescription = tr("Hilfsraster"), contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize().graphicsLayer { alpha = 0.45f })
         }
 
         // Gestures – with the camera sheet open they move the camera picture (handbook p. 14).
@@ -620,7 +622,7 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
                         if (two && System.currentTimeMillis() - started < 300) {
                             camera.lockExposure(preview, spot)
                             exposureLocked = true
-                            say("Belichtung gesperrt")
+                            say(tr("Belichtung gesperrt"))
                         }
                     }
                 })
@@ -637,8 +639,8 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
                 onSave = {
                     val bitmap = shown ?: reference ?: return@FilterSheet
                     val saved = Reference.saveToPhotos(context, Reference.compose(bitmap, placement, screen.width.toInt(), screen.height.toInt()),
-                        "LiCida-${System.currentTimeMillis() / 1000}")
-                    say(if (saved) "In Fotos gesichert" else "Sichern hat nicht geklappt")
+                        tr("LiCida-{currentTimeMillis}", "currentTimeMillis" to (System.currentTimeMillis() / 1000)))
+                    say(if (saved) tr("In Fotos gesichert") else tr("Sichern hat nicht geklappt"))
                 },
                 onDone = { filterSheet = false },
                 modifier = Modifier.align(Alignment.BottomCenter).fillMaxHeight(0.52f),
@@ -671,14 +673,14 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
                         runCatching {
                             androidx.print.PrintHelper(context).apply { scaleMode = androidx.print.PrintHelper.SCALE_MODE_FIT }
                                 .printBitmap("LiCida-Zielbild", Target.bitmap(2480))
-                        }.onFailure { say("Drucken ist hier nicht möglich") }
+                        }.onFailure { say(tr("Drucken ist hier nicht möglich")) }
                     },
                     onSaveTarget = {
-                        say(if (Reference.saveToPhotos(context, Target.bitmap(2480), "LiCida-Zielbild")) "Zielbild in Fotos gesichert" else "Sichern hat nicht geklappt")
+                        say(if (Reference.saveToPhotos(context, Target.bitmap(2480), "LiCida-Zielbild")) tr("Zielbild in Fotos gesichert") else tr("Sichern hat nicht geklappt"))
                     },
                     onAuto = ::runAuto,
-                    onSaveSetting = { savedCorrection = correction; studio.savedCorrection = correction; say("Ausrichtung gesichert") },
-                    onRestoreSetting = { savedCorrection?.let { setCorrection(it); say("Ausrichtung wiederhergestellt") } }))
+                    onSaveSetting = { savedCorrection = correction; studio.savedCorrection = correction; say(tr("Ausrichtung gesichert")) },
+                    onRestoreSetting = { savedCorrection?.let { setCorrection(it); say(tr("Ausrichtung wiederhergestellt")) } }))
             effectsSheet -> Unit   // while the colour sliders are open, everything else waits (handbook p. 10)
             aligning != null && mode == Mode.Setup -> AlignControls(alignAlpha, { alignAlpha = it }, alignBusy, ::alignAuto,
                 Modifier.align(Alignment.BottomCenter)) { aligning = null; alignSnapshot = null }
@@ -689,8 +691,8 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
                 onSave = {
                     val bitmap = shown ?: reference ?: return@SetupChrome
                     val saved = Reference.saveToPhotos(context, Reference.compose(bitmap, placement, screen.width.toInt(), screen.height.toInt()),
-                        "LiCida-Vorlage-${System.currentTimeMillis() / 1000}")
-                    say(if (saved) "In Fotos gesichert" else "Sichern hat nicht geklappt")
+                        tr("LiCida-Vorlage-{currentTimeMillis}", "currentTimeMillis" to (System.currentTimeMillis() / 1000)))
+                    say(if (saved) tr("In Fotos gesichert") else tr("Sichern hat nicht geklappt"))
                 },
                 onDraw = { mode = Mode.Draw; view = DrawView(); chrome = true },
                 onCameraSettings = { cameraSheet = true }, onFilters = { filterSheet = true })
@@ -702,7 +704,7 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
                     onOpacity = { drawOpacity = it }, onOpacityDone = { studio.drawOpacity = drawOpacity },
                     onBack = { mode = Mode.Setup; view = DrawView() },
                     onSaveSession = if (tools.sessionButton) ::openSave else null,
-                    onFocus = { camera.focus(preview); say("Scharfgestellt") },
+                    onFocus = { camera.focus(preview); say(tr("Scharfgestellt")) },
                     onUnlock = { camera.unlock(); exposureLocked = false },
                     onZoomReset = { view = DrawView() })
             }
@@ -716,13 +718,13 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
         if (mode == Mode.Draw && tools.split && !capturing) SplitHandle(tools.splitAt) { tools = tools.copy(splitAt = it) }
         if (moreSheet && mode == Mode.Draw) MoreToolsSheet(tools, camera.hasTorch, { tools = it },
             extra = { TimelapseRows(tools, timelapse, { tools = it }) { timelapse = it; studio.timelapse = it } },
-            onSave = { captureWork { picture -> say(if (Reference.saveToPhotos(context, picture, "LiCida-Zeichnung-${System.currentTimeMillis() / 1000}")) "In Fotos gesichert" else "Sichern hat nicht geklappt") } },
+            onSave = { captureWork { picture -> say(if (Reference.saveToPhotos(context, picture, tr("LiCida-Zeichnung-{currentTimeMillis}", "currentTimeMillis" to (System.currentTimeMillis() / 1000)))) tr("In Fotos gesichert") else tr("Sichern hat nicht geklappt")) } },
             onShare = {
                 captureWork { picture ->
-                    val uri = Reference.savePhoto(context, picture, "LiCida-Zeichnung-${System.currentTimeMillis() / 1000}") ?: return@captureWork say("Sichern hat nicht geklappt")
+                    val uri = Reference.savePhoto(context, picture, tr("LiCida-Zeichnung-{currentTimeMillis}", "currentTimeMillis" to (System.currentTimeMillis() / 1000))) ?: return@captureWork say(tr("Sichern hat nicht geklappt"))
                     val send = android.content.Intent(android.content.Intent.ACTION_SEND).setType("image/jpeg")
                         .putExtra(android.content.Intent.EXTRA_STREAM, uri).addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    context.startActivity(android.content.Intent.createChooser(send, "Zeichnung teilen"))
+                    context.startActivity(android.content.Intent.createChooser(send, tr("Zeichnung teilen")))
                 }
             },
             onClose = { moreSheet = false })
@@ -741,7 +743,7 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
         }
         wheelOf?.let { palette ->
             PaletteWheel(palette,
-                onSave = { say(if (Reference.saveToPhotos(context, it, "LiCida-Farbkreis-${System.currentTimeMillis() / 1000}")) "Farbkreis in Fotos gesichert" else "Sichern hat nicht geklappt") },
+                onSave = { say(if (Reference.saveToPhotos(context, it, tr("LiCida-Farbkreis-{currentTimeMillis}", "currentTimeMillis" to (System.currentTimeMillis() / 1000)))) tr("Farbkreis in Fotos gesichert") else tr("Sichern hat nicht geklappt")) },
                 onPrint = { wheel -> runCatching { androidx.print.PrintHelper(context).apply { scaleMode = androidx.print.PrintHelper.SCALE_MODE_FIT }.printBitmap("LiCida-Farbkreis", wheel) } },
                 onClose = { wheelOf = null })
         }
@@ -751,26 +753,26 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
             BasicText(text, style = style(17f, 600, Color.Black), modifier = Modifier.align(Alignment.TopCenter)
                 .windowInsetsPadding(WindowInsets.statusBars).padding(top = 64.dp).clip(CircleShape).background(Ink.yellow).padding(horizontal = 16.dp, vertical = 8.dp))
         }
-        if (askCheck) AskDialog("Kamera ausgerichtet", "Jetzt prüfen, ob Zielbild und Kamerabild genau übereinanderliegen? Das Zielbild dabei liegen lassen.",
-            "Prüfen", onYes = { askCheck = false; checking = true; cameraSheet = false }, onNo = { askCheck = false })
+        if (askCheck) AskDialog(tr("Kamera ausgerichtet"), tr("Jetzt prüfen, ob Zielbild und Kamerabild genau übereinanderliegen? Das Zielbild dabei liegen lassen."),
+            tr("Prüfen"), onYes = { askCheck = false; checking = true; cameraSheet = false }, onNo = { askCheck = false })
         if (checking) CheckControls(checkSpeed, { checkSpeed = it }, Modifier.align(Alignment.BottomCenter)) { checking = false }
 
         if (setupMenu && mode == Mode.Setup) SetupMenu(onClose = { setupMenu = false }, entries = listOf(
-            MenuEntry(Symbol.Folder, "Aus Dateien") { setupMenu = false; pickFile() },
-            MenuEntry(Symbol.Sessions, "Sitzungen …") { openSessions() },
-            MenuEntry(Symbol.Maximize, "Größtmögliche Zeichnung", ::maximize),
-            MenuEntry(Symbol.Reset, "Kamera zurücksetzen", ::resetCamera),
-            MenuEntry(Symbol.Gear, "Einstellungen …") { setupMenu = false; settingsPage = true },
-            MenuEntry(Symbol.Help, "Hilfe …") { setupMenu = false; guidePage = true }))
-        if (drawHint && !capturing && !moreSheet && !filterSheet) HintPill(Symbol.Hand, "Tippen blendet die Knöpfe aus · Doppeltipp zoomt",
+            MenuEntry(Symbol.Folder, tr("Aus Dateien")) { setupMenu = false; pickFile() },
+            MenuEntry(Symbol.Sessions, tr("Sitzungen …")) { openSessions() },
+            MenuEntry(Symbol.Maximize, tr("Größtmögliche Zeichnung"), ::maximize),
+            MenuEntry(Symbol.Reset, tr("Kamera zurücksetzen"), ::resetCamera),
+            MenuEntry(Symbol.Gear, tr("Einstellungen …")) { setupMenu = false; settingsPage = true },
+            MenuEntry(Symbol.Help, tr("Hilfe …")) { setupMenu = false; guidePage = true }))
+        if (drawHint && !capturing && !moreSheet && !filterSheet) HintPill(Symbol.Hand, tr("Tippen blendet die Knöpfe aus · Doppeltipp zoomt"),
             Modifier.align(Alignment.TopCenter))
         if (guidePage) GuidePage(onTour = ::startTour, onPdf = ::saveGuide, onDone = { guidePage = false })
         tourStep?.let { index ->
             TourOverlay(index, anchors, onNext = { tourStep = if (index < Tour.steps.lastIndex) index + 1 else null }, onSkip = { tourStep = null })
         }
         if (offerTour && cameraAllowed && mode == Mode.Setup && tourStep == null && !settingsPage && !guidePage)
-            AskDialog("Willkommen bei LiCida", "Ein kurzer Rundgang zeigt dir die Knöpfe – eine Minute. Du findest ihn später unter „Mehr“ → „Hilfe“.",
-                "Rundgang", onYes = ::startTour, onNo = { offerTour = false; studio.tourOffered = true })
+            AskDialog(tr("Willkommen bei LiCida"), tr("Ein kurzer Rundgang zeigt dir die Knöpfe – eine Minute. Du findest ihn später unter „Mehr“ → „Hilfe“."),
+                tr("Rundgang"), onYes = ::startTour, onNo = { offerTour = false; studio.tourOffered = true })
         if (settingsPage) SettingsPage(settingsState(), listening, ::applySettings, onListen = { listening = it },
             onPermissions = {
                 context.startActivity(android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
@@ -779,9 +781,9 @@ fun LiCidaApp(studio: Studio, initial: Bitmap?, cameraAllowed: Boolean, onAskCam
             onDone = { listening = null; settingsPage = false; slots = namedSlots() })
         if (saveSheet) SaveSessionSheet(saveSnapshot, saveDescription, { saveDescription = it }, ::retake, { saveSheet = false }, ::saveSession)
         if (sessionsSheet) SessionsSheet(sessionList, { Sessions.thumbnail(context, it.id) }, ::restore,
-            onDelete = { gone -> Sessions.delete(context, gone.id); sessionList = sessionList - gone; say("Sitzung gelöscht") },
+            onDelete = { gone -> Sessions.delete(context, gone.id); sessionList = sessionList - gone; say(tr("Sitzung gelöscht")) },
             onClose = { sessionsSheet = false })
-        (countdown ?: if (alignBusy) "Suche dein Blatt …" else null)?.let { text ->
+        (countdown ?: if (alignBusy) tr("Suche dein Blatt …") else null)?.let { text ->
             BasicText(text, style = style(17f, 600, Color.Black), modifier = Modifier.align(Alignment.TopCenter)
                 .windowInsetsPadding(WindowInsets.statusBars).padding(top = 64.dp).clip(CircleShape).background(Ink.yellow).padding(horizontal = 16.dp, vertical = 8.dp))
         }
@@ -805,32 +807,32 @@ private fun SetupChrome(reference: Bitmap?, opacity: Float, hintSeen: Boolean, c
         // Top: files on the left, turn and keep on the right (Camera keeps its top bar this light).
         Row(Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars).padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically) {
-            GlassButton(Symbol.Ellipsis, "Mehr", modifier = Modifier.tourAnchor("mehr"), onClick = onMenu)
+            GlassButton(Symbol.Ellipsis, tr("Mehr"), modifier = Modifier.tourAnchor("mehr"), onClick = onMenu)
             Spacer(Modifier.size(12.dp))
-            GlassButton(Symbol.Aperture, "Kamera wählen und einstellen", enabled = cameraAllowed, modifier = Modifier.tourAnchor("kamera"), onClick = onCameraSettings)
+            GlassButton(Symbol.Aperture, tr("Kamera wählen und einstellen"), enabled = cameraAllowed, modifier = Modifier.tourAnchor("kamera"), onClick = onCameraSettings)
             Spacer(Modifier.size(12.dp))
-            GlassButton(Symbol.Filters, "Werkzeuge und Filter", enabled = ready, modifier = Modifier.tourAnchor("werkzeuge"), onClick = onFilters)
+            GlassButton(Symbol.Filters, tr("Werkzeuge und Filter"), enabled = ready, modifier = Modifier.tourAnchor("werkzeuge"), onClick = onFilters)
             Spacer(Modifier.weight(1f))
-            GlassButton(Symbol.RotateRight, "Vorlage um 90 Grad drehen", enabled = ready, modifier = Modifier.tourAnchor("drehen"), onClick = onRotate)
+            GlassButton(Symbol.RotateRight, tr("Vorlage um 90 Grad drehen"), enabled = ready, modifier = Modifier.tourAnchor("drehen"), onClick = onRotate)
             Spacer(Modifier.size(12.dp))
-            GlassButton(Symbol.Save, "Vorlage in Fotos sichern", enabled = ready, modifier = Modifier.tourAnchor("sichern"), onClick = onSave)
+            GlassButton(Symbol.Save, tr("Vorlage in Fotos sichern"), enabled = ready, modifier = Modifier.tourAnchor("sichern"), onClick = onSave)
         }
 
         if (!cameraAllowed) CameraNeeded(onAskCamera, Modifier.align(Alignment.Center))
         else if (!ready) EmptyStart(onPhotos, onFiles, onCamera, Modifier.align(Alignment.Center))
-        else if (!hintSeen) HintPill(Symbol.Hand, "Mit zwei Fingern verschieben, zoomen und drehen", Modifier.align(Alignment.TopCenter))
+        else if (!hintSeen) HintPill(Symbol.Hand, tr("Mit zwei Fingern verschieben, zoomen und drehen"), Modifier.align(Alignment.TopCenter))
 
         Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth()) {
             if (ready) Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp).tourAnchor("deckkraft"), verticalAlignment = Alignment.CenterVertically) {
-                BasicText("Vorlage", style = style(13f, 600), modifier = Modifier.widthIn(min = 64.dp))
-                IosSlider(opacity, onOpacity, "Deckkraft der Vorlage", Modifier.weight(1f), onRelease = onOpacityDone)
+                BasicText(tr("Vorlage"), style = style(13f, 600), modifier = Modifier.widthIn(min = 64.dp))
+                IosSlider(opacity, onOpacity, tr("Deckkraft der Vorlage"), Modifier.weight(1f), onRelease = onOpacityDone)
                 BasicText("${(opacity * 100).toInt()} %", style = style(13f, 500, Ink.secondary, tabular = true).copy(textAlign = TextAlign.End), modifier = Modifier.widthIn(min = 48.dp))
             }
             Row(Modifier.fillMaxWidth().background(Ink.bar).windowInsetsPadding(WindowInsets.navigationBars).padding(horizontal = 28.dp, vertical = 18.dp),
                 horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 PhotosButton(reference, onPhotos, Modifier.tourAnchor("fotos"))
                 DrawButton(enabled = ready, modifier = Modifier.tourAnchor("zeichnen"), onClick = onDraw)
-                GlassButton(Symbol.Camera, "Vorlage fotografieren", size = 52.dp, modifier = Modifier.tourAnchor("fotografieren"), onClick = onCamera)
+                GlassButton(Symbol.Camera, tr("Vorlage fotografieren"), size = 52.dp, modifier = Modifier.tourAnchor("fotografieren"), onClick = onCamera)
             }
         }
     }
@@ -840,7 +842,7 @@ private fun SetupChrome(reference: Bitmap?, opacity: Float, hintSeen: Boolean, c
 @Composable
 private fun PhotosButton(reference: Bitmap?, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Box(modifier.size(52.dp).clip(RoundedCornerShape(10.dp)).background(Ink.glass).border(1.5.dp, Ink.white.copy(alpha = 0.9f), RoundedCornerShape(10.dp))
-        .clickable(role = Role.Button, onClickLabel = "Bild aus Fotos", onClick = onClick).semantics { contentDescription = "Bild aus Fotos" },
+        .clickable(role = Role.Button, onClickLabel = tr("Bild aus Fotos"), onClick = onClick).semantics { contentDescription = tr("Bild aus Fotos") },
         contentAlignment = Alignment.Center) {
         if (reference != null) {
             val thumb = remember(reference) { reference.asImageBitmap() }
@@ -853,11 +855,11 @@ private fun PhotosButton(reference: Bitmap?, onClick: () -> Unit, modifier: Modi
 @Composable
 private fun EmptyStart(onPhotos: () -> Unit, onFiles: () -> Unit, onCamera: () -> Unit, modifier: Modifier) {
     Column(modifier.padding(horizontal = 32.dp).widthIn(max = 360.dp).clip(RoundedCornerShape(22.dp)).background(Ink.card).padding(vertical = 20.dp)) {
-        BasicText("Was möchtest du zeichnen?", style = style(20f, 700), modifier = Modifier.padding(horizontal = 20.dp))
-        BasicText("Wähle ein Bild aus deinen Fotos oder Dateien – oder fotografiere eine Vorlage. Es bleibt auf deinem Gerät.",
+        BasicText(tr("Was möchtest du zeichnen?"), style = style(20f, 700), modifier = Modifier.padding(horizontal = 20.dp))
+        BasicText(tr("Wähle ein Bild aus deinen Fotos oder Dateien – oder fotografiere eine Vorlage. Es bleibt auf deinem Gerät."),
             style = style(15f, 400, Ink.secondary), modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 6.dp, bottom = 14.dp))
-        for ((index, entry) in listOf(Triple(Symbol.Photo, "Aus Fotos", onPhotos), Triple(Symbol.Folder, "Aus Dateien", onFiles),
-            Triple(Symbol.Camera, "Vorlage fotografieren", onCamera)).withIndex()) {
+        for ((index, entry) in listOf(Triple(Symbol.Photo, tr("Aus Fotos"), onPhotos), Triple(Symbol.Folder, tr("Aus Dateien"), onFiles),
+            Triple(Symbol.Camera, tr("Vorlage fotografieren"), onCamera)).withIndex()) {
             val (symbol, label, action) = entry
             if (index > 0) Box(Modifier.padding(start = 60.dp).fillMaxWidth().height(0.5.dp).background(Ink.separator))
             Row(Modifier.fillMaxWidth().clickable(role = Role.Button, onClick = action).padding(horizontal = 20.dp, vertical = 13.dp),
@@ -872,10 +874,10 @@ private fun EmptyStart(onPhotos: () -> Unit, onFiles: () -> Unit, onCamera: () -
 @Composable
 private fun CameraNeeded(onAsk: () -> Unit, modifier: Modifier) {
     Column(modifier.padding(horizontal = 32.dp).widthIn(max = 360.dp).clip(RoundedCornerShape(22.dp)).background(Ink.card).padding(20.dp)) {
-        BasicText("LiCida braucht die Kamera", style = style(20f, 700))
-        BasicText("Du zeichnest mit Blick auf den Bildschirm: Die Kamera zeigt dein Papier, darüber liegt die Vorlage. Das Kamerabild bleibt auf deinem Gerät – LiCida hat keinen Internetzugang.",
+        BasicText(tr("LiCida braucht die Kamera"), style = style(20f, 700))
+        BasicText(tr("Du zeichnest mit Blick auf den Bildschirm: Die Kamera zeigt dein Papier, darüber liegt die Vorlage. Das Kamerabild bleibt auf deinem Gerät – LiCida hat keinen Internetzugang."),
             style = style(15f, 400, Ink.secondary), modifier = Modifier.padding(top = 6.dp, bottom = 16.dp))
-        BasicText("Kamera erlauben", style = style(17f, 600, Color.Black).copy(textAlign = TextAlign.Center),
+        BasicText(tr("Kamera erlauben"), style = style(17f, 600, Color.Black).copy(textAlign = TextAlign.Center),
             modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Ink.yellow).clickable(role = Role.Button, onClick = onAsk).padding(vertical = 13.dp))
     }
 }
@@ -889,33 +891,33 @@ private fun DrawChrome(view: DrawView, opacity: Float, exposureLocked: Boolean, 
             horizontalAlignment = Alignment.CenterHorizontally) {
             // Like Camera's "AE/AF-SPERRE": yellow, tap to release.
             if (exposureLocked) BasicText("BELICHTUNG GESPERRT", style = style(12f, 700, Color.Black),
-                modifier = Modifier.clip(RoundedCornerShape(5.dp)).background(Ink.yellow).clickable(role = Role.Button, onClickLabel = "Belichtung lösen", onClick = onUnlock)
+                modifier = Modifier.clip(RoundedCornerShape(5.dp)).background(Ink.yellow).clickable(role = Role.Button, onClickLabel = tr("Belichtung lösen"), onClick = onUnlock)
                     .padding(horizontal = 8.dp, vertical = 4.dp))
             if (view.zoom > 1.01f) BasicText("%.1f×".format(view.zoom).replace('.', ','), style = style(13f, 700, Ink.yellow, tabular = true).copy(textAlign = TextAlign.Center),
                 modifier = Modifier.padding(top = 8.dp).size(44.dp).clip(CircleShape).background(Ink.glass)
-                    .clickable(role = Role.Button, onClickLabel = "Ganze Ansicht", onClick = onZoomReset).padding(top = 13.dp))
+                    .clickable(role = Role.Button, onClickLabel = tr("Ganze Ansicht"), onClick = onZoomReset).padding(top = 13.dp))
         }
         Row(Modifier.align(Alignment.TopStart).windowInsetsPadding(WindowInsets.statusBars).padding(16.dp)) {
-            GlassButton(Symbol.Filters, "Werkzeuge und Filter", onClick = onFilters)
+            GlassButton(Symbol.Filters, tr("Werkzeuge und Filter"), onClick = onFilters)
             // Handbook p. 32: with the flashlight on, a button to turn it off.
-            if (torch) { Spacer(Modifier.size(12.dp)); GlassButton(Symbol.Flashlight, "Taschenlampe aus", active = true, onClick = onTorchOff) }
+            if (torch) { Spacer(Modifier.size(12.dp)); GlassButton(Symbol.Flashlight, tr("Taschenlampe aus"), active = true, onClick = onTorchOff) }
         }
         Row(Modifier.align(Alignment.TopEnd).windowInsetsPadding(WindowInsets.statusBars).padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             record?.let { it(); Spacer(Modifier.size(12.dp)) }
-            onSaveSession?.let { GlassButton(Symbol.Sessions, "Sitzung sichern", onClick = it); Spacer(Modifier.size(12.dp)) }
-            GlassButton(Symbol.Focus, "Scharfstellen", onClick = onFocus)
+            onSaveSession?.let { GlassButton(Symbol.Sessions, tr("Sitzung sichern"), onClick = it); Spacer(Modifier.size(12.dp)) }
+            GlassButton(Symbol.Focus, tr("Scharfstellen"), onClick = onFocus)
         }
         Row(Modifier.align(Alignment.BottomCenter).fillMaxWidth().windowInsetsPadding(WindowInsets.navigationBars).padding(horizontal = 16.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically) {
-            GlassButton(Symbol.ChevronLeft, "Zurück zum Einrichten", onClick = onBack)
+            GlassButton(Symbol.ChevronLeft, tr("Zurück zum Einrichten"), onClick = onBack)
             Row(Modifier.weight(1f).padding(start = 12.dp).clip(CircleShape).background(Ink.glass).padding(horizontal = 12.dp),
                 verticalAlignment = Alignment.CenterVertically) {
                 SymbolIcon(Symbol.Camera, Ink.white, size = 18.dp)
-                IosSlider(opacity, onOpacity, "Deckkraft der Vorlage", Modifier.weight(1f).padding(horizontal = 6.dp), onRelease = onOpacityDone)
+                IosSlider(opacity, onOpacity, tr("Deckkraft der Vorlage"), Modifier.weight(1f).padding(horizontal = 6.dp), onRelease = onOpacityDone)
                 SymbolIcon(Symbol.Photo, Ink.white, size = 18.dp)
             }
             Spacer(Modifier.size(12.dp))
-            GlassButton(Symbol.More, "Weitere Werkzeuge", onClick = onMore)
+            GlassButton(Symbol.More, tr("Weitere Werkzeuge"), onClick = onMore)
         }
     }
 }
@@ -943,10 +945,10 @@ object AutoAlign {
 @Composable
 private fun CheckOverlay(rect: FloatArray, picture: Bitmap, own: Boolean, speed: Float) {
     val image = remember(picture) { picture.asImageBitmap() }
-    val transition = androidx.compose.animation.core.rememberInfiniteTransition(label = "Prüfen")
+    val transition = androidx.compose.animation.core.rememberInfiniteTransition(label = tr("Prüfen"))
     val period = (3000 - speed * 2700).toInt()
     val alpha by transition.animateFloat(0f, 1f, androidx.compose.animation.core.infiniteRepeatable(
-        androidx.compose.animation.core.tween(period), androidx.compose.animation.core.RepeatMode.Reverse), label = "Überblenden")
+        androidx.compose.animation.core.tween(period), androidx.compose.animation.core.RepeatMode.Reverse), label = tr("Überblenden"))
     androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
         // Own picture: its corners are the rectangle; LiCida's target: the dots' rectangle → the whole sheet.
         val left: Float; val top: Float; val width: Float; val height: Float
@@ -967,14 +969,14 @@ private fun CheckControls(speed: Float, onSpeed: (Float) -> Unit, modifier: Modi
     Column(modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.navigationBars).padding(12.dp).clip(RoundedCornerShape(18.dp))
         .background(Ink.card).padding(16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            BasicText("Ausrichtung prüfen", style = style(17f, 600), modifier = Modifier.weight(1f))
-            BasicText("Fertig", style = style(17f, 600, Ink.yellow), modifier = Modifier.clickable(role = Role.Button, onClick = onDone).padding(6.dp))
+            BasicText(tr("Ausrichtung prüfen"), style = style(17f, 600), modifier = Modifier.weight(1f))
+            BasicText(tr("Fertig"), style = style(17f, 600, Ink.yellow), modifier = Modifier.clickable(role = Role.Button, onClick = onDone).padding(6.dp))
         }
-        BasicText("Liegt alles übereinander, flimmert kaum etwas. Sieht es doppelt aus: Zielbild glätten, Licht prüfen und erneut ausrichten.",
+        BasicText(tr("Liegt alles übereinander, flimmert kaum etwas. Sieht es doppelt aus: Zielbild glätten, Licht prüfen und erneut ausrichten."),
             style = style(13f, 400, Ink.secondary), modifier = Modifier.padding(top = 4.dp, bottom = 6.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            BasicText("Tempo", style = style(15f), modifier = Modifier.widthIn(min = 56.dp))
-            IosSlider(speed, onSpeed, "Tempo des Überblendens", Modifier.weight(1f))
+            BasicText(tr("Tempo"), style = style(15f), modifier = Modifier.widthIn(min = 56.dp))
+            IosSlider(speed, onSpeed, tr("Tempo des Überblendens"), Modifier.weight(1f))
         }
     }
 }
@@ -988,7 +990,7 @@ private fun AskDialog(title: String, body: String, yes: String, onYes: () -> Uni
             BasicText(body, style = style(13f).copy(textAlign = TextAlign.Center), modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 16.dp))
             Box(Modifier.fillMaxWidth().height(0.5.dp).background(Ink.separator))
             Row(Modifier.fillMaxWidth()) {
-                BasicText("Später", style = style(17f, 400, Ink.yellow).copy(textAlign = TextAlign.Center),
+                BasicText(tr("Später"), style = style(17f, 400, Ink.yellow).copy(textAlign = TextAlign.Center),
                     modifier = Modifier.weight(1f).clickable(role = Role.Button, onClick = onNo).padding(vertical = 12.dp))
                 Box(Modifier.size(0.5.dp, 44.dp).background(Ink.separator))
                 BasicText(yes, style = style(17f, 600, Ink.yellow).copy(textAlign = TextAlign.Center),
@@ -1004,16 +1006,16 @@ private fun AlignControls(alpha: Float, onAlpha: (Float) -> Unit, busy: Boolean,
     Column(modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.navigationBars).padding(12.dp).clip(RoundedCornerShape(18.dp))
         .background(Ink.card).padding(16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            BasicText("Blatt wiederfinden", style = style(17f, 600), modifier = Modifier.weight(1f))
-            BasicText("Fertig", style = style(17f, 600, Ink.yellow), modifier = Modifier.clickable(role = Role.Button, onClick = onDone).padding(6.dp))
+            BasicText(tr("Blatt wiederfinden"), style = style(17f, 600), modifier = Modifier.weight(1f))
+            BasicText(tr("Fertig"), style = style(17f, 600, Ink.yellow), modifier = Modifier.clickable(role = Role.Button, onClick = onDone).padding(6.dp))
         }
-        BasicText("Der Schnappschuss liegt über dem Kamerabild. Leg dein Blatt so, dass beides übereinanderliegt – oder lass LiCida die Vorlage passend schieben.",
+        BasicText(tr("Der Schnappschuss liegt über dem Kamerabild. Leg dein Blatt so, dass beides übereinanderliegt – oder lass LiCida die Vorlage passend schieben."),
             style = style(13f, 400, Ink.secondary), modifier = Modifier.padding(top = 4.dp, bottom = 6.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
-            BasicText("Schnappschuss", style = style(15f), modifier = Modifier.widthIn(min = 112.dp))
-            IosSlider(alpha, onAlpha, "Deckkraft des Schnappschusses", Modifier.weight(1f))
+            BasicText(tr("Schnappschuss"), style = style(15f), modifier = Modifier.widthIn(min = 112.dp))
+            IosSlider(alpha, onAlpha, tr("Deckkraft des Schnappschusses"), Modifier.weight(1f))
         }
-        BasicText(if (busy) "Suche …" else "Automatisch ausrichten", style = style(17f, 600, Color.Black).copy(textAlign = TextAlign.Center),
+        BasicText(if (busy) tr("Suche …") else tr("Automatisch ausrichten"), style = style(17f, 600, Color.Black).copy(textAlign = TextAlign.Center),
             modifier = Modifier.padding(top = 8.dp).fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(if (busy) Ink.secondary else Ink.yellow)
                 .clickable(enabled = !busy, role = Role.Button, onClick = onAuto).padding(vertical = 13.dp))
     }
