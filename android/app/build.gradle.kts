@@ -57,6 +57,8 @@ android {
     testOptions {
         unitTests.isIncludeAndroidResources = true
         unitTests.all {
+            // Tests check the German texts (the source language) – regardless of the computer's locale.
+            it.systemProperty("licida.language", (project.findProperty("lang") as String?) ?: "de")
             it.systemProperty("robolectric.pixelCopyRenderMode", "hardware")
             // Pictures: ./gradlew testDebugUnitTest -Pshots=/folder
             (project.findProperty("shots") as String?)?.let { folder -> it.systemProperty("licida.shots", folder) }
@@ -67,6 +69,14 @@ android {
         resources.excludes.add("/META-INF/{AL2.0,LGPL2.1}")
     }
 }
+
+// The translations (locale/<lang>.json in the repository) go into the app's assets.
+val copyLocale by tasks.registering(Sync::class) {
+    from(rootProject.file("../locale")) { include("*.json") }
+    into(layout.buildDirectory.dir("generated/locale/locale"))
+}
+android.sourceSets["main"].assets.srcDir(layout.buildDirectory.dir("generated/locale"))
+tasks.named("preBuild") { dependsOn(copyLocale) }
 
 dependencies {
     // Only Google's AndroidX – no network, analytics or ad libraries (privacy: card 462a919b).

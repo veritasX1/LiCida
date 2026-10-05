@@ -1,5 +1,7 @@
 package io.github.veritasx1.licida
 
+import io.github.veritasx1.licida.i18n.tr
+
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -93,9 +95,9 @@ data class Session(val id: String, val description: String, val created: Long, v
         }.getOrNull()
 
         fun defaultDescription(time: Long = System.currentTimeMillis()) =
-            "Zeichnung vom " + SimpleDateFormat("d. MMMM yyyy, HH:mm", Locale.GERMANY).format(Date(time))
+            tr("Zeichnung vom {date}", "date" to SimpleDateFormat(tr("d. MMMM yyyy, HH:mm"), Locale.forLanguageTag(io.github.veritasx1.licida.i18n.I18n.language())).format(Date(time)))
 
-        fun dateText(time: Long) = SimpleDateFormat("d. MMM yyyy, HH:mm", Locale.GERMANY).format(Date(time))
+        fun dateText(time: Long) = SimpleDateFormat(tr("d. MMM yyyy, HH:mm"), Locale.forLanguageTag(io.github.veritasx1.licida.i18n.I18n.language())).format(Date(time))
     }
 }
 
@@ -167,18 +169,18 @@ private fun SheetFrame(title: String, left: String?, right: String?, rightEnable
 @Composable
 fun SaveSessionSheet(snapshot: Bitmap?, description: String, onDescription: (String) -> Unit, onRetake: () -> Unit,
                      onCancel: () -> Unit, onSave: () -> Unit) {
-    SheetFrame("Sitzung sichern", "Abbrechen", "Sichern", snapshot != null, onCancel, onSave, onCancel) {
+    SheetFrame(tr("Sitzung sichern"), tr("Abbrechen"), tr("Sichern"), snapshot != null, onCancel, onSave, onCancel) {
         Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 val image = remember(snapshot) { snapshot?.asImageBitmap() }
                 Box(Modifier.size(96.dp, 150.dp).clip(RoundedCornerShape(10.dp)).background(Color(0xFF2C2C2E)), contentAlignment = Alignment.Center) {
-                    if (image != null) Image(image, "Schnappschuss der Zeichenfläche", contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+                    if (image != null) Image(image, tr("Schnappschuss der Zeichenfläche"), contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
                     else BasicText("…", style = style(17f, 600, Ink.secondary))
                 }
                 Column(Modifier.padding(start = 14.dp).weight(1f)) {
-                    BasicText("Der Schnappschuss zeigt dein Blatt, wie die Kamera es jetzt sieht. Damit findet LiCida es beim Wiederherstellen wieder.",
+                    BasicText(tr("Der Schnappschuss zeigt dein Blatt, wie die Kamera es jetzt sieht. Damit findet LiCida es beim Wiederherstellen wieder."),
                         style = style(13f, 400, Ink.secondary))
-                    BasicText("Neu aufnehmen", style = style(15f, 600, Ink.yellow), modifier = Modifier.padding(top = 10.dp)
+                    BasicText(tr("Neu aufnehmen"), style = style(15f, 600, Ink.yellow), modifier = Modifier.padding(top = 10.dp)
                         .clip(RoundedCornerShape(8.dp)).background(Color(0xFF2C2C2E)).clickable(role = Role.Button, onClick = onRetake)
                         .padding(horizontal = 12.dp, vertical = 8.dp))
                 }
@@ -186,9 +188,9 @@ fun SaveSessionSheet(snapshot: Bitmap?, description: String, onDescription: (Str
             BasicText("BESCHREIBUNG", style = style(13f, 400, Ink.secondary), modifier = Modifier.padding(start = 16.dp, top = 18.dp, bottom = 6.dp))
             Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Color(0xFF2C2C2E)).padding(horizontal = 16.dp, vertical = 12.dp)) {
                 BasicTextField(description, onDescription, singleLine = true, textStyle = style(17f), cursorBrush = SolidColor(Ink.yellow),
-                    modifier = Modifier.fillMaxWidth().semantics { contentDescription = "Beschreibung" })
+                    modifier = Modifier.fillMaxWidth().semantics { contentDescription = tr("Beschreibung") })
             }
-            BasicText("Gesichert werden Vorlage, Filter, Lage der Vorlage, Kamera und Ausrichtung – nur auf diesem Gerät.",
+            BasicText(tr("Gesichert werden Vorlage, Filter, Lage der Vorlage, Kamera und Ausrichtung – nur auf diesem Gerät."),
                 style = style(13f, 400, Ink.secondary), modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 6.dp))
         }
     }
@@ -197,9 +199,9 @@ fun SaveSessionSheet(snapshot: Bitmap?, description: String, onDescription: (Str
 /** "Sitzungen": the kept ones, newest first; tap to carry on, swipe left to delete (iOS list). */
 @Composable
 fun SessionsSheet(sessions: List<Session>, thumbnail: (Session) -> Bitmap?, onOpen: (Session) -> Unit, onDelete: (Session) -> Unit, onClose: () -> Unit) {
-    SheetFrame("Sitzungen", null, "Fertig", true, {}, onClose, onClose) {
+    SheetFrame(tr("Sitzungen"), null, tr("Fertig"), true, {}, onClose, onClose) {
         if (sessions.isEmpty()) {
-            BasicText("Noch keine Sitzung gesichert.\nBeim Zeichnen oben rechts auf den Pfeil nach unten tippen – dann kannst du später genau dort weitermachen.",
+            BasicText(tr("Noch keine Sitzung gesichert.\nBeim Zeichnen oben rechts auf den Pfeil nach unten tippen – dann kannst du später genau dort weitermachen."),
                 style = style(15f, 400, Ink.secondary).copy(textAlign = TextAlign.Center), modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp, vertical = 40.dp))
         } else Column(Modifier.heightIn(max = 520.dp).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)
             .clip(RoundedCornerShape(12.dp)).background(Color(0xFF2C2C2E))) {
@@ -210,13 +212,13 @@ fun SessionsSheet(sessions: List<Session>, thumbnail: (Session) -> Bitmap?, onOp
                         val thumb by produceState<Bitmap?>(null, session.id) {
                             value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { thumbnail(session) }
                         }
-                        Row(Modifier.fillMaxWidth().background(Color(0xFF2C2C2E)).clickable(role = Role.Button, onClickLabel = "Weiterzeichnen") { onOpen(session) }
+                        Row(Modifier.fillMaxWidth().background(Color(0xFF2C2C2E)).clickable(role = Role.Button, onClickLabel = tr("Weiterzeichnen")) { onOpen(session) }
                             .padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                             Box(Modifier.size(56.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xFF3A3A3C))) {
                                 thumb?.let { Image(remember(it) { it.asImageBitmap() }, null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize()) }
                             }
                             Column(Modifier.padding(start = 12.dp).weight(1f)) {
-                                BasicText(session.description.ifBlank { "Ohne Beschreibung" }, style = style(17f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                BasicText(session.description.ifBlank { tr("Ohne Beschreibung") }, style = style(17f), maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 BasicText(Session.dateText(session.created), style = style(13f, 400, Ink.secondary))
                             }
                         }
@@ -224,7 +226,7 @@ fun SessionsSheet(sessions: List<Session>, thumbnail: (Session) -> Bitmap?, onOp
                 }
             }
         }
-        BasicText("Nach links wischen zum Löschen.", style = style(13f, 400, Ink.secondary),
+        BasicText(tr("Nach links wischen zum Löschen."), style = style(13f, 400, Ink.secondary),
             modifier = Modifier.padding(start = 32.dp, top = 6.dp).then(if (sessions.isEmpty()) Modifier.height(0.dp) else Modifier))
     }
 }
@@ -238,9 +240,9 @@ fun SwipeToDelete(label: String, onDelete: () -> Unit, content: @Composable () -
     Box(Modifier.fillMaxWidth().onSizeChanged { width = it.width.toFloat() }) {
         Row(Modifier.matchParentSize(), horizontalArrangement = Arrangement.End) {
             Box(Modifier.fillMaxHeight().width(with(LocalDensity.current) { (-offset).coerceAtLeast(0f).toDp() }).background(Ink.red)
-                .clickable(role = Role.Button, onClickLabel = "Löschen", onClick = onDelete).semantics { contentDescription = "$label löschen" },
+                .clickable(role = Role.Button, onClickLabel = tr("Löschen"), onClick = onDelete).semantics { contentDescription = tr("{label} löschen", "label" to label) },
                 contentAlignment = Alignment.Center) {
-                if (-offset > reveal * 0.6f) BasicText("Löschen", style = style(15f, 600), maxLines = 1)
+                if (-offset > reveal * 0.6f) BasicText(tr("Löschen"), style = style(15f, 600), maxLines = 1)
             }
         }
         Box(Modifier.offset { IntOffset(offset.roundToInt(), 0) }.pointerInput(Unit) {

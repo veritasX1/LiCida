@@ -1,5 +1,7 @@
 package io.github.veritasx1.licida
 
+import io.github.veritasx1.licida.i18n.tr
+
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -17,26 +19,26 @@ class Pixels(val width: Int, val height: Int, val argb: IntArray = IntArray(widt
  *  three custom slots – never rename them. */
 enum class Filter(val id: String, val label: String, val hint: String, val takesValue: Boolean = false, val defaultValue: Int = 0) {
     /** Opens the four colour sliders (card 4); as a step it carries their values. */
-    ColourEffects("effects", "Farbeffekte", "Helligkeit, Kontrast, Sättigung, Farbton"),
+    ColourEffects("effects", tr("Farbeffekte"), tr("Helligkeit, Kontrast, Sättigung, Farbton")),
     /** Opens the palette editor (card 11); as a step it carries its palette. */
-    ColourPalette("palette", "Farbpalette", "Wenige Farben, einzeln ein- und ausblendbar"),
-    Colors64("colors64", "64 Farben", "Auf 64 Farben reduziert"),
-    Sepia("sepia", "Sepia", "Bräunlich wie alte Fotos"),
-    Gray("gray", "Graustufen", "Ohne Farbe"),
-    Posterize("posterize", "Tontrennung", "2 bis 16 Grautöne", takesValue = true, defaultValue = 4),
-    Wash("wash", "Lasurwerte", "Grauwerte zum Schichten von Lasuren"),
-    ComicColor("comic", "Comic", "Wenig Farben, Pastell, schwarze Tusche"),
-    ComicBw("comicbw", "Comic s/w", "Schwarzweiß mit Tusche"),
-    Neon("neon", "Neon", "Leuchtende Linien auf Schwarz"),
-    Blur("blur", "Weichzeichnen", "Glättet – mehrmals für mehr"),
-    Edges("edges", "Kanten", "Schwarze Linien, sonst durchsichtig"),
-    Threshold("threshold", "Schwellwert", "Nur Schwarz und Weiß – nochmal: umgekehrt"),
-    Normalize("normalize", "Normalisieren", "Grau mit gedehntem Kontrast"),
-    Equalize("equalize", "Ausgleichen", "Mehr Kontrast, gleichmäßig verteilt"),
-    Mirror("mirror", "Spiegeln", "Links und rechts tauschen"),
-    Ticks("ticks", "Eckmarken", "Passkreuze in den Ecken"),
-    GridSmall("gridsmall", "Kleines Raster", "Gleich große Quadrate"),
-    GridLarge("gridlarge", "Großes Raster", "Große Felder zum Aufteilen");
+    ColourPalette("palette", tr("Farbpalette"), tr("Wenige Farben, einzeln ein- und ausblendbar")),
+    Colors64("colors64", tr("64 Farben"), tr("Auf 64 Farben reduziert")),
+    Sepia("sepia", tr("Sepia"), tr("Bräunlich wie alte Fotos")),
+    Gray("gray", tr("Graustufen"), tr("Ohne Farbe")),
+    Posterize("posterize", tr("Tontrennung"), tr("2 bis 16 Grautöne"), takesValue = true, defaultValue = 4),
+    Wash("wash", tr("Lasurwerte"), tr("Grauwerte zum Schichten von Lasuren")),
+    ComicColor("comic", tr("Comic"), tr("Wenig Farben, Pastell, schwarze Tusche")),
+    ComicBw("comicbw", "Comic s/w", tr("Schwarzweiß mit Tusche")),
+    Neon("neon", tr("Neon"), tr("Leuchtende Linien auf Schwarz")),
+    Blur("blur", tr("Weichzeichnen"), tr("Glättet – mehrmals für mehr")),
+    Edges("edges", tr("Kanten"), tr("Schwarze Linien, sonst durchsichtig")),
+    Threshold("threshold", tr("Schwellwert"), tr("Nur Schwarz und Weiß – nochmal: umgekehrt")),
+    Normalize("normalize", tr("Normalisieren"), tr("Grau mit gedehntem Kontrast")),
+    Equalize("equalize", tr("Ausgleichen"), tr("Mehr Kontrast, gleichmäßig verteilt")),
+    Mirror("mirror", tr("Spiegeln"), tr("Links und rechts tauschen")),
+    Ticks("ticks", tr("Eckmarken"), tr("Passkreuze in den Ecken")),
+    GridSmall("gridsmall", tr("Kleines Raster"), tr("Gleich große Quadrate")),
+    GridLarge("gridlarge", tr("Großes Raster"), tr("Große Felder zum Aufteilen"));
 
     companion object {
         fun byId(id: String) = entries.firstOrNull { it.id == id }

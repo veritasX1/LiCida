@@ -1,9 +1,11 @@
 package io.github.veritasx1.licida
 
+import io.github.veritasx1.licida.i18n.tr
+
 /** One applied filter (with its value, e.g. 4 shades; a palette step carries its palette in `data`). */
 data class Step(val filter: Filter, val value: Int = filter.defaultValue, val data: String = "") {
     val label get() = when {
-        filter == Filter.ColourPalette -> "${filter.label} (${palette?.let { it.size - it.removed.size } ?: value} Farben)"
+        filter == Filter.ColourPalette -> tr("{label} ({value} Farben)", "label" to filter.label, "value" to (palette?.let { it.size - it.removed.size } ?: value))
         filter == Filter.ColourEffects -> filter.label
         filter.takesValue -> "${filter.label} ($value)"
         else -> filter.label
@@ -75,9 +77,9 @@ data class Slot(val name: String, val steps: List<Step>) {
 
     companion object {
         fun decode(text: String?, index: Int): Slot {
-            if (text.isNullOrBlank() || "|" !in text) return Slot("Platz ${index + 1}", emptyList())
+            if (text.isNullOrBlank() || "|" !in text) return Slot(tr("Platz {value}", "value" to (index + 1)), emptyList())
             val (name, list) = text.split("|", limit = 2)
-            return Slot(name.ifBlank { "Platz ${index + 1}" }, list.split(";").filter { it.isNotBlank() }.mapNotNull(Step::decode))
+            return Slot(name.ifBlank { tr("Platz {value}", "value" to (index + 1)) }, list.split(";").filter { it.isNotBlank() }.mapNotNull(Step::decode))
         }
     }
 }

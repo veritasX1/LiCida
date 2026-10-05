@@ -1,5 +1,8 @@
 package io.github.veritasx1.licida
 
+import io.github.veritasx1.licida.i18n.tr
+import io.github.veritasx1.licida.i18n.trn
+
 import android.app.Activity
 import android.graphics.Bitmap
 import android.os.Handler
@@ -59,29 +62,29 @@ fun MoreToolsSheet(tools: Tools, hasTorch: Boolean, onTools: (Tools) -> Unit, on
                 Box(Modifier.size(36.dp, 5.dp).clip(CircleShape).background(Color(0x66EBEBF5)))
             }
             Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                BasicText("Werkzeuge beim Zeichnen", style = style(17f, 600), modifier = Modifier.weight(1f))
-                BasicText("Fertig", style = style(17f, 600, Ink.yellow), modifier = Modifier.clickable(role = Role.Button, onClick = onClose).padding(4.dp))
+                BasicText(tr("Werkzeuge beim Zeichnen"), style = style(17f, 600), modifier = Modifier.weight(1f))
+                BasicText(tr("Fertig"), style = style(17f, 600, Ink.yellow), modifier = Modifier.clickable(role = Role.Button, onClick = onClose).padding(4.dp))
             }
             Column(Modifier.padding(horizontal = 16.dp).clip(RoundedCornerShape(12.dp)).background(Color(0xFF2C2C2E))) {
-                SwitchRow("Taschenlampe", if (hasTorch) "Licht auf die Zeichenfläche" else "Diese Kamera hat kein Licht", tools.torch, hasTorch) { onTools(tools.copy(torch = it)) }
+                SwitchRow(tr("Taschenlampe"), if (hasTorch) tr("Licht auf die Zeichenfläche") else tr("Diese Kamera hat kein Licht"), tools.torch, hasTorch) { onTools(tools.copy(torch = it)) }
                 Line()
-                SwitchRow("Geteilte Ansicht", "Links die Vorlage, rechts die Kamera – zum Farbvergleich", tools.split, true) { onTools(tools.copy(split = it)) }
+                SwitchRow(tr("Geteilte Ansicht"), tr("Links die Vorlage, rechts die Kamera – zum Farbvergleich"), tools.split, true) { onTools(tools.copy(split = it)) }
                 Line()
-                SwitchRow("Flimmern", "Vorlage blendet ein und aus – stimmt die Farbe, verschwindet das Flimmern", tools.flicker, true) { onTools(tools.copy(flicker = it)) }
+                SwitchRow(tr("Flimmern"), tr("Vorlage blendet ein und aus – stimmt die Farbe, verschwindet das Flimmern"), tools.flicker, true) { onTools(tools.copy(flicker = it)) }
                 if (tools.flicker) Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-                    BasicText("Tempo", style = style(15f), modifier = Modifier.width(64.dp))
-                    IosSlider(tools.flickerSpeed, { onTools(tools.copy(flickerSpeed = it)) }, "Tempo des Flimmerns", Modifier.weight(1f))
+                    BasicText(tr("Tempo"), style = style(15f), modifier = Modifier.width(64.dp))
+                    IosSlider(tools.flickerSpeed, { onTools(tools.copy(flickerSpeed = it)) }, tr("Tempo des Flimmerns"), Modifier.weight(1f))
                 }
                 Line()
-                SwitchRow("Knopf „Sitzung sichern“", "Oben rechts beim Zeichnen", tools.sessionButton, true) { onTools(tools.copy(sessionButton = it)) }
+                SwitchRow(tr("Knopf „Sitzung sichern“"), tr("Oben rechts beim Zeichnen"), tools.sessionButton, true) { onTools(tools.copy(sessionButton = it)) }
                 extra()
             }
             Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp)) {
-                Wide("In Fotos sichern", Modifier.weight(1f), onSave)
+                Wide(tr("In Fotos sichern"), Modifier.weight(1f), onSave)
                 Box(Modifier.width(8.dp))
-                Wide("Teilen …", Modifier.weight(1f), onShare)
+                Wide(tr("Teilen …"), Modifier.weight(1f), onShare)
             }
-            BasicText("Sichern und Teilen nehmen ein Bild deiner Zeichenfläche auf, ohne Knöpfe. Geteilt wird nur, wohin du es selbst schickst.",
+            BasicText(tr("Sichern und Teilen nehmen ein Bild deiner Zeichenfläche auf, ohne Knöpfe. Geteilt wird nur, wohin du es selbst schickst."),
                 style = style(13f, 400, Ink.secondary), modifier = Modifier.padding(start = 32.dp, end = 32.dp, top = 6.dp))
         }
     }
@@ -116,7 +119,7 @@ fun SplitHandle(at: Float, onMove: (Float) -> Unit) {
         val grip = with(LocalDensity.current) { 22.dp.toPx() }.roundToInt()
         Box(Modifier.offset { IntOffset(x - 1, 0) }.width(2.dp).fillMaxHeight().background(Color.White.copy(alpha = 0.9f)))
         Box(Modifier.align(Alignment.CenterStart).offset { IntOffset(x - grip, 0) }.size(44.dp).clip(CircleShape).background(Color.White)
-            .semantics { contentDescription = "Teiler verschieben" }
+            .semantics { contentDescription = tr("Teiler verschieben") }
             .pointerInput(width) { detectDragGestures { change, drag -> change.consume(); onMove(((at * width + drag.x) / width).coerceIn(0.05f, 0.95f)) } },
             contentAlignment = Alignment.Center) {
             BasicText("‹ ›", style = style(15f, 700, Color.Black))
@@ -138,29 +141,29 @@ fun captureScreen(activity: Activity, onDone: (Bitmap?) -> Unit) {
 @Composable
 fun TimelapseRows(tools: Tools, settings: TimelapseSettings, onTools: (Tools) -> Unit, onSettings: (TimelapseSettings) -> Unit) {
     Line()
-    SwitchRow("Zeitraffer", "Aufnahmeknopf oben rechts – das Video kommt in Fotos", tools.recordButton, true) { onTools(tools.copy(recordButton = it)) }
+    SwitchRow(tr("Zeitraffer"), tr("Aufnahmeknopf oben rechts – das Video kommt in Fotos"), tools.recordButton, true) { onTools(tools.copy(recordButton = it)) }
     if (tools.recordButton) {
         val speeds = TimelapseSettings.SPEEDS
         val index = speeds.indexOf(settings.speed).let { if (it < 0) speeds.indexOf(60) else it }
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-            BasicText("Tempo", style = style(15f), modifier = Modifier.width(64.dp))
+            BasicText(tr("Tempo"), style = style(15f), modifier = Modifier.width(64.dp))
             IosSlider(index / (speeds.size - 1f), { onSettings(settings.copy(speed = speeds[(it * (speeds.size - 1)).roundToInt()])) },
-                "Wiedergabetempo des Zeitraffers", Modifier.weight(1f))
+                tr("Wiedergabetempo des Zeitraffers"), Modifier.weight(1f))
             BasicText("${settings.speed}×", style = style(15f, 600, Ink.secondary, tabular = true).copy(textAlign = TextAlign.End), modifier = Modifier.width(52.dp))
         }
-        BasicText(if (settings.choppy) "Unter 5× ruckelt das Video – für eine Aufnahme in Echtzeit lieber Androids Bildschirmaufnahme nehmen."
-            else "${settings.speed}×: eine Stunde Zeichnen wird ${formatFilm(3600.0 / settings.speed)} Video.",
+        BasicText(if (settings.choppy) tr("Unter 5× ruckelt das Video – für eine Aufnahme in Echtzeit lieber Androids Bildschirmaufnahme nehmen.")
+            else tr("{speed}×: eine Stunde Zeichnen wird {formatFilm} Video.", "speed" to settings.speed, "formatFilm" to (formatFilm(3600.0 / settings.speed))),
             style = style(13f, 400, if (settings.choppy) Ink.yellow else Ink.secondary), modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 6.dp))
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-            BasicText("Qualität", style = style(15f), modifier = Modifier.weight(1f))
+            BasicText(tr("Qualität"), style = style(15f), modifier = Modifier.weight(1f))
             Segmented(TimelapseSettings.QUALITIES, settings.quality) { onSettings(settings.copy(quality = it)) }
         }
     }
 }
 
 fun formatFilm(seconds: Double): String = when {
-    seconds >= 60 -> "${(seconds / 60).roundToInt()} Minute${if ((seconds / 60).roundToInt() == 1) "" else "n"}"
-    else -> "${seconds.roundToInt()} Sekunden"
+    seconds >= 60 -> trn("{n} Minute", tr("{n} Minuten"), (seconds / 60).roundToInt())
+    else -> tr("{roundToInt} Sekunden", "roundToInt" to (seconds.roundToInt()))
 }
 
 /** The record button like Camera's: a white ring; red dot to start, red square while recording. */
@@ -169,8 +172,8 @@ fun RecordButton(recording: Boolean, filmSeconds: Int, onClick: () -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         if (recording) BasicText("%d:%02d".format(filmSeconds / 60, filmSeconds % 60), style = style(13f, 700, Color.White, tabular = true),
             modifier = Modifier.padding(end = 8.dp).clip(RoundedCornerShape(6.dp)).background(Ink.red).padding(horizontal = 8.dp, vertical = 3.dp))
-        Box(Modifier.size(44.dp).clip(CircleShape).background(Ink.glass).clickable(role = Role.Button, onClickLabel = if (recording) "Zeitraffer beenden" else "Zeitraffer aufnehmen", onClick = onClick)
-            .semantics { contentDescription = if (recording) "Zeitraffer beenden" else "Zeitraffer aufnehmen" }, contentAlignment = Alignment.Center) {
+        Box(Modifier.size(44.dp).clip(CircleShape).background(Ink.glass).clickable(role = Role.Button, onClickLabel = if (recording) tr("Zeitraffer beenden") else tr("Zeitraffer aufnehmen"), onClick = onClick)
+            .semantics { contentDescription = if (recording) tr("Zeitraffer beenden") else tr("Zeitraffer aufnehmen") }, contentAlignment = Alignment.Center) {
             Box(Modifier.size(34.dp).clip(CircleShape).background(Color.White), contentAlignment = Alignment.Center) {
                 Box(Modifier.size(30.dp).clip(CircleShape).background(Color.Black), contentAlignment = Alignment.Center) {
                     if (recording) Box(Modifier.size(13.dp).clip(RoundedCornerShape(3.dp)).background(Ink.red))

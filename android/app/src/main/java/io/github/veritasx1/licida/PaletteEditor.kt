@@ -1,5 +1,7 @@
 package io.github.veritasx1.licida
 
+import io.github.veritasx1.licida.i18n.tr
+
 import android.graphics.Bitmap
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -89,9 +91,9 @@ fun PaletteEditor(source: Bitmap, start: Palette?, onImport: (count: Int, into: 
     Column(Modifier.fillMaxSize().background(Color.Black)) {
         Row(Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars).padding(horizontal = 16.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically) {
-            BasicText("Abbrechen", style = style(17f, 400, Ink.yellow), modifier = Modifier.clickable(role = Role.Button, onClick = onCancel).padding(4.dp))
-            BasicText(if (busy) "Farben werden gesucht …" else "Farbpalette", style = style(17f, 600).copy(textAlign = TextAlign.Center), modifier = Modifier.weight(1f))
-            BasicText("Anwenden", style = style(17f, 600, Ink.yellow), modifier = Modifier.clickable(role = Role.Button) { onApply(palette) }.padding(4.dp))
+            BasicText(tr("Abbrechen"), style = style(17f, 400, Ink.yellow), modifier = Modifier.clickable(role = Role.Button, onClick = onCancel).padding(4.dp))
+            BasicText(if (busy) tr("Farben werden gesucht …") else tr("Farbpalette"), style = style(17f, 600).copy(textAlign = TextAlign.Center), modifier = Modifier.weight(1f))
+            BasicText(tr("Anwenden"), style = style(17f, 600, Ink.yellow), modifier = Modifier.clickable(role = Role.Button) { onApply(palette) }.padding(4.dp))
         }
         // The picture: the palette's result – while the pipette is held, the original to pick from.
         BoxWithConstraints(Modifier.weight(1f).fillMaxWidth().clip(RoundedCornerShape(0.dp))) {
@@ -105,7 +107,7 @@ fun PaletteEditor(source: Bitmap, start: Palette?, onImport: (count: Int, into: 
             }
             val shown = if (pipette) workBitmap else preview ?: workBitmap
             val image = remember(shown) { shown.asImageBitmap() }
-            Image(image, contentDescription = if (pipette) "Original" else "Vorschau der Farbpalette", contentScale = ContentScale.Fit,
+            Image(image, contentDescription = if (pipette) tr("Original") else tr("Vorschau der Farbpalette"), contentScale = ContentScale.Fit,
                 modifier = Modifier.fillMaxSize().graphicsLayer { scaleX = zoom; scaleY = zoom; translationX = pan.x; translationY = pan.y }
                     .pointerInput(Unit) { detectTransformGestures { _, move, factor, _ -> zoom = (zoom * factor).coerceIn(1f, 8f); pan += move } }
                     .pointerInput(pipette, palette, zoom, pan) {
@@ -122,7 +124,7 @@ fun PaletteEditor(source: Bitmap, start: Palette?, onImport: (count: Int, into: 
                             }
                         }
                     })
-            if (pipette) BasicText("Tippe ins Original, um die Farbe zu übernehmen", style = style(13f, 600, Color.Black),
+            if (pipette) BasicText(tr("Tippe ins Original, um die Farbe zu übernehmen"), style = style(13f, 600, Color.Black),
                 modifier = Modifier.align(Alignment.TopCenter).padding(top = 10.dp).clip(CircleShape).background(Ink.yellow).padding(horizontal = 12.dp, vertical = 6.dp))
         }
         Column(Modifier.fillMaxWidth().background(Color(0xFF1C1C1E)).windowInsetsPadding(WindowInsets.navigationBars).padding(bottom = 8.dp)) {
@@ -142,21 +144,21 @@ fun PaletteEditor(source: Bitmap, start: Palette?, onImport: (count: Int, into: 
                 }
             }
             Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), verticalAlignment = Alignment.CenterVertically) {
-                BasicText("Farben", style = style(15f), modifier = Modifier.width(64.dp))
-                IosSlider((count - 2) / 62f, { setCount(2 + (it * 62).toInt()) }, "Anzahl der Farben", Modifier.weight(1f))
+                BasicText(tr("Farben"), style = style(15f), modifier = Modifier.width(64.dp))
+                IosSlider((count - 2) / 62f, { setCount(2 + (it * 62).toInt()) }, tr("Anzahl der Farben"), Modifier.weight(1f))
                 BasicText("$count", style = style(15f, 600, Ink.secondary, tabular = true).copy(textAlign = TextAlign.End), modifier = Modifier.width(32.dp))
             }
             Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                Segmented(listOf("Ersetzen", "Angleichen"), if (palette.replace) 0 else 1) { palette = palette.copy(replace = it == 0) }
+                Segmented(listOf(tr("Ersetzen"), tr("Angleichen")), if (palette.replace) 0 else 1) { palette = palette.copy(replace = it == 0) }
                 Spacer(Modifier.weight(1f))
                 PipetteButton(pipette) { pipette = it }
                 Spacer(Modifier.width(10.dp))
-                GlassButton(Symbol.Import, "Farben aus einem Foto übernehmen") { onImport(count) { imported -> palette = imported; selected = 0 } }
+                GlassButton(Symbol.Import, tr("Farben aus einem Foto übernehmen")) { onImport(count) { imported -> palette = imported; selected = 0 } }
                 Spacer(Modifier.width(10.dp))
-                GlassButton(Symbol.Wheel, "Palette als Farbkreis sichern oder drucken") { onWheel(palette) }
+                GlassButton(Symbol.Wheel, tr("Palette als Farbkreis sichern oder drucken")) { onWheel(palette) }
             }
-            BasicText(if (palette.replace) "Ersetzen: jede Farbe wird durch ihre neue Farbe (unten im Feld) ersetzt."
-                else "Angleichen: jede Stelle nimmt die nächstliegende neue Farbe.",
+            BasicText(if (palette.replace) tr("Ersetzen: jede Farbe wird durch ihre neue Farbe (unten im Feld) ersetzt.")
+                else tr("Angleichen: jede Stelle nimmt die nächstliegende neue Farbe."),
                 style = style(12f, 400, Ink.secondary), modifier = Modifier.padding(horizontal = 20.dp))
         }
     }
@@ -170,7 +172,7 @@ fun PaletteEditor(source: Bitmap, start: Palette?, onImport: (count: Int, into: 
 private fun Swatch(before: Int, after: Int, selected: Boolean, removed: Boolean, onTap: () -> Unit, onHold: () -> Unit) {
     Box(Modifier.size(48.dp, 60.dp).scale(if (removed) 0.7f else 1f).clip(RoundedCornerShape(10.dp))
         .border(if (selected) 2.5.dp else 0.5.dp, if (selected) Ink.yellow else Ink.separator, RoundedCornerShape(10.dp))
-        .semantics { contentDescription = if (removed) "Farbe herausgenommen" else "Farbe"; this.selected = selected }
+        .semantics { contentDescription = if (removed) tr("Farbe herausgenommen") else tr("Farbe"); this.selected = selected }
         .pointerInput(removed, selected) { detectTapGestures(onTap = { onTap() }, onLongPress = { onHold() }) }) {
         Column(Modifier.fillMaxSize()) {
             Box(Modifier.weight(1f).fillMaxWidth().background(Color(before)))
@@ -184,8 +186,8 @@ private fun Swatch(before: Int, after: Int, selected: Boolean, removed: Boolean,
 @Composable
 private fun PipetteButton(active: Boolean, onToggle: (Boolean) -> Unit) {
     Box(Modifier.size(44.dp).clip(CircleShape).background(if (active) Ink.yellow else Ink.glass)
-        .clickable(role = Role.Switch, onClickLabel = "Pipette") { onToggle(!active) }
-        .semantics { contentDescription = "Pipette: Farbe aus dem Original nehmen"; selected = active }, contentAlignment = Alignment.Center) {
+        .clickable(role = Role.Switch, onClickLabel = tr("Pipette")) { onToggle(!active) }
+        .semantics { contentDescription = tr("Pipette: Farbe aus dem Original nehmen"); selected = active }, contentAlignment = Alignment.Center) {
         SymbolIcon(Symbol.Pipette, if (active) Color.Black else Ink.white, size = 22.dp)
     }
 }
@@ -199,10 +201,10 @@ fun ColourPicker(before: Int, after: Int, onClose: () -> Unit, onPick: (Int) -> 
     androidx.compose.ui.window.Dialog(onDismissRequest = onClose) {
         Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Color(0xFF1C1C1E)).padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                BasicText("Farben", style = style(17f, 600), modifier = Modifier.weight(1f))
-                BasicText("Fertig", style = style(17f, 600, Ink.yellow), modifier = Modifier.clickable(role = Role.Button) { onPick(current); onClose() }.padding(4.dp))
+                BasicText(tr("Farben"), style = style(17f, 600), modifier = Modifier.weight(1f))
+                BasicText(tr("Fertig"), style = style(17f, 600, Ink.yellow), modifier = Modifier.clickable(role = Role.Button) { onPick(current); onClose() }.padding(4.dp))
             }
-            Box(Modifier.padding(vertical = 10.dp)) { Segmented(listOf("Raster", "Regler"), tab) { tab = it } }
+            Box(Modifier.padding(vertical = 10.dp)) { Segmented(listOf(tr("Raster"), tr("Regler")), tab) { tab = it } }
             if (tab == 0) {
                 // 12 hues across, light to dark down, a grey row on top – like the iOS grid.
                 Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp))) {
@@ -217,16 +219,16 @@ fun ColourPicker(before: Int, after: Int, onClose: () -> Unit, onPick: (Int) -> 
                     }
                 }
             } else {
-                PickerSlider("Farbton", hsb[0] / 360f) { current = Colours.fromHsb(it * 360f, hsb[1], hsb[2]) }
-                PickerSlider("Sättigung", hsb[1]) { current = Colours.fromHsb(hsb[0], it, hsb[2]) }
-                PickerSlider("Helligkeit", hsb[2]) { current = Colours.fromHsb(hsb[0], hsb[1], it) }
+                PickerSlider(tr("Farbton"), hsb[0] / 360f) { current = Colours.fromHsb(it * 360f, hsb[1], hsb[2]) }
+                PickerSlider(tr("Sättigung"), hsb[1]) { current = Colours.fromHsb(hsb[0], it, hsb[2]) }
+                PickerSlider(tr("Helligkeit"), hsb[2]) { current = Colours.fromHsb(hsb[0], hsb[1], it) }
             }
             Row(Modifier.padding(top = 14.dp).fillMaxWidth().height(56.dp).clip(RoundedCornerShape(12.dp))) {
                 Box(Modifier.weight(1f).fillMaxSize().background(Color(before)), contentAlignment = Alignment.BottomStart) {
-                    BasicText("Vorher", style = style(12f, 600, if (Colours.lab(before)[0] > 60) Color.Black else Color.White), modifier = Modifier.padding(8.dp))
+                    BasicText(tr("Vorher"), style = style(12f, 600, if (Colours.lab(before)[0] > 60) Color.Black else Color.White), modifier = Modifier.padding(8.dp))
                 }
                 Box(Modifier.weight(1f).fillMaxSize().background(Color(current)), contentAlignment = Alignment.BottomEnd) {
-                    BasicText("Nachher", style = style(12f, 600, if (Colours.lab(current)[0] > 60) Color.Black else Color.White), modifier = Modifier.padding(8.dp))
+                    BasicText(tr("Nachher"), style = style(12f, 600, if (Colours.lab(current)[0] > 60) Color.Black else Color.White), modifier = Modifier.padding(8.dp))
                 }
             }
         }
@@ -250,16 +252,16 @@ fun PaletteWheel(palette: Palette, onSave: (Bitmap) -> Unit, onPrint: (Bitmap) -
         Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Color(0xFF1C1C1E)).padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                BasicText("Farbkreis", style = style(17f, 600), modifier = Modifier.weight(1f))
-                BasicText("Fertig", style = style(17f, 600, Ink.yellow), modifier = Modifier.clickable(role = Role.Button, onClick = onClose).padding(4.dp))
+                BasicText(tr("Farbkreis"), style = style(17f, 600), modifier = Modifier.weight(1f))
+                BasicText(tr("Fertig"), style = style(17f, 600, Ink.yellow), modifier = Modifier.clickable(role = Role.Button, onClick = onClose).padding(4.dp))
             }
             val image = remember(wheel) { wheel.asImageBitmap() }
-            Image(image, "Farbkreis der Palette", modifier = Modifier.padding(vertical = 12.dp).size(240.dp).clip(CircleShape))
-            Segmented(listOf("Nach Farbton", "Nach Helligkeit"), if (byHue) 0 else 1) { byHue = it == 0 }
+            Image(image, tr("Farbkreis der Palette"), modifier = Modifier.padding(vertical = 12.dp).size(240.dp).clip(CircleShape))
+            Segmented(listOf(tr("Nach Farbton"), tr("Nach Helligkeit")), if (byHue) 0 else 1) { byHue = it == 0 }
             Row(Modifier.padding(top = 14.dp).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                BasicText("In Fotos sichern", style = style(15f, 600, Ink.yellow).copy(textAlign = TextAlign.Center),
+                BasicText(tr("In Fotos sichern"), style = style(15f, 600, Ink.yellow).copy(textAlign = TextAlign.Center),
                     modifier = Modifier.weight(1f).clip(RoundedCornerShape(10.dp)).background(Color(0xFF2C2C2E)).clickable(role = Role.Button) { onSave(wheel) }.padding(vertical = 12.dp))
-                BasicText("Drucken …", style = style(15f, 600, Ink.yellow).copy(textAlign = TextAlign.Center),
+                BasicText(tr("Drucken …"), style = style(15f, 600, Ink.yellow).copy(textAlign = TextAlign.Center),
                     modifier = Modifier.weight(1f).clip(RoundedCornerShape(10.dp)).background(Color(0xFF2C2C2E)).clickable(role = Role.Button) { onPrint(wheel) }.padding(vertical = 12.dp))
             }
         }
@@ -275,8 +277,8 @@ fun PaletteLayers(palette: Palette, hidden: Set<Int>, onHidden: (Set<Int>) -> Un
     Row(modifier.clip(RoundedCornerShape(14.dp)).background(Ink.glass).padding(6.dp), verticalAlignment = Alignment.CenterVertically) {
         val allOn = hidden.isEmpty()
         Box(Modifier.size(40.dp).clip(RoundedCornerShape(8.dp)).background(Ink.glassStrong)
-            .clickable(role = Role.Button, onClickLabel = if (allOn) "Alle Farben aus" else "Alle Farben ein") { onHidden(if (allOn) used.toSet() else emptySet()) }
-            .semantics { contentDescription = if (allOn) "Alle Farben aus" else "Alle Farben ein" }, contentAlignment = Alignment.Center) {
+            .clickable(role = Role.Button, onClickLabel = if (allOn) tr("Alle Farben aus") else tr("Alle Farben ein")) { onHidden(if (allOn) used.toSet() else emptySet()) }
+            .semantics { contentDescription = if (allOn) tr("Alle Farben aus") else tr("Alle Farben ein") }, contentAlignment = Alignment.Center) {
             SymbolIcon(Symbol.Filters, Ink.white, size = 20.dp)
         }
         LazyRow(Modifier.weight(1f, fill = false), contentPadding = PaddingValues(horizontal = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -284,20 +286,20 @@ fun PaletteLayers(palette: Palette, hidden: Set<Int>, onHidden: (Set<Int>) -> Un
                 val off = index in hidden
                 Box(Modifier.size(40.dp).scale(if (off) 0.62f else 1f).clip(RoundedCornerShape(8.dp)).background(Color(palette.after[index]))
                     .border(1.dp, Color(0x55FFFFFF), RoundedCornerShape(8.dp))
-                    .semantics { contentDescription = if (off) "Farbebene aus" else "Farbebene ein"; selected = !off }
+                    .semantics { contentDescription = if (off) tr("Farbebene aus") else tr("Farbebene ein"); selected = !off }
                     .pointerInput(off, hidden) {
                         detectTapGestures(onTap = { onHidden(if (off) hidden - index else hidden + index) }, onLongPress = { big = index })
                     })
             }
         }
-        Box(Modifier.size(40.dp).clip(RoundedCornerShape(8.dp)).background(Ink.glassStrong).clickable(role = Role.Button, onClickLabel = "Palette bearbeiten", onClick = onEdit)
-            .semantics { contentDescription = "Palette bearbeiten" }, contentAlignment = Alignment.Center) {
+        Box(Modifier.size(40.dp).clip(RoundedCornerShape(8.dp)).background(Ink.glassStrong).clickable(role = Role.Button, onClickLabel = tr("Palette bearbeiten"), onClick = onEdit)
+            .semantics { contentDescription = tr("Palette bearbeiten") }, contentAlignment = Alignment.Center) {
             SymbolIcon(Symbol.Wheel, Ink.white, size = 20.dp)
         }
     }
     big?.let { index ->
         androidx.compose.ui.window.Dialog(onDismissRequest = { big = null }) {
-            Canvas(Modifier.size(260.dp).clip(RoundedCornerShape(20.dp)).clickable { big = null }.semantics { contentDescription = "Farbe groß" }) {
+            Canvas(Modifier.size(260.dp).clip(RoundedCornerShape(20.dp)).clickable { big = null }.semantics { contentDescription = tr("Farbe groß") }) {
                 drawRect(Color(palette.after[index]))
             }
         }

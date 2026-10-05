@@ -1,5 +1,7 @@
 package io.github.veritasx1.licida
 
+import io.github.veritasx1.licida.i18n.tr
+
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
@@ -191,7 +193,7 @@ object Target {
         for (p in 0 until 4) canvas.drawCircle(DOTS[2 * p] * k, DOTS[2 * p + 1] * k, RADIUS * k, paint)
         canvas.drawCircle(MARKER[0] * k, MARKER[1] * k, MARKER_RADIUS * k, paint)
         paint.textSize = 4.2f * k; paint.color = android.graphics.Color.rgb(90, 90, 90); paint.textAlign = android.graphics.Paint.Align.CENTER
-        canvas.drawText("LiCida · Zielbild und Hilfsraster · flach auf die Zeichenfläche legen", WIDTH / 2 * k, (HEIGHT - 10) * k, paint)
+        canvas.drawText(tr("LiCida · Zielbild und Hilfsraster · flach auf die Zeichenfläche legen"), WIDTH / 2 * k, (HEIGHT - 10) * k, paint)
         return bitmap
     }
 }

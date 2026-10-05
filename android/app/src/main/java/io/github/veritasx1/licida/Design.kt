@@ -1,5 +1,7 @@
 package io.github.veritasx1.licida
 
+import io.github.veritasx1.licida.i18n.tr
+
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -76,8 +78,8 @@ fun GlassButton(symbol: Symbol, description: String, enabled: Boolean = true, ac
 @Composable
 fun DrawButton(enabled: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
     Box(modifier.size(78.dp).border(4.dp, Ink.white.copy(alpha = if (enabled) 1f else 0.35f), CircleShape)
-        .clickable(enabled = enabled, role = Role.Button, onClickLabel = "Zeichnen", onClick = onClick)
-        .semantics { contentDescription = "Zeichnen" }, contentAlignment = Alignment.Center) {
+        .clickable(enabled = enabled, role = Role.Button, onClickLabel = tr("Zeichnen"), onClick = onClick)
+        .semantics { contentDescription = tr("Zeichnen") }, contentAlignment = Alignment.Center) {
         Box(Modifier.size(64.dp).clip(CircleShape).background(Ink.white.copy(alpha = if (enabled) 1f else 0.35f)),
             contentAlignment = Alignment.Center) {
             SymbolIcon(Symbol.Pencil, Color.Black, size = 30.dp, weight = 1.9f)

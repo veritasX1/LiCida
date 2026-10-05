@@ -1,5 +1,7 @@
 package io.github.veritasx1.licida
 
+import io.github.veritasx1.licida.i18n.tr
+
 import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -73,11 +75,11 @@ fun FilterSheet(edits: Edits, previews: Map<Filter, Bitmap>, slots: List<Slot>, 
             Box(Modifier.size(36.dp, 5.dp).clip(CircleShape).background(Color(0x66EBEBF5)))
         }
         Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-            ToolButton(Symbol.Undo, "Rückgängig", edits.canUndo, onUndo)
-            ToolButton(Symbol.Redo, "Wiederholen", edits.canRedo, onRedo)
-            ToolButton(Symbol.History, "Verlauf", edits.steps.isNotEmpty(), active = history) { history = !history }
-            BasicText(if (busy) "Wird angewendet …" else "Werkzeuge", style = style(17f, 600).copy(textAlign = TextAlign.Center), modifier = Modifier.weight(1f))
-            BasicText("Fertig", style = style(17f, 600, Ink.yellow).copy(textAlign = TextAlign.End),
+            ToolButton(Symbol.Undo, tr("Rückgängig"), edits.canUndo, onUndo)
+            ToolButton(Symbol.Redo, tr("Wiederholen"), edits.canRedo, onRedo)
+            ToolButton(Symbol.History, tr("Verlauf"), edits.steps.isNotEmpty(), active = history) { history = !history }
+            BasicText(if (busy) tr("Wird angewendet …") else tr("Werkzeuge"), style = style(17f, 600).copy(textAlign = TextAlign.Center), modifier = Modifier.weight(1f))
+            BasicText(tr("Fertig"), style = style(17f, 600, Ink.yellow).copy(textAlign = TextAlign.End),
                 modifier = Modifier.width(72.dp).clickable(role = Role.Button, onClick = onDone).padding(vertical = 8.dp))
         }
         Column(Modifier.verticalScroll(rememberScrollState()).padding(bottom = 12.dp)) {
@@ -106,8 +108,8 @@ fun FilterSheet(edits: Edits, previews: Map<Filter, Bitmap>, slots: List<Slot>, 
             }
             // Tontrennung's shades, like a slider under Photos' filters: changes the last step.
             if (last?.filter == Filter.Posterize) Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                BasicText("Grautöne", style = style(15f), modifier = Modifier.width(84.dp))
-                IosSlider((last.value - 2) / 14f, { onValue(2 + (it * 14).toInt()) }, "Anzahl der Grautöne", Modifier.weight(1f))
+                BasicText(tr("Grautöne"), style = style(15f), modifier = Modifier.width(84.dp))
+                IosSlider((last.value - 2) / 14f, { onValue(2 + (it * 14).toInt()) }, tr("Anzahl der Grautöne"), Modifier.weight(1f))
                 BasicText("${last.value}", style = style(15f, 600, Ink.secondary, tabular = true).copy(textAlign = TextAlign.End), modifier = Modifier.width(32.dp))
             }
             BasicText("EIGENE FOLGEN", style = style(13f, 400, Ink.secondary), modifier = Modifier.padding(start = 32.dp, top = 14.dp, bottom = 6.dp))
@@ -116,11 +118,11 @@ fun FilterSheet(edits: Edits, previews: Map<Filter, Bitmap>, slots: List<Slot>, 
                     SlotCard(slot, Modifier.weight(1f)) { question = SlotQuestion.Menu(index) }
                 }
             }
-            BasicText("Eine Folge merkt sich die Filter von jetzt und wendet sie später auf andere Bilder an.",
+            BasicText(tr("Eine Folge merkt sich die Filter von jetzt und wendet sie später auf andere Bilder an."),
                 style = style(13f, 400, Ink.secondary), modifier = Modifier.padding(start = 32.dp, end = 32.dp, top = 6.dp))
             Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Wide("Original", Ink.white, edits.position > 0, Modifier.weight(1f)) { onJump(0) }
-                Wide("In Fotos sichern", Ink.yellow, true, Modifier.weight(1f), onClick = onSave)
+                Wide(tr("Original"), Ink.white, edits.position > 0, Modifier.weight(1f)) { onJump(0) }
+                Wide(tr("In Fotos sichern"), Ink.yellow, true, Modifier.weight(1f), onClick = onSave)
             }
         }
     }
@@ -147,7 +149,7 @@ private fun ToolButton(symbol: Symbol, description: String, enabled: Boolean, ac
 @Composable
 private fun History(edits: Edits, onJump: (Int) -> Unit) {
     Column(Modifier.padding(horizontal = 16.dp).clip(RoundedCornerShape(12.dp)).background(Color(0xFF2C2C2E))) {
-        (listOf("Original") + edits.steps.map { it.label }).forEachIndexed { index, label ->
+        (listOf(tr("Original")) + edits.steps.map { it.label }).forEachIndexed { index, label ->
             if (index > 0) Box(Modifier.padding(start = 16.dp).fillMaxWidth().height(0.5.dp).background(Ink.separator))
             val current = index == edits.position
             Row(Modifier.fillMaxWidth().clickable(role = Role.Button) { onJump(index) }.semantics { selected = current }
@@ -167,7 +169,7 @@ private fun SlotCard(slot: Slot, modifier: Modifier, onClick: () -> Unit) {
         .semantics { contentDescription = "${slot.name}, ${if (slot.steps.isEmpty()) "leer" else "${slot.steps.size} Filter"}" }
         .padding(vertical = 12.dp, horizontal = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         BasicText(slot.name, style = style(15f, 600).copy(textAlign = TextAlign.Center), maxLines = 1, overflow = TextOverflow.Ellipsis)
-        BasicText(if (slot.steps.isEmpty()) "leer" else "${slot.steps.size} Filter", style = style(12f, 400, Ink.secondary), modifier = Modifier.padding(top = 2.dp))
+        BasicText(if (slot.steps.isEmpty()) "leer" else tr("{size} Filter", "size" to slot.steps.size), style = style(12f, 400, Ink.secondary), modifier = Modifier.padding(top = 2.dp))
     }
 }
 
@@ -188,10 +190,10 @@ private fun SlotDialog(question: SlotQuestion, slots: List<Slot>, edits: Edits, 
     }
     val (title, body, action) = when (question) {
         is SlotQuestion.Menu -> Triple("", "", "")
-        is SlotQuestion.Store -> Triple(if (slots[question.index].steps.isEmpty()) "In „${slots[question.index].name}“ sichern?" else "„${slots[question.index].name}“ überschreiben?",
-            edits.active.joinToString(" → ") { it.label }, "Sichern")
-        is SlotQuestion.Replay -> Triple("„${slots[question.index].name}“ anwenden?", slots[question.index].steps.joinToString(" → ") { it.label }, "Anwenden")
-        is SlotQuestion.Rename -> Triple("Folge umbenennen", "", "Sichern")
+        is SlotQuestion.Store -> Triple(if (slots[question.index].steps.isEmpty()) tr("In „{value}“ sichern?", "value" to (slots[question.index].name)) else tr("„{value}“ überschreiben?", "value" to (slots[question.index].name)),
+            edits.active.joinToString(" → ") { it.label }, tr("Sichern"))
+        is SlotQuestion.Replay -> Triple(tr("„{value}“ anwenden?", "value" to (slots[question.index].name)), slots[question.index].steps.joinToString(" → ") { it.label }, tr("Anwenden"))
+        is SlotQuestion.Rename -> Triple(tr("Folge umbenennen"), "", tr("Sichern"))
     }
     androidx.compose.ui.window.Dialog(onDismissRequest = onClose) {
         Column(Modifier.width(270.dp).clip(RoundedCornerShape(14.dp)).background(Color(0xF22C2C2E)).keepTouches(),
@@ -200,11 +202,11 @@ private fun SlotDialog(question: SlotQuestion, slots: List<Slot>, edits: Edits, 
             if (body.isNotEmpty()) BasicText(body, style = style(13f, 400).copy(textAlign = TextAlign.Center), modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp))
             if (question is SlotQuestion.Rename) BasicTextField(name, { name = it.take(24) }, singleLine = true, textStyle = style(15f),
                 cursorBrush = SolidColor(Ink.yellow), modifier = Modifier.padding(16.dp).fillMaxWidth().clip(RoundedCornerShape(7.dp))
-                    .background(Color(0xFF1C1C1E)).padding(horizontal = 10.dp, vertical = 8.dp).semantics { contentDescription = "Name der Folge" })
+                    .background(Color(0xFF1C1C1E)).padding(horizontal = 10.dp, vertical = 8.dp).semantics { contentDescription = tr("Name der Folge") })
             Spacer(Modifier.height(16.dp))
             Box(Modifier.fillMaxWidth().height(0.5.dp).background(Ink.separator))
             Row(Modifier.fillMaxWidth()) {
-                BasicText("Abbrechen", style = style(17f, 400, Ink.yellow).copy(textAlign = TextAlign.Center),
+                BasicText(tr("Abbrechen"), style = style(17f, 400, Ink.yellow).copy(textAlign = TextAlign.Center),
                     modifier = Modifier.weight(1f).clickable(role = Role.Button, onClick = onClose).padding(vertical = 12.dp))
                 Box(Modifier.width(0.5.dp).height(44.dp).background(Ink.separator))
                 BasicText(action, style = style(17f, 600, Ink.yellow).copy(textAlign = TextAlign.Center),
@@ -230,14 +232,14 @@ private fun SlotMenu(index: Int, slot: Slot, edits: Edits, onClose: () -> Unit, 
         Column(Modifier.width(300.dp)) {
             Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Color(0xF22C2C2E)), horizontalAlignment = Alignment.CenterHorizontally) {
                 BasicText(slot.name, style = style(13f, 600, Ink.secondary).copy(textAlign = TextAlign.Center), modifier = Modifier.padding(top = 14.dp))
-                BasicText(if (slot.steps.isEmpty()) "Noch keine Filter gesichert" else slot.steps.joinToString(" → ") { it.label },
+                BasicText(if (slot.steps.isEmpty()) tr("Noch keine Filter gesichert") else slot.steps.joinToString(" → ") { it.label },
                     style = style(13f, 400, Ink.secondary).copy(textAlign = TextAlign.Center), modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 2.dp, bottom = 14.dp))
-                MenuOption("Auf dieses Bild anwenden", slot.steps.isNotEmpty()) { onReplay(index); onClose() }
-                MenuOption(if (slot.steps.isEmpty()) "Aktuelle Filter hier sichern" else "Mit aktuellen Filtern ersetzen", edits.active.isNotEmpty()) { onStore(index); onClose() }
-                MenuOption("Umbenennen", true, onRename)
+                MenuOption(tr("Auf dieses Bild anwenden"), slot.steps.isNotEmpty()) { onReplay(index); onClose() }
+                MenuOption(if (slot.steps.isEmpty()) tr("Aktuelle Filter hier sichern") else tr("Mit aktuellen Filtern ersetzen"), edits.active.isNotEmpty()) { onStore(index); onClose() }
+                MenuOption(tr("Umbenennen"), true, onRename)
             }
             Spacer(Modifier.height(8.dp))
-            BasicText("Abbrechen", style = style(19f, 600, Ink.yellow).copy(textAlign = TextAlign.Center),
+            BasicText(tr("Abbrechen"), style = style(19f, 600, Ink.yellow).copy(textAlign = TextAlign.Center),
                 modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(Color(0xF22C2C2E)).clickable(role = Role.Button, onClick = onClose)
                     .padding(vertical = 15.dp))
         }
