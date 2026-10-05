@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LiCida – Dessiner avec l’appareil photo et un modèle</title>
+<meta name="description" content="LiCida superpose votre modèle à l’image de votre papier – vous repassez simplement les traits. Pour Android, selon les directives de conception d’Apple, hors ligne, sans achats et sans autorisation Internet.">
+<link rel="icon" href="../licida.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../site.css">
+<!--lang--><link rel="alternate" hreflang="de" href="https://lisoft.goip.de/licida/"><link rel="alternate" hreflang="en" href="https://lisoft.goip.de/licida/en/"><link rel="alternate" hreflang="fr" href="https://lisoft.goip.de/licida/fr/">
+<style>
+.apps .wrap { position: relative; }
+.lang-switch { position: absolute; right: 22px; display: flex; gap: 12px; }
+.lang-switch a[aria-current], .lang-foot a[aria-current] { color: #fff; opacity: 1; font-weight: 600; }
+.lang-foot { display: flex; gap: 14px; justify-content: center; padding-top: 18px; font-size: 13px; }
+.lang-foot a[aria-current] { color: inherit; }
+@media (max-width: 900px) { .lang-switch { display: none; } }
+</style><!--/lang-->
+</head>
+<body>
+
+<div class="apps">
+  <div class="wrap">
+    <a href="https://lisoft.goip.de/linotes/fr/">LiNotes</a>
+    <a href="https://lisoft.goip.de/prevux/fr/">Prevux</a>
+    <a href="https://lisoft.goip.de/liboard/fr/">LiBoard</a>
+    <a href="https://lisoft.goip.de/licida/fr/" aria-current="page">LiCida</a>
+    <a href="https://lisoft.goip.de/lical/fr/">LiCal</a>
+    <a href="https://lisoft.goip.de/lidio/fr/">LiDio</a>
+  <!--lang--><span class="lang-switch"><a href="../" hreflang="de" lang="de">DE</a><a href="../en/" hreflang="en" lang="en">EN</a><a href="./" hreflang="fr" lang="fr" aria-current="true">FR</a></span><!--/lang-->
+  </div>
+</div>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="#"><img src="../licida.svg" alt="">LiCida</a>
+    <nav class="links">
+      <a href="#so-gehts">Comment ça marche</a>
+      <a href="#bilder">Images</a>
+      <a href="#funktionen">Fonctions</a>
+      <a href="#datenschutz">Confidentialité</a>
+      <a href="https://github.com/veritasX1/LiCida">GitHub</a>
+    </nav>
+    <a class="btn small cta" href="#laden">Télécharger</a>
+  </div>
+</header>
+
+<main>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="wrap">
+    <img class="app-icon reveal" src="../licida.svg" alt="Icône de LiCida" width="120" height="120">
+    <span class="badge reveal">Nouveau : version 0.1 bêta</span>
+    <h1 class="display reveal d1">Dessinez ce que vous voyez.<br><span class="gradient-text">Sur papier.</span></h1>
+    <p class="lead reveal d2">LiCida superpose votre modèle à l’image de votre feuille filmée par l’appareil photo.<br>Vous regardez l’écran et repassez simplement les traits.</p>
+    <div class="actions reveal d3">
+      <a class="btn" href="#laden">Télécharger gratuitement</a>
+      <a class="btn ghost" href="#so-gehts">Comment ça marche</a>
+    </div>
+    <div class="solo-phone reveal">
+      <div class="phone"><img src="../img/einrichten.webp" alt="LiCida pendant l’ajustement : un voilier servant de modèle, semi-transparent, sur l’image de papier quadrillé" width="640" height="1422"></div>
+    </div>
+  </div>
+</section>
+
+<section class="wrap center" style="padding-top: 40px; max-width: 1000px">
+  <p class="headline reveal">L’instrument de dessin<br><span style="color: var(--muted)">des maîtres anciens.</span></p>
+  <p class="lead reveal d1">Une chambre claire reflète le sujet sur votre papier – les peintres s’en servent depuis plus de 200 ans pour reporter des contours. LiCida fait de même avec l’appareil photo de votre téléphone : sur le modèle de l’app iOS « Camera Lucida », reconstruite pour Android et conçue selon les Human Interface Guidelines d’Apple.</p>
+</section>
+
+<!-- HOW -->
+<section id="so-gehts" class="alt">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">Comment ça marche</p>
+      <h2 class="headline">Trois étapes.</h2>
+      <p class="lead">Le téléphone au-dessus du papier, choisir un modèle, repasser les traits.</p>
+    </div>
+    <div class="tiles">
+      <div class="tile reveal"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="7" rx="1.5"/><path d="M12 9.5V14M4 20.5h16M6 20.5l2-6.5h8l2 6.5"/></svg></div><h3>1 · Installer</h3><p>Placez le téléphone bien stable au-dessus du papier, l’objectif vers le bas – sur un support, un trépied ou une pile de livres.</p></div>
+      <div class="tile reveal d1"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M6.5 16.5l4-4.5 3 3 2-2 3 3.5"/><circle cx="16" cy="9" r="1.3"/></svg></div><h3>2 · Ajuster</h3><p>Choisissez une image dans Photos ou Fichiers et placez-la avec deux doigts là où elle doit aller sur le papier.</p></div>
+      <div class="tile reveal d2"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1.5-5L16 4.5l3.5 3.5L9 18.5z"/><path d="M14 6.5l3.5 3.5"/></svg></div><h3>3 · Dessiner</h3><p>L’appareil photo et le modèle sont maintenant liés. Zoomez jusqu’à 30×, faites la mise au point, verrouillez l’exposition – et repassez les traits.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- SCREENS -->
+<section id="bilder">
+  <div class="wrap section-head reveal" style="margin-bottom: 30px">
+    <p class="eyebrow">Images</p>
+    <h2 class="headline">Aussi épuré que l’appareil photo.</h2>
+    <p class="lead">Fond noir, boutons de verre flottants, chaque chose à sa place – et rien qui ne distraie pendant le dessin.</p>
+  </div>
+  <div class="carousel" id="pages">
+    <figure><div class="phone"><img src="../img/einrichten.webp" alt="" loading="lazy"></div><figcaption>Ajuster<span>Le modèle sur le papier</span></figcaption></figure>
+    <figure><div class="phone"><img src="../img/zeichnen.webp" alt="" loading="lazy"></div><figcaption>Dessiner<span>Zoom couplé, ici 2×</span></figcaption></figure>
+    <figure><div class="phone"><img src="../img/werkzeuge.webp" alt="" loading="lazy"></div><figcaption>Outils<span>17 filtres avec aperçu</span></figcaption></figure>
+    <figure><div class="phone"><img src="../img/palette.webp" alt="" loading="lazy"></div><figcaption>Palette<span>Peu de couleurs, masquables une à une</span></figcaption></figure>
+    <figure><div class="phone"><img src="../img/kamera.webp" alt="" loading="lazy"></div><figcaption>Appareil photo<span>Grand-angle, frontal, USB</span></figcaption></figure>
+    <figure><div class="phone"><img src="../img/korrektur.webp" alt="" loading="lazy"></div><figcaption>Aligner<span>Automatiquement avec une mire</span></figcaption></figure>
+    <figure><div class="phone"><img src="../img/mehr.webp" alt="" loading="lazy"></div><figcaption>Pendant le dessin<span>Lampe, écran partagé, clignotement</span></figcaption></figure>
+    <figure><div class="phone"><img src="../img/einstellungen.webp" alt="" loading="lazy"></div><figcaption>Réglages<span>Selon les directives d’Apple</span></figcaption></figure>
+    <figure><div class="phone"><img src="../img/rundgang.webp" alt="" loading="lazy"></div><figcaption>Visite<span>Au premier lancement</span></figcaption></figure>
+  </div>
+  <div class="carousel-nav" data-track="#pages"><button data-dir="-1" aria-label="Retour">‹</button><button data-dir="1" aria-label="Suivant">›</button></div>
+</section>
+
+<!-- SESSIONS -->
+<section class="alt">
+  <div class="wrap">
+    <div class="split">
+      <div class="reveal">
+        <p class="eyebrow">Sessions</p>
+        <h2 class="headline">Demain, reprenez<br>exactement là où vous étiez.</h2>
+        <p class="lead">Une session mémorise le modèle, les filtres, la position, l’appareil photo et l’alignement – ainsi qu’un instantané de votre feuille.</p>
+        <ul class="checks">
+          <li><b>Retrouver la feuille :</b> l’instantané se superpose à l’image de l’appareil photo, vous placez le papier en conséquence.</li>
+          <li><b>Ou automatiquement :</b> LiCida détecte le décalage, la rotation et la taille par comparaison d’images et déplace le modèle en conséquence.</li>
+          <li><b>Uniquement sur l’appareil</b> – rien n’est envoyé.</li>
+        </ul>
+      </div>
+      <div class="reveal d1" style="max-width: 320px; margin: 0 auto">
+        <div class="phone"><img src="../img/wiederfinden.webp" alt="« Retrouver la feuille » : instantané sur l’image de l’appareil photo, en dessous « Alignement automatique »" loading="lazy"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROJECTOR -->
+<section>
+  <div class="wrap">
+    <div class="split reverse">
+      <div class="reveal">
+        <p class="eyebrow">Dessiner en grand</p>
+        <h2 class="headline">Pour le mur.<br>À distance.</h2>
+        <p class="lead">En mode projecteur, l’image de l’appareil photo reste noire – seul le modèle s’illumine. Un clavier Bluetooth, une manette ou un déclencheur à selfie contrôle le zoom, l’opacité et le clignotement pendant que vous êtes au mur.</p>
+        <ul class="checks">
+          <li><b>Chaque touche est configurable</b> – par défaut comme dans l’original : E Q pour zoomer, W A S D pour déplacer.</li>
+          <li><b>L’accéléré</b> continue de filmer : l’appareil photo tourne toujours.</li>
+        </ul>
+      </div>
+      <div class="reveal d1" style="max-width: 320px; margin: 0 auto">
+        <div class="phone"><img src="../img/projektor.webp" alt="Mode projecteur : fond noir, seul le modèle est visible" loading="lazy"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TILES -->
+<section id="funktionen" class="alt">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">Fonctions</p>
+      <h2 class="headline">Et bien plus encore.</h2>
+      <p class="lead">Les fonctions de l’app iOS – sans un seul achat.</p>
+    </div>
+    <div class="tiles">
+      <div class="tile reveal"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.6" r="5"/><circle cx="8.6" cy="14.6" r="5"/><circle cx="15.4" cy="14.6" r="5"/></svg></div><h3>Des filtres qui se combinent</h3><p>Niveaux de gris, postérisation, valeurs, bande dessinée, néon, contours, seuil, grille, repères d’angle – avec historique et trois enchaînements personnalisés.</p></div>
+      <div class="tile reveal d1"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5a8.5 8.5 0 1 0 0 17c1.4 0 2-1 2-2 0-1.4 1.1-2.5 2.5-2.5H18c1.7 0 2.5-1.6 2.5-3.5 0-5-3.8-9-8.5-9z"/><circle cx="8" cy="10" r="1"/><circle cx="11.5" cy="7" r="1"/><circle cx="15.5" cy="8.5" r="1"/></svg></div><h3>Palette de couleurs</h3><p>Réduit le modèle à quelques couleurs. Pendant le dessin, vous masquez les couleurs une à une – idéal pour peindre.</p></div>
+      <div class="tile reveal d2"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><path d="M8 15l3-6 5 7z"/></svg></div><h3>Alignement automatique</h3><p>Imprimez la mire, posez-la, touchez – LiCida redresse l’image comme si l’appareil photo regardait droit vers le bas. Un achat dans l’app iOS, simplement inclus ici.</p></div>
+      <div class="tile reveal"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.2" fill="currentColor"/></svg></div><h3>Accéléré</h3><p>Une heure de dessin devient une minute de vidéo – avec l’encodeur d’Android, directement dans vos photos.</p></div>
+      <div class="tile reveal d1"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="17" height="16" rx="2.5"/><path d="M12 4v16"/></svg></div><h3>Écran partagé et clignotement</h3><p>Le modèle à gauche, le papier à droite – ou le modèle apparaît et disparaît. Quand la couleur est juste, le clignotement disparaît.</p></div>
+      <div class="tile reveal d2"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.7"/><circle cx="12" cy="17" r=".6" fill="currentColor"/></svg></div><h3>Visite et guide</h3><p>Au premier lancement, une visite présente chaque bouton. Le guide se trouve dans l’app – et en PDF à imprimer (actuellement en allemand).</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- PRIVACY -->
+<section id="datenschutz">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">Confidentialité</p>
+      <h2 class="headline">Vos images<br>restent chez vous.</h2>
+      <p class="lead">LiCida ne voit que l’image que vous choisissez, et l’appareil photo. Techniquement, il ne peut rien envoyer.</p>
+    </div>
+    <div class="facts">
+      <div class="reveal"><div class="num gradient-text">0</div><div class="lbl">autorisation Internet</div></div>
+      <div class="reveal d1"><div class="num gradient-text">0</div><div class="lbl">achats, abonnements, publicité</div></div>
+      <div class="reveal d2"><div class="num gradient-text">0</div><div class="lbl">traqueurs et statistiques</div></div>
+      <div class="reveal d3"><div class="num gradient-text">100 %</div><div class="lbl">code source ouvert</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- DOWNLOAD -->
+<section id="laden" class="alt">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">Télécharger</p>
+      <h2 class="headline">Lancez-vous. Gratuitement.</h2>
+      <p class="lead">Version 0.1 bêta pour Android 10 et ultérieur.</p>
+    </div>
+    <div class="downloads">
+      <div class="download reveal">
+        <h3>F-Droid</h3>
+        <div class="meta">Recommandé – les mises à jour arrivent automatiquement</div>
+        <div class="grow">
+          <p>Ajoutez le dépôt dans F-Droid, puis recherchez LiCida et installez-le.</p>
+          <a href="fdroidrepos://volkskamera.goip.de/fdroid/repo?fingerprint=8DA9DEF44C65856A1B098DB7BF876D48514997EF17C7256E23E91EAC6C486500">Ajouter le dépôt dans F-Droid ›</a>
+          <img class="qr" src="../fdroid-qr.svg" alt="QR code du dépôt F-Droid">
+        </div>
+        <details><summary>Empreinte du dépôt</summary>
+          <p><code style="word-break: break-all">8DA9DEF44C65856A1B098DB7BF876D48514997EF17C7256E23E91EAC6C486500</code></p>
+        </details>
+      </div>
+      <div class="download reveal d1">
+        <h3>APK</h3>
+        <div class="meta">Environ 4 Mo</div>
+        <div class="grow">
+          <p>Téléchargez et installez directement. LiCida ne demande que l’accès à l’appareil photo.</p>
+        </div>
+        <a class="btn" href="../download/LiCida-0.1b.apk">Télécharger l’APK</a>
+        <details><summary>Signature de l’app</summary>
+          <p>SHA-256: <code style="word-break: break-all">7aca15dc655f1581b554f0a2c93cf8eae271330d5c2684dca47a1a26e45da75d</code></p>
+        </details>
+      </div>
+      <div class="download reveal d2">
+        <h3>Code source</h3>
+        <div class="meta">GPL-3.0 · sur GitHub</div>
+        <div class="grow">
+          <p>Chaque ligne consultable, toutes les versions à télécharger. Bugs ou idées bienvenus dans le gestionnaire de tickets.</p>
+        </div>
+        <a class="btn" href="https://github.com/veritasX1/LiCida">Aller sur GitHub</a>
+      </div>
+    </div>
+    <p class="center reveal" style="margin-top: 50px; font-size: 19px; font-weight: 600">Développé par Olaf Winkler dans le Schleswig-Holstein.</p>
+    <p class="center" style="margin-top: 10px; color: var(--muted); font-size: 15px">Sommes de contrôle : <a href="../download/SHA256SUMS">SHA256SUMS</a> · Bêta, car LiCida n’a encore été testé que sur peu d’appareils.</p>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap made">
+    <img src="../licida.svg" alt="" width="34" height="34">
+    <p><b>Développé dans le Schleswig-Holstein.</b><br>Par Olaf Winkler – entre mer du Nord et mer Baltique.</p>
+  </div>
+  <div class="wrap cols">
+    <div>
+      <h4>LiCida</h4>
+      <p>Dessiner avec l’appareil photo et un modèle, pour Android. Un projet privé et non commercial d’Olaf Winkler.</p>
+      <p>Logiciel libre sous <a href="https://github.com/veritasX1/LiCida/blob/main/LICENSE">GPL-3.0</a>.</p>
+    </div>
+    <div>
+      <h4>Confidentialité de ce site</h4>
+      <p>Pas de cookies, aucun contenu de serveurs tiers, aucun journal d’accès. Le JavaScript de ce site s’exécute uniquement dans votre navigateur et n’envoie rien.</p>
+    </div>
+    <div>
+      <h4>Remarque</h4>
+      <p>LiCida est un projet indépendant, sans lien avec Peter Moeykens (« Camera Lucida ») ni Apple Inc. Aucun graphisme ni aucune police d’Apple n’est fourni.</p>
+    </div>
+  </div>
+<!--lang--><div class="wrap lang-foot"><a href="../" hreflang="de" lang="de">DE</a><a href="../en/" hreflang="en" lang="en">EN</a><a href="./" hreflang="fr" lang="fr" aria-current="true">FR</a></div><!--/lang-->
+</footer>
+
+<script src="../site.js"></script>
+</body>
+</html>

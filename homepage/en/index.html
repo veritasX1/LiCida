@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LiCida – Drawing with camera and template</title>
+<meta name="description" content="LiCida lays your template over the camera image of your paper – you simply trace the lines. For Android, following Apple’s design guidelines, offline, without purchases and without internet permission.">
+<link rel="icon" href="../licida.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../site.css">
+<!--lang--><link rel="alternate" hreflang="de" href="https://lisoft.goip.de/licida/"><link rel="alternate" hreflang="en" href="https://lisoft.goip.de/licida/en/"><link rel="alternate" hreflang="fr" href="https://lisoft.goip.de/licida/fr/">
+<style>
+.apps .wrap { position: relative; }
+.lang-switch { position: absolute; right: 22px; display: flex; gap: 12px; }
+.lang-switch a[aria-current], .lang-foot a[aria-current] { color: #fff; opacity: 1; font-weight: 600; }
+.lang-foot { display: flex; gap: 14px; justify-content: center; padding-top: 18px; font-size: 13px; }
+.lang-foot a[aria-current] { color: inherit; }
+@media (max-width: 900px) { .lang-switch { display: none; } }
+</style><!--/lang-->
+</head>
+<body>
+
+<div class="apps">
+  <div class="wrap">
+    <a href="https://lisoft.goip.de/linotes/en/">LiNotes</a>
+    <a href="https://lisoft.goip.de/prevux/en/">Prevux</a>
+    <a href="https://lisoft.goip.de/liboard/en/">LiBoard</a>
+    <a href="https://lisoft.goip.de/licida/en/" aria-current="page">LiCida</a>
+    <a href="https://lisoft.goip.de/lical/en/">LiCal</a>
+    <a href="https://lisoft.goip.de/lidio/en/">LiDio</a>
+  <!--lang--><span class="lang-switch"><a href="../" hreflang="de" lang="de">DE</a><a href="./" hreflang="en" lang="en" aria-current="true">EN</a><a href="../fr/" hreflang="fr" lang="fr">FR</a></span><!--/lang-->
+  </div>
+</div>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="#"><img src="../licida.svg" alt="">LiCida</a>
+    <nav class="links">
+      <a href="#so-gehts">How it works</a>
+      <a href="#bilder">Pictures</a>
+      <a href="#funktionen">Features</a>
+      <a href="#datenschutz">Privacy</a>
+      <a href="https://github.com/veritasX1/LiCida">GitHub</a>
+    </nav>
+    <a class="btn small cta" href="#laden">Download</a>
+  </div>
+</header>
+
+<main>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="wrap">
+    <img class="app-icon reveal" src="../licida.svg" alt="LiCida icon" width="120" height="120">
+    <span class="badge reveal">New: version 0.1 beta</span>
+    <h1 class="display reveal d1">Draw what you see.<br><span class="gradient-text">On paper.</span></h1>
+    <p class="lead reveal d2">LiCida lays your template over the camera image of your sheet.<br>You look at the screen and simply trace the lines.</p>
+    <div class="actions reveal d3">
+      <a class="btn" href="#laden">Download for free</a>
+      <a class="btn ghost" href="#so-gehts">How it works</a>
+    </div>
+    <div class="solo-phone reveal">
+      <div class="phone"><img src="../img/einrichten.webp" alt="LiCida while arranging: a sailing boat as template lies half-transparent over the camera image of squared paper" width="640" height="1422"></div>
+    </div>
+  </div>
+</section>
+
+<section class="wrap center" style="padding-top: 40px; max-width: 1000px">
+  <p class="headline reveal">The drawing tool<br><span style="color: var(--muted)">of the old masters.</span></p>
+  <p class="lead reveal d1">A camera lucida mirrors the subject onto your paper – painters have used it to transfer outlines for over 200 years. LiCida does the same with your phone’s camera: modelled on the iOS app “Camera Lucida”, rebuilt for Android and designed following Apple’s Human Interface Guidelines.</p>
+</section>
+
+<!-- HOW -->
+<section id="so-gehts" class="alt">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">How it works</p>
+      <h2 class="headline">Three steps.</h2>
+      <p class="lead">Phone above the paper, pick a template, trace.</p>
+    </div>
+    <div class="tiles">
+      <div class="tile reveal"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="7" rx="1.5"/><path d="M12 9.5V14M4 20.5h16M6 20.5l2-6.5h8l2 6.5"/></svg></div><h3>1 · Set up</h3><p>Place the phone firmly above the paper, camera facing down – on a holder, a tripod or a stack of books.</p></div>
+      <div class="tile reveal d1"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M6.5 16.5l4-4.5 3 3 2-2 3 3.5"/><circle cx="16" cy="9" r="1.3"/></svg></div><h3>2 · Arrange</h3><p>Choose a picture from Photos or Files and use two fingers to place it where it should go on the paper.</p></div>
+      <div class="tile reveal d2"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1.5-5L16 4.5l3.5 3.5L9 18.5z"/><path d="M14 6.5l3.5 3.5"/></svg></div><h3>3 · Draw</h3><p>Camera and template are now linked. Zoom up to 30×, focus, lock exposure – and trace.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- SCREENS -->
+<section id="bilder">
+  <div class="wrap section-head reveal" style="margin-bottom: 30px">
+    <p class="eyebrow">Pictures</p>
+    <h2 class="headline">As tidy as the Camera.</h2>
+    <p class="lead">Black surface, floating glass buttons, everything in its place – and nothing to distract you while drawing.</p>
+  </div>
+  <div class="carousel" id="pages">
+    <figure><div class="phone"><img src="../img/einrichten.webp" alt="" loading="lazy"></div><figcaption>Arrange<span>Template over the paper</span></figcaption></figure>
+    <figure><div class="phone"><img src="../img/zeichnen.webp" alt="" loading="lazy"></div><figcaption>Draw<span>Zoomed together, here 2×</span></figcaption></figure>
+    <figure><div class="phone"><img src="../img/werkzeuge.webp" alt="" loading="lazy"></div><figcaption>Tools<span>17 filters with preview</span></figcaption></figure>
+    <figure><div class="phone"><img src="../img/palette.webp" alt="" loading="lazy"></div><figcaption>Colour palette<span>A few colours, each can be hidden</span></figcaption></figure>
+    <figure><div class="phone"><img src="../img/kamera.webp" alt="" loading="lazy"></div><figcaption>Camera<span>Wide angle, front, USB</span></figcaption></figure>
+    <figure><div class="phone"><img src="../img/korrektur.webp" alt="" loading="lazy"></div><figcaption>Align<span>Automatically with a target sheet</span></figcaption></figure>
+    <figure><div class="phone"><img src="../img/mehr.webp" alt="" loading="lazy"></div><figcaption>While drawing<span>Torch, split view, flicker</span></figcaption></figure>
+    <figure><div class="phone"><img src="../img/einstellungen.webp" alt="" loading="lazy"></div><figcaption>Settings<span>Following Apple’s guidelines</span></figcaption></figure>
+    <figure><div class="phone"><img src="../img/rundgang.webp" alt="" loading="lazy"></div><figcaption>Tour<span>On first launch</span></figcaption></figure>
+  </div>
+  <div class="carousel-nav" data-track="#pages"><button data-dir="-1" aria-label="Back">‹</button><button data-dir="1" aria-label="Next">›</button></div>
+</section>
+
+<!-- SESSIONS -->
+<section class="alt">
+  <div class="wrap">
+    <div class="split">
+      <div class="reveal">
+        <p class="eyebrow">Sessions</p>
+        <h2 class="headline">Pick up tomorrow<br>right where you left off.</h2>
+        <p class="lead">A session remembers the template, filters, position, camera and alignment – and a snapshot of your sheet.</p>
+        <ul class="checks">
+          <li><b>Find your sheet again:</b> the snapshot lies over the camera image, and you line the paper up with it.</li>
+          <li><b>Or automatically:</b> LiCida finds the shift, rotation and scale by image matching and moves the template along.</li>
+          <li><b>Only on the device</b> – nothing is uploaded.</li>
+        </ul>
+      </div>
+      <div class="reveal d1" style="max-width: 320px; margin: 0 auto">
+        <div class="phone"><img src="../img/wiederfinden.webp" alt="“Find your sheet again”: snapshot over the camera image, below it “Automatic alignment”" loading="lazy"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROJECTOR -->
+<section>
+  <div class="wrap">
+    <div class="split reverse">
+      <div class="reveal">
+        <p class="eyebrow">Drawing big</p>
+        <h2 class="headline">For the wall.<br>From a distance.</h2>
+        <p class="lead">In projector mode the camera image stays black – only the template glows. A Bluetooth keyboard, a controller or a selfie remote controls zoom, opacity and flicker while you stand at the wall.</p>
+        <ul class="checks">
+          <li><b>Every key can be assigned</b> – default as in the original: E Q to zoom, W A S D to move.</li>
+          <li><b>Time-lapse</b> still records: the camera keeps running.</li>
+        </ul>
+      </div>
+      <div class="reveal d1" style="max-width: 320px; margin: 0 auto">
+        <div class="phone"><img src="../img/projektor.webp" alt="Projector mode: black background, only the template is visible" loading="lazy"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TILES -->
+<section id="funktionen" class="alt">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">Features</p>
+      <h2 class="headline">And so much more.</h2>
+      <p class="lead">The features of the iOS app – without a single purchase.</p>
+    </div>
+    <div class="tiles">
+      <div class="tile reveal"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.6" r="5"/><circle cx="8.6" cy="14.6" r="5"/><circle cx="15.4" cy="14.6" r="5"/></svg></div><h3>Filters that stack</h3><p>Greyscale, posterise, value studies, comic, neon, edges, threshold, grid, corner marks – with history and three custom chains.</p></div>
+      <div class="tile reveal d1"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5a8.5 8.5 0 1 0 0 17c1.4 0 2-1 2-2 0-1.4 1.1-2.5 2.5-2.5H18c1.7 0 2.5-1.6 2.5-3.5 0-5-3.8-9-8.5-9z"/><circle cx="8" cy="10" r="1"/><circle cx="11.5" cy="7" r="1"/><circle cx="15.5" cy="8.5" r="1"/></svg></div><h3>Colour palette</h3><p>Reduces the template to a few colours. While drawing you hide colour after colour – ideal for painting.</p></div>
+      <div class="tile reveal d2"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><path d="M8 15l3-6 5 7z"/></svg></div><h3>Automatic alignment</h3><p>Print the target sheet, lay it down, tap – LiCida straightens the camera image as if the camera were looking straight down. A purchase in the iOS app, simply included here.</p></div>
+      <div class="tile reveal"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.2" fill="currentColor"/></svg></div><h3>Time-lapse</h3><p>An hour of drawing becomes a minute of video – with Android’s own encoder, straight into your photos.</p></div>
+      <div class="tile reveal d1"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="17" height="16" rx="2.5"/><path d="M12 4v16"/></svg></div><h3>Split view and flicker</h3><p>Template on the left, paper on the right – or the template fades in and out. When the colour is right, the flicker disappears.</p></div>
+      <div class="tile reveal d2"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.7"/><circle cx="12" cy="17" r=".6" fill="currentColor"/></svg></div><h3>Tour and guide</h3><p>On first launch a tour shows every button. The guide is in the app – and as a PDF to print (currently in German).</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- PRIVACY -->
+<section id="datenschutz">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">Privacy</p>
+      <h2 class="headline">Your pictures<br>stay with you.</h2>
+      <p class="lead">LiCida only sees the one picture you choose, and the camera. Technically it cannot send anything.</p>
+    </div>
+    <div class="facts">
+      <div class="reveal"><div class="num gradient-text">0</div><div class="lbl">internet permissions</div></div>
+      <div class="reveal d1"><div class="num gradient-text">0</div><div class="lbl">purchases, subscriptions, ads</div></div>
+      <div class="reveal d2"><div class="num gradient-text">0</div><div class="lbl">trackers and statistics</div></div>
+      <div class="reveal d3"><div class="num gradient-text">100 %</div><div class="lbl">open source code</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- DOWNLOAD -->
+<section id="laden" class="alt">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">Download</p>
+      <h2 class="headline">Get started. For free.</h2>
+      <p class="lead">Version 0.1 beta for Android 10 and later.</p>
+    </div>
+    <div class="downloads">
+      <div class="download reveal">
+        <h3>F-Droid</h3>
+        <div class="meta">Recommended – updates arrive automatically</div>
+        <div class="grow">
+          <p>Add the repository in F-Droid, then search for LiCida and install it.</p>
+          <a href="fdroidrepos://volkskamera.goip.de/fdroid/repo?fingerprint=8DA9DEF44C65856A1B098DB7BF876D48514997EF17C7256E23E91EAC6C486500">Add repository in F-Droid ›</a>
+          <img class="qr" src="../fdroid-qr.svg" alt="QR code of the F-Droid repository">
+        </div>
+        <details><summary>Repository fingerprint</summary>
+          <p><code style="word-break: break-all">8DA9DEF44C65856A1B098DB7BF876D48514997EF17C7256E23E91EAC6C486500</code></p>
+        </details>
+      </div>
+      <div class="download reveal d1">
+        <h3>APK</h3>
+        <div class="meta">About 4 MB</div>
+        <div class="grow">
+          <p>Download and install directly. LiCida only asks for the camera.</p>
+        </div>
+        <a class="btn" href="../download/LiCida-0.1b.apk">Download APK</a>
+        <details><summary>App signature</summary>
+          <p>SHA-256: <code style="word-break: break-all">7aca15dc655f1581b554f0a2c93cf8eae271330d5c2684dca47a1a26e45da75d</code></p>
+        </details>
+      </div>
+      <div class="download reveal d2">
+        <h3>Source code</h3>
+        <div class="meta">GPL-3.0 · on GitHub</div>
+        <div class="grow">
+          <p>Every line open to inspect, all versions available to download. Bugs or ideas are welcome in the issue tracker.</p>
+        </div>
+        <a class="btn" href="https://github.com/veritasX1/LiCida">Go to GitHub</a>
+      </div>
+    </div>
+    <p class="center reveal" style="margin-top: 50px; font-size: 19px; font-weight: 600">Developed by Olaf Winkler in Schleswig-Holstein.</p>
+    <p class="center" style="margin-top: 10px; color: var(--muted); font-size: 15px">Checksums: <a href="../download/SHA256SUMS">SHA256SUMS</a> · Beta, because LiCida has only been tested on a few devices so far.</p>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap made">
+    <img src="../licida.svg" alt="" width="34" height="34">
+    <p><b>Made in Schleswig-Holstein.</b><br>By Olaf Winkler – between the North Sea and the Baltic.</p>
+  </div>
+  <div class="wrap cols">
+    <div>
+      <h4>LiCida</h4>
+      <p>Drawing with camera and template for Android. A private, non-commercial project by Olaf Winkler.</p>
+      <p>Free software under the <a href="https://github.com/veritasX1/LiCida/blob/main/LICENSE">GPL-3.0</a>.</p>
+    </div>
+    <div>
+      <h4>Privacy on this site</h4>
+      <p>No cookies, no content from third-party servers, no access logs. The JavaScript on this site runs only in your browser and sends nothing.</p>
+    </div>
+    <div>
+      <h4>Note</h4>
+      <p>LiCida is an independent project and has no connection to Peter Moeykens (“Camera Lucida”) or Apple Inc. No graphics or fonts from Apple are included.</p>
+    </div>
+  </div>
+<!--lang--><div class="wrap lang-foot"><a href="../" hreflang="de" lang="de">DE</a><a href="./" hreflang="en" lang="en" aria-current="true">EN</a><a href="../fr/" hreflang="fr" lang="fr">FR</a></div><!--/lang-->
+</footer>
+
+<script src="../site.js"></script>
+</body>
+</html>
