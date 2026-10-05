@@ -41,7 +41,7 @@ wartet noch auf den Test mit gedrucktem Zielbild.
 
 ## Laden
 
-- Homepage: https://licida.goip.de
+- Homepage: https://lisoft.goip.de/licida/
 - F-Droid-Paketquelle: `https://volkskamera.goip.de/fdroid/repo`
 - APK: unter „Releases“ auf GitHub
 
