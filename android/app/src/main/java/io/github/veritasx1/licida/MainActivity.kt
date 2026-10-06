@@ -25,6 +25,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        // Card 529c817e: while LiCida is in front the display never turns itself off (one draws without touching the phone);
+        // in the background Android's own timeout applies again – the window flag only counts while the window is visible.
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         cameraAllowed.value = granted()
         val studio = Studio(this)
         val initial = Reference.restore(this)
@@ -54,9 +57,9 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    /** Drawing: the picture stays as it is (rotation locked, handbook p. 6) and the screen stays on. */
+    /** Drawing: the picture stays as it is (rotation locked, handbook p. 6). The screen stays on all the time LiCida is open
+     *  (card 529c817e, Olaf 06.10.2026: „das Display darf sich während der Benutzung nicht abschalten“) – see onCreate. */
     private fun drawMode(on: Boolean) {
         requestedOrientation = if (on) ActivityInfo.SCREEN_ORIENTATION_LOCKED else ActivityInfo.SCREEN_ORIENTATION_FULL_USER
-        if (on) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 }
