@@ -21,8 +21,8 @@ android {
         // Android 10+: saving to Fotos and the photo picker need no storage permission.
         minSdk = 29
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1b"
+        versionCode = 2
+        versionName = "0.2b"
     }
 
     signingConfigs {
