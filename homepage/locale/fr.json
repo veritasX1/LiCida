@@ -8,7 +8,6 @@
  "Zeichnen, was du siehst.<br><span class=\"gradient-text\">Auf Papier.": "Dessinez ce que vous voyez.<br><span class=\"gradient-text\">Sur papier.",
  "LiCida legt deine Vorlage über das Kamerabild deines Blatts.<br>Du schaust auf den Bildschirm und ziehst die Linien einfach nach.": "LiCida superpose votre modèle à l’image de votre feuille filmée par l’appareil photo.<br>Vous regardez l’écran et repassez simplement les traits.",
  "Das Zeichengerät<br><span style=\"color: var(--muted)\">der alten Meister.": "L’instrument de dessin<br><span style=\"color: var(--muted)\">des maîtres anciens.",
- "Drei Schritte.": "Trois étapes.",
  "Handy über das Papier, Vorlage wählen, nachzeichnen.": "Le téléphone au-dessus du papier, choisir un modèle, repasser les traits.",
  "1 · Aufbauen": "1 · Installer",
  "2 · Einrichten": "2 · Ajuster",
@@ -16,7 +15,6 @@
  "3 · Zeichnen": "3 · Dessiner",
  "Einrichten<span>Vorlage über dem Papier": "Ajuster<span>Le modèle sur le papier",
  "Zeichnen<span>Gekoppelt gezoomt, hier 2×": "Dessiner<span>Zoom couplé, ici 2×",
- "Werkzeuge<span>17 Filter mit Vorschau": "Outils<span>17 filtres avec aperçu",
  "Farbpalette<span>Wenige Farben, einzeln ausblendbar": "Palette<span>Peu de couleurs, masquables une à une",
  "Kamera<span>Weitwinkel, Front, USB": "Appareil photo<span>Grand-angle, frontal, USB",
  "Ausrichten<span>Automatisch mit Zielbild": "Aligner<span>Automatiquement avec une mire",
@@ -24,11 +22,9 @@
  "Einstellungen<span>Nach Apples Richtlinien": "Réglages<span>Selon les directives d’Apple",
  "Rundgang<span>Beim ersten Start": "Visite<span>Au premier lancement",
  "Sitzungen": "Sessions",
- "Morgen genau<br>dort weiter.": "Demain, reprenez<br>exactement là où vous étiez.",
  "Blatt wiederfinden:</b> Der Schnappschuss liegt über dem Kamerabild, du legst das Papier passend hin.": "Retrouver la feuille :</b> l’instantané se superpose à l’image de l’appareil photo, vous placez le papier en conséquence.",
  "Oder automatisch:</b> LiCida sucht Verschiebung, Drehung und Größe per Bildabgleich und schiebt die Vorlage mit.": "Ou automatiquement :</b> LiCida détecte le décalage, la rotation et la taille par comparaison d’images et déplace le modèle en conséquence.",
  "Groß zeichnen": "Dessiner en grand",
- "Für die Wand.<br>Aus der Ferne.": "Pour le mur.<br>À distance.",
  "Zeitraffer</b> filmt trotzdem mit: Die Kamera läuft weiter.": "L’accéléré</b> continue de filmer : l’appareil photo tourne toujours.",
  "Filter, die aufeinander wirken": "Des filtres qui se combinent",
  "Farbpalette": "Palette de couleurs",
@@ -89,5 +85,9 @@
  "Ein privates, nichtkommerzielles Projekt von Olaf Winkler aus Schleswig-Holstein.": "Un projet privé et non commercial d’Olaf Winkler, du Schleswig-Holstein.",
  "Zeichnen mit Kamera und Vorlage für Android.": "Dessiner avec caméra et modèle pour Android.",
  "Nur auf dem Gerät:</b> Nichts wird hochgeladen.": "Uniquement sur l’appareil :</b> rien n’est envoyé.",
- "Jede Taste belegbar.</b> Ab Werk wie im Original: E Q zoomen, W A S D schieben.": "Chaque touche est configurable.</b> Par défaut comme l’original : E Q pour zoomer, W A S D pour déplacer."
+ "In drei Schritten": "En trois étapes",
+ "Später weiterzeichnen": "Reprendre plus tard",
+ "An der Wand zeichnen": "Dessiner au mur",
+ "Tasten frei belegen:</b> Ab Werk wie im Original, E Q zoomen, W A S D schieben.": "Touches librement configurables :</b> par défaut comme l’original, E Q pour zoomer, W A S D pour déplacer.",
+ "Werkzeuge<span>Filter mit Vorschau": "Outils<span>Filtres avec aperçu"
 }

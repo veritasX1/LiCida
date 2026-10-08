@@ -8,7 +8,6 @@
  "Zeichnen, was du siehst.<br><span class=\"gradient-text\">Auf Papier.": "Draw what you see.<br><span class=\"gradient-text\">On paper.",
  "LiCida legt deine Vorlage über das Kamerabild deines Blatts.<br>Du schaust auf den Bildschirm und ziehst die Linien einfach nach.": "LiCida lays your template over the camera image of your sheet.<br>You look at the screen and simply trace the lines.",
  "Das Zeichengerät<br><span style=\"color: var(--muted)\">der alten Meister.": "The drawing tool<br><span style=\"color: var(--muted)\">of the old masters.",
- "Drei Schritte.": "Three steps.",
  "Handy über das Papier, Vorlage wählen, nachzeichnen.": "Phone above the paper, pick a template, trace.",
  "1 · Aufbauen": "1 · Set up",
  "2 · Einrichten": "2 · Arrange",
@@ -16,7 +15,6 @@
  "3 · Zeichnen": "3 · Draw",
  "Einrichten<span>Vorlage über dem Papier": "Arrange<span>Template over the paper",
  "Zeichnen<span>Gekoppelt gezoomt, hier 2×": "Draw<span>Zoomed together, here 2×",
- "Werkzeuge<span>17 Filter mit Vorschau": "Tools<span>17 filters with preview",
  "Farbpalette<span>Wenige Farben, einzeln ausblendbar": "Colour palette<span>A few colours, each can be hidden",
  "Kamera<span>Weitwinkel, Front, USB": "Camera<span>Wide angle, front, USB",
  "Ausrichten<span>Automatisch mit Zielbild": "Align<span>Automatically with a target sheet",
@@ -24,11 +22,9 @@
  "Einstellungen<span>Nach Apples Richtlinien": "Settings<span>Following Apple’s guidelines",
  "Rundgang<span>Beim ersten Start": "Tour<span>On first launch",
  "Sitzungen": "Sessions",
- "Morgen genau<br>dort weiter.": "Pick up tomorrow<br>right where you left off.",
  "Blatt wiederfinden:</b> Der Schnappschuss liegt über dem Kamerabild, du legst das Papier passend hin.": "Find your sheet again:</b> the snapshot lies over the camera image, and you line the paper up with it.",
  "Oder automatisch:</b> LiCida sucht Verschiebung, Drehung und Größe per Bildabgleich und schiebt die Vorlage mit.": "Or automatically:</b> LiCida finds the shift, rotation and scale by image matching and moves the template along.",
  "Groß zeichnen": "Drawing big",
- "Für die Wand.<br>Aus der Ferne.": "For the wall.<br>From a distance.",
  "Zeitraffer</b> filmt trotzdem mit: Die Kamera läuft weiter.": "Time-lapse</b> still records: the camera keeps running.",
  "Filter, die aufeinander wirken": "Filters That Stack",
  "Farbpalette": "Color Palette",
@@ -89,5 +85,9 @@
  "Ein privates, nichtkommerzielles Projekt von Olaf Winkler aus Schleswig-Holstein.": "A private, non-commercial project by Olaf Winkler from Schleswig-Holstein.",
  "Zeichnen mit Kamera und Vorlage für Android.": "Drawing with camera and template for Android.",
  "Nur auf dem Gerät:</b> Nichts wird hochgeladen.": "On the device only:</b> Nothing is uploaded.",
- "Jede Taste belegbar.</b> Ab Werk wie im Original: E Q zoomen, W A S D schieben.": "Every key can be assigned.</b> By default as in the original: E Q zoom, W A S D move."
+ "In drei Schritten": "In Three Steps",
+ "Später weiterzeichnen": "Continue Later",
+ "An der Wand zeichnen": "Drawing on the Wall",
+ "Tasten frei belegen:</b> Ab Werk wie im Original, E Q zoomen, W A S D schieben.": "Assign keys freely:</b> By default as in the original, E Q zoom, W A S D move.",
+ "Werkzeuge<span>Filter mit Vorschau": "Tools<span>Filters with preview"
 }
